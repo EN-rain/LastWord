@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://b8y4r8w8y8y8y"]
+
+[ext_resource type="Script" path="res://Scripts/UI/HUDManager.cs" id="1_hud"]
+[ext_resource type="Texture2D" uid="uid://c6l8l8l8l8l8l" path="res://icon.svg" id="2_skull"]
+
+[node name="HUD" type="CanvasLayer"]
+
+[node name="HUDManager" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_hud")
+TierLabelPath = NodePath("VoiceInfo/TierLabel")
+VolumeMeterPath = NodePath("VoiceInfo/VolumeMeter")
+TokenIndicatorPath = NodePath("TokenIndicator")
+
+[node name="VoiceInfo" type="VBoxContainer" parent="HUDManager"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -220.0
+offset_top = -80.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="TierLabel" type="Label" parent="HUDManager/VoiceInfo"]
+layout_mode = 2
+text = "Voice: Silent"
+horizontal_alignment = 2
+
+[node name="VolumeMeter" type="ProgressBar" parent="HUDManager/VoiceInfo"]
+custom_minimum_size = Vector2(200, 10)
+layout_mode = 2
+value = 50.0
+show_percentage = false
+
+[node name="TokenIndicator" type="TextureRect" parent="HUDManager"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 84.0
+offset_bottom = 84.0
+pivot_offset = Vector2(32, 32)
+texture = ExtResource("2_skull")
+expand_mode = 1
+stretch_mode = 5

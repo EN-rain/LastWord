@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://ddy6t8e7k3n5"]
+
+[ext_resource type="Script" uid="uid://wu7i5gd1i7s1" path="res://Scripts/Player/PlayerController.cs" id="1_a2b3c"]
+[ext_resource type="PackedScene" uid="uid://b1fxadayeg258" path="res://Scenes/base_character.tscn" id="2_d4e5f"]
+[ext_resource type="Script" uid="uid://0q072o58og5b" path="res://Scripts/Player/CameraManager.cs" id="3_cam"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.3
+height = 1.8
+
+[node name="Player" type="CharacterBody3D" groups=["Player"]]
+script = ExtResource("1_a2b3c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=12414825]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="BaseCharacter" parent="." unique_id=78718086 instance=ExtResource("2_d4e5f")]
+
+[node name="CameraManager" type="Node3D" parent="." unique_id=971482928]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5047812, 0)
+script = ExtResource("3_cam")
+TargetPath = NodePath("..")
+CameraPivotPath = NodePath("Pivot")
+CameraTransformPath = NodePath("Pivot/MainCamera")
+CameraSensitivity = 0.2
+CameraLookSpeed = 0.5
+CameraPivotSpeed = 0.2
+
+[node name="Pivot" type="Node3D" parent="CameraManager" unique_id=1226680050]
+
+[node name="MainCamera" type="Camera3D" parent="CameraManager/Pivot" unique_id=1507857411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.5)

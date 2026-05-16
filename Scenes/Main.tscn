@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://5nwn4tp7i8wg"]
+
+[ext_resource type="PackedScene" uid="uid://ddy6t8e7k3n5" path="res://Scenes/Player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://Scenes/HUD.tscn" id="2_hud"]
+
+[sub_resource type="Shader" id="Shader_grid"]
+code = "shader_type spatial;
+
+uniform vec3 albedo : source_color = vec3(0.2, 0.2, 0.2);
+uniform vec3 line_color : source_color = vec3(0.4, 0.4, 0.4);
+uniform float line_thickness = 0.02;
+
+varying vec3 world_pos;
+
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+
+void fragment() {
+	vec2 grid = fract(world_pos.xz);
+	float line_x = step(grid.x, line_thickness) + step(1.0 - line_thickness, grid.x);
+	float line_y = step(grid.y, line_thickness) + step(1.0 - line_thickness, grid.y);
+	float is_line = clamp(line_x + line_y, 0.0, 1.0);
+	ALBEDO = mix(albedo, line_color, is_line);
+	ROUGHNESS = 0.8;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_floor"]
+render_priority = 0
+shader = SubResource("Shader_grid")
+shader_parameter/albedo = Color(0.3204915, 0.3204913, 0.32049137, 1)
+shader_parameter/line_color = Color(0, 0, 0, 1)
+shader_parameter/line_thickness = 0.01
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_p1q2r"]
+material = SubResource("ShaderMaterial_floor")
+size = Vector2(20, 20)
+
+[sub_resource type="ConcavePolygonShape3D" id="ConcavePolygonShape3D_floor"]
+data = PackedVector3Array(10, 0, 10, -10, 0, 10, 10, 0, -10, -10, 0, 10, -10, 0, -10, 10, 0, -10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_box"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_box"]
+
+[node name="Main" type="Node3D" unique_id=417295634]
+
+[node name="Plane" type="MeshInstance3D" parent="." unique_id=956697109]
+transform = Transform3D(4.2617984, 0, 0, 0, 1, 0, 0, 0, 3.9901886, 0, 0, 0)
+mesh = SubResource("PlaneMesh_p1q2r")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Plane" unique_id=634356793]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Plane/StaticBody3D" unique_id=998105398]
+shape = SubResource("ConcavePolygonShape3D_floor")
+
+[node name="Player" parent="." unique_id=559049181 instance=ExtResource("1_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="HUD" parent="." instance=ExtResource("2_hud")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=650871301]
+transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 5, 0)
+shadow_enabled = true
+
+[node name="Node3D" type="Node3D" parent="." unique_id=14737317]
+transform = Transform3D(1.4325968, 0, 0, 0, 2, 0, 0, 0, 78.68188, 41.5113, 0.87730694, 0.53417206)
+
+[node name="TestBox" type="MeshInstance3D" parent="Node3D" unique_id=197498237]
+mesh = SubResource("BoxMesh_box")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Node3D/TestBox" unique_id=198225062]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/TestBox/StaticBody3D" unique_id=680599255]
+shape = SubResource("BoxShape3D_box")
+
+[node name="TestBox2" type="MeshInstance3D" parent="Node3D" unique_id=10680163]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -58.389496, 0, 0)
+mesh = SubResource("BoxMesh_box")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Node3D/TestBox2" unique_id=729060145]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/TestBox2/StaticBody3D" unique_id=2104978446]
+shape = SubResource("BoxShape3D_box")
+
+[node name="TestBox3" type="MeshInstance3D" parent="Node3D" unique_id=1187567156]
+transform = Transform3D(57.12885, 0, 0, 0, 1, 0, 0, 0, 0.019844357, -28.983496, 0, 0.49318972)
+mesh = SubResource("BoxMesh_box")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Node3D/TestBox3" unique_id=1128716092]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/TestBox3/StaticBody3D" unique_id=1947945025]
+shape = SubResource("BoxShape3D_box")
+
+[node name="TestBox4" type="MeshInstance3D" parent="Node3D" unique_id=1187703656]
+transform = Transform3D(57.12885, 0, 0, 0, 1, 0, 0, 0, 0.019844357, -28.983496, 0, -0.49701023)
+mesh = SubResource("BoxMesh_box")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Node3D/TestBox4" unique_id=1154633815]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/TestBox4/StaticBody3D" unique_id=1510623088]
+shape = SubResource("BoxShape3D_box")

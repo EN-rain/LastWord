@@ -1,0 +1,47 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[audio]
+
+driver/enable_input=true
+default_bus_layout="res://default_bus_layout.tres"
+
+[application]
+
+config/name=":LastWord"
+run/main_scene="uid://5nwn4tp7i8wg"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+VoiceManager="*res://Scripts/Core/VoiceManager.cs"
+
+[dotnet]
+
+project/assembly_name="-LastWord"
+
+[file_customization]
+
+folder_colors={
+"res://Assets/Models/characters/": "red"
+}
+
+[filesystem]
+
+import/blender/enabled=false
+
+[physics]
+
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+rendering_device/driver.windows="d3d12"
