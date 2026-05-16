@@ -12,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_hud")
 TierLabelPath = NodePath("VoiceInfo/TierLabel")
 VolumeMeterPath = NodePath("VoiceInfo/VolumeMeter")
@@ -30,17 +31,20 @@ offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="TierLabel" type="Label" parent="HUDManager/VoiceInfo"]
 layout_mode = 2
 text = "Voice: Silent"
 horizontal_alignment = 2
+mouse_filter = 2
 
 [node name="VolumeMeter" type="ProgressBar" parent="HUDManager/VoiceInfo"]
 custom_minimum_size = Vector2(200, 10)
 layout_mode = 2
 value = 50.0
 show_percentage = false
+mouse_filter = 2
 
 [node name="TokenIndicator" type="TextureRect" parent="HUDManager"]
 layout_mode = 0
@@ -52,3 +56,4 @@ pivot_offset = Vector2(32, 32)
 texture = ExtResource("2_skull")
 expand_mode = 1
 stretch_mode = 5
+mouse_filter = 2

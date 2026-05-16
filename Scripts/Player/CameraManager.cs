@@ -93,26 +93,24 @@ public partial class CameraManager : Node3D
         {
             if (mouseButton.ButtonIndex == MouseButton.WheelUp && mouseButton.Pressed)
             {
-                // Zoom in (decrease Z)
                 _targetZoom -= ZoomSpeed * 0.5f;
                 _targetZoom = Mathf.Clamp(_targetZoom, MinZoomDistance, MaxZoomDistance);
             }
             else if (mouseButton.ButtonIndex == MouseButton.WheelDown && mouseButton.Pressed)
             {
-                // Zoom out (increase Z)
                 _targetZoom += ZoomSpeed * 0.5f;
                 _targetZoom = Mathf.Clamp(_targetZoom, MinZoomDistance, MaxZoomDistance);
             }
-            
-            if (mouseButton.ButtonIndex == MouseButton.Left && mouseButton.Pressed)
+
+            // Re-capture mouse if user clicks back into the game window
+            if (mouseButton.ButtonIndex == MouseButton.Left && mouseButton.Pressed
+                && Input.MouseMode != Input.MouseModeEnum.Captured)
             {
-                Input.MouseMode = Input.MouseModeEnum.Captured;
+                // Only recapture if the pause menu is NOT open
+                var pause = GetTree().GetFirstNodeInGroup("PauseMenu");
+                if (pause == null)
+                    Input.MouseMode = Input.MouseModeEnum.Captured;
             }
-        }
-        
-        if (@event is InputEventKey keyEvent && keyEvent.Pressed && keyEvent.Keycode == Key.Escape)
-        {
-            Input.MouseMode = Input.MouseModeEnum.Visible;
         }
     }
 

@@ -70,71 +70,71 @@ public partial class PlayerController : CharacterBody3D
 	{
 		Vector3 velocity = Velocity;
 
-		// Add the gravity
+		// --- Gravity always applies regardless of menu state ---
 		if (!IsOnFloor())
-		{
 			velocity.Y -= Gravity * (float)delta;
-		}
 
-		// Handle Jump (Spacebar)
-		if (Input.IsKeyPressed(Key.Space) && IsOnFloor())
+		bool isRunning  = false;
+		float currentSpeed = WalkSpeed;
+		Vector3 direction  = Vector3.Zero;
+
+		// --- Block all movement/jump input when menu is open ---
+		if (!PauseMenu.IsOpen)
 		{
-			velocity.Y = JumpVelocity;
+			// Jump
+			if (Input.IsKeyPressed(Key.Space) && IsOnFloor())
+				velocity.Y = JumpVelocity;
+
+			// WASD direction
+			Vector2 inputDir = Vector2.Zero;
+			if (Input.IsKeyPressed(Key.W)) inputDir.Y -= 1;
+			if (Input.IsKeyPressed(Key.S)) inputDir.Y += 1;
+			if (Input.IsKeyPressed(Key.A)) inputDir.X -= 1;
+			if (Input.IsKeyPressed(Key.D)) inputDir.X += 1;
+			inputDir = inputDir.Normalized();
+
+			if (_cameraManager != null)
+			{
+				Vector3 camForward = -_cameraManager.GlobalTransform.Basis.Z;
+				Vector3 camRight   =  _cameraManager.GlobalTransform.Basis.X;
+				camForward.Y = 0; camRight.Y = 0;
+				camForward = camForward.Normalized();
+				camRight   = camRight.Normalized();
+				direction  = (camRight * inputDir.X + camForward * -inputDir.Y).Normalized();
+			}
+			else
+			{
+				direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
+			}
+
+			isRunning    = Input.IsKeyPressed(Key.Shift);
+			currentSpeed = isRunning ? RunSpeed : WalkSpeed;
 		}
 
-		// Calculate Input Direction from WASD directly
-		Vector2 inputDir = Vector2.Zero;
-		if (Input.IsKeyPressed(Key.W)) inputDir.Y -= 1;
-		if (Input.IsKeyPressed(Key.S)) inputDir.Y += 1;
-		if (Input.IsKeyPressed(Key.A)) inputDir.X -= 1;
-		if (Input.IsKeyPressed(Key.D)) inputDir.X += 1;
-		
-		inputDir = inputDir.Normalized();
-
-		Vector3 direction = Vector3.Zero;
-		if (_cameraManager != null)
-		{
-			Vector3 camForward = -_cameraManager.GlobalTransform.Basis.Z;
-			Vector3 camRight = _cameraManager.GlobalTransform.Basis.X;
-			
-			camForward.Y = 0;
-			camRight.Y = 0;
-			camForward = camForward.Normalized();
-			camRight = camRight.Normalized();
-			
-			direction = (camRight * inputDir.X + camForward * -inputDir.Y).Normalized();
-		}
-		else
-		{
-			direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
-		}
-		
-		bool isRunning = Input.IsKeyPressed(Key.Shift);
-		float currentSpeed = isRunning ? RunSpeed : WalkSpeed;
-
+		// Apply horizontal velocity
 		if (direction != Vector3.Zero)
 		{
 			velocity.X = direction.X * currentSpeed;
 			velocity.Z = direction.Z * currentSpeed;
-			
-			// Rotate the character to face the direction of movement
+
 			if (_visuals != null)
 			{
-				float targetAngle = Mathf.Atan2(direction.X, direction.Z);
-				Vector3 currentRotation = _visuals.Rotation;
-				currentRotation.Y = Mathf.LerpAngle(currentRotation.Y, targetAngle, 10.0f * (float)delta);
-				_visuals.Rotation = currentRotation;
+				float targetAngle     = Mathf.Atan2(direction.X, direction.Z);
+				Vector3 rot           = _visuals.Rotation;
+				rot.Y                 = Mathf.LerpAngle(rot.Y, targetAngle, 10f * (float)delta);
+				_visuals.Rotation     = rot;
 			}
 		}
 		else
 		{
-			velocity.X = Mathf.MoveToward(Velocity.X, 0, currentSpeed);
-			velocity.Z = Mathf.MoveToward(Velocity.Z, 0, currentSpeed);
+			// Decelerate to zero when no input (or menu open)
+			velocity.X = Mathf.MoveToward(Velocity.X, 0, currentSpeed > 0 ? currentSpeed : WalkSpeed);
+			velocity.Z = Mathf.MoveToward(Velocity.Z, 0, currentSpeed > 0 ? currentSpeed : WalkSpeed);
 		}
 
 		Velocity = velocity;
 		MoveAndSlide();
-		
+
 		UpdateAnimation(direction != Vector3.Zero, isRunning);
 	}
 	

@@ -1,74 +1,83 @@
 using Godot;
-using System;
 
 public partial class HUDManager : Control
 {
-    [Export] public NodePath TierLabelPath;
-    [Export] public NodePath VolumeMeterPath;
-    [Export] public NodePath TokenIndicatorPath;
+	[Export] public NodePath TierLabelPath;
+	[Export] public NodePath VolumeMeterPath;
+	[Export] public NodePath TokenIndicatorPath;
 
-    private Label _tierLabel;
-    private ProgressBar _volumeMeter;
-    private TextureRect _tokenIndicator;
+	private Label _tierLabel;
+	private ProgressBar _volumeMeter;
+	private TextureRect _tokenIndicator;
 
-    private Color _colorSilent = new Color(0.5f, 0.5f, 0.5f);
-    private Color _colorWhisper = new Color(0.2f, 0.8f, 0.2f);
-    private Color _colorNormal = new Color(0.8f, 0.8f, 0.2f);
-    private Color _colorShouting = new Color(0.8f, 0.2f, 0.2f);
+	private static readonly Color ColorSilent   = new Color(0.45f, 0.45f, 0.45f);
+	private static readonly Color ColorWhisper  = new Color(0.2f,  0.85f, 0.2f);
+	private static readonly Color ColorNormal   = new Color(0.9f,  0.8f,  0.1f);
+	private static readonly Color ColorShouting = new Color(0.9f,  0.2f,  0.2f);
 
-    public override void _Ready()
-    {
-        _tierLabel = GetNode<Label>(TierLabelPath);
-        _volumeMeter = GetNode<ProgressBar>(VolumeMeterPath);
-        _tokenIndicator = GetNode<TextureRect>(TokenIndicatorPath);
+	public override void _Ready()
+	{
+		GD.Print("HUDManager: _Ready starting...");
+		_tierLabel       = GetNodeOrNull<Label>(TierLabelPath);
+		_volumeMeter     = GetNodeOrNull<ProgressBar>(VolumeMeterPath);
+		_tokenIndicator  = GetNodeOrNull<TextureRect>(TokenIndicatorPath);
 
-        // Connect to VoiceManager signals
-        VoiceManager.Instance.TierChanged += OnTierChanged;
-        VoiceManager.Instance.VolumeUpdated += OnVolumeUpdated;
-        VoiceManager.Instance.TokenTransferred += OnTokenTransferred;
+		// Connect to VoiceManager
+		if (VoiceManager.Instance != null)
+		{
+			VoiceManager.Instance.TierChanged      += OnTierChanged;
+			VoiceManager.Instance.VolumeUpdated    += OnVolumeUpdated;
+			VoiceManager.Instance.TokenTransferred += OnTokenTransferred;
+		}
+		else
+		{
+			GD.PrintErr("HUDManager: VoiceManager.Instance is null! Signals not connected.");
+		}
 
-        // Initialize state
-        _tokenIndicator.Visible = false;
-        UpdateTierUI(0);
-    }
+		if (_tokenIndicator != null) _tokenIndicator.Visible = false;
+		UpdateTierUI(0);
+	}
 
-    private void OnTierChanged(int newTier)
-    {
-        UpdateTierUI(newTier);
-    }
+	// ------------------------------------------------------------------ //
+	//  Signal callbacks
+	// ------------------------------------------------------------------ //
+	private void OnTierChanged(int newTier)   => UpdateTierUI(newTier);
 
-    private void OnVolumeUpdated(float dbValue)
-    {
-        // Map dB (-60 to 0) to progress (0 to 100)
-        float progress = Mathf.Remap(dbValue, -60f, 0f, 0f, 100f);
-        _volumeMeter.Value = progress;
-    }
+	private void OnVolumeUpdated(float dbValue)
+	{
+		if (_volumeMeter == null) return;
+		// Map dB range -80..0 → progress 0..100
+		float progress = Mathf.Remap(dbValue, -80f, 0f, 0f, 100f);
+		_volumeMeter.Value = Mathf.Clamp(progress, 0f, 100f);
+	}
 
-    private void OnTokenTransferred(Node3D newHolder)
-    {
-        // Show skull if local player is the holder
-        // In single player, it's always the local player
-        _tokenIndicator.Visible = true;
-        
-        // Pulse effect
-        var tween = CreateTween();
-        tween.TweenProperty(_tokenIndicator, "scale", new Vector2(1.2f, 1.2f), 0.1f);
-        tween.TweenProperty(_tokenIndicator, "scale", new Vector2(1.0f, 1.0f), 0.1f);
-    }
+	private void OnTokenTransferred(Node3D newHolder)
+	{
+		_tokenIndicator.Visible = true;
 
-    private void UpdateTierUI(int tier)
-    {
-        VoiceTier voiceTier = (VoiceTier)tier;
-        _tierLabel.Text = "Voice: " + voiceTier.ToString();
+		// Pulse scale
+		var tween = CreateTween();
+		tween.TweenProperty(_tokenIndicator, "scale", new Vector2(1.3f, 1.3f), 0.1f);
+		tween.TweenProperty(_tokenIndicator, "scale", new Vector2(1.0f, 1.0f), 0.15f);
+	}
 
-        Color targetColor = _colorSilent;
-        switch (voiceTier)
-        {
-            case VoiceTier.Whisper: targetColor = _colorWhisper; break;
-            case VoiceTier.Normal: targetColor = _colorNormal; break;
-            case VoiceTier.Shouting: targetColor = _colorShouting; break;
-        }
+	// ------------------------------------------------------------------ //
+	//  Tier UI update
+	// ------------------------------------------------------------------ //
+	private void UpdateTierUI(int tier)
+	{
+		if (_tierLabel == null) return;
+		VoiceTier voiceTier = (VoiceTier)tier;
+		_tierLabel.Text = "Voice: " + voiceTier.ToString();
 
-        _tierLabel.Modulate = targetColor;
-    }
+		Color targetColor = tier switch
+		{
+			1 => ColorWhisper,
+			2 => ColorNormal,
+			3 => ColorShouting,
+			_ => ColorSilent
+		};
+		_tierLabel.Modulate = targetColor;
+		if (_volumeMeter != null) _volumeMeter.Modulate = targetColor;
+	}
 }

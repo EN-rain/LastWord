@@ -8,17 +8,17 @@
 
 config_version=5
 
+[application]
+
+config/name=":LastWord"
+run/main_scene="res://Scenes/Main.tscn"
+config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+config/icon="res://icon.svg"
+
 [audio]
 
 driver/enable_input=true
 default_bus_layout="res://default_bus_layout.tres"
-
-[application]
-
-config/name=":LastWord"
-run/main_scene="uid://5nwn4tp7i8wg"
-config/features=PackedStringArray("4.6", "C#", "Forward Plus")
-config/icon="res://icon.svg"
 
 [autoload]
 
@@ -40,8 +40,8 @@ import/blender/enabled=false
 
 [physics]
 
-3d/physics_engine="Jolt Physics"
+3d/physics_engine="GodotPhysics3D"
 
 [rendering]
 
-rendering_device/driver.windows="d3d12"
+renderer/rendering_method="forward_plus"

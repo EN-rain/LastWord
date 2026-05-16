@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://5nwn4tp7i8wg"]
 
 [ext_resource type="PackedScene" uid="uid://ddy6t8e7k3n5" path="res://Scenes/Player.tscn" id="1_player"]
-[ext_resource type="PackedScene" path="res://Scenes/HUD.tscn" id="2_hud"]
+[ext_resource type="PackedScene" uid="uid://b8y4r8w8y8y8y" path="res://Scenes/HUD.tscn" id="2_hud"]
+[ext_resource type="PackedScene" uid="uid://dblixul2w7k1a" path="res://Scenes/PauseMenu.tscn" id="3_pause"]
 
 [sub_resource type="Shader" id="Shader_grid"]
 code = "shader_type spatial;
@@ -46,6 +47,10 @@ data = PackedVector3Array(10, 0, 10, -10, 0, 10, 10, 0, -10, -10, 0, 10, -10, 0,
 
 [node name="Main" type="Node3D" unique_id=417295634]
 
+[node name="HUD" parent="." unique_id=1234231811 instance=ExtResource("2_hud")]
+
+[node name="PauseMenu" parent="." unique_id=1156729821 instance=ExtResource("3_pause")]
+
 [node name="Plane" type="MeshInstance3D" parent="." unique_id=956697109]
 transform = Transform3D(4.2617984, 0, 0, 0, 1, 0, 0, 0, 3.9901886, 0, 0, 0)
 mesh = SubResource("PlaneMesh_p1q2r")
@@ -57,8 +62,6 @@ shape = SubResource("ConcavePolygonShape3D_floor")
 
 [node name="Player" parent="." unique_id=559049181 instance=ExtResource("1_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-
-[node name="HUD" parent="." instance=ExtResource("2_hud")]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=650871301]
 transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 5, 0)
