@@ -43,6 +43,8 @@ public partial class VoiceManager : Node
     // Token System
     private Node3D _tokenHolder = null;
     public Node3D TokenHolder => _tokenHolder;
+    private long _tokenHolderPeerId = 0;
+    public long TokenHolderPeerId => _tokenHolderPeerId;
 
     public override void _EnterTree()
     {
@@ -322,13 +324,73 @@ public partial class VoiceManager : Node
 
     private void UpdateTokenHolder()
     {
-        Node3D localPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
-        if (localPlayer != null && _tokenHolder != localPlayer)
+        if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
         {
-            _tokenHolder = localPlayer;
-            EmitSignal(SignalName.TokenTransferred, _tokenHolder);
-            GD.Print($"VoiceManager: Token → {localPlayer.Name}");
+            long myPeerId = Multiplayer.GetUniqueId();
+            if (_tokenHolderPeerId != myPeerId)
+            {
+                RpcId(1, nameof(RequestTokenTransfer), myPeerId);
+            }
         }
+        else
+        {
+            Node3D localPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
+            if (localPlayer != null && _tokenHolder != localPlayer)
+            {
+                _tokenHolder = localPlayer;
+                EmitSignal(SignalName.TokenTransferred, _tokenHolder);
+                GD.Print($"VoiceManager: Token → {localPlayer.Name}");
+            }
+        }
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
+    private void RequestTokenTransfer(long peerId)
+    {
+        if (!Multiplayer.IsServer()) return;
+        Rpc(nameof(SyncTokenHolder), peerId);
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
+    private void SyncTokenHolder(long peerId)
+    {
+        _tokenHolderPeerId = peerId;
+        Node3D playerNode = FindPlayerNodeByPeerId(peerId);
+        if (playerNode != null)
+        {
+            _tokenHolder = playerNode;
+            EmitSignal(SignalName.TokenTransferred, _tokenHolder);
+            GD.Print($"VoiceManager: Token synced over network → {playerNode.Name} (Peer {peerId})");
+        }
+    }
+
+    private Node3D FindPlayerNodeByPeerId(long peerId)
+    {
+        if (Multiplayer.MultiplayerPeer == null || !Multiplayer.HasMultiplayerPeer() || peerId == 0)
+        {
+            return GetTree().GetFirstNodeInGroup("Player") as Node3D;
+        }
+
+        var playersContainer = GetTree().Root.GetNodeOrNull("Main/Players");
+        if (playersContainer != null)
+        {
+            var pNode = playersContainer.GetNodeOrNull<Node3D>(peerId.ToString());
+            if (pNode != null) return pNode;
+        }
+
+        var playerNodes = GetTree().GetNodesInGroup("Player");
+        foreach (Node node in playerNodes)
+        {
+            if (node is Node3D node3D)
+            {
+                if (node3D.Name == peerId.ToString() || node3D.Name == "Player")
+                {
+                    return node3D;
+                }
+            }
+        }
+
+        return GetTree().GetFirstNodeInGroup("Player") as Node3D;
     }
 
     private void LoadBaseline()

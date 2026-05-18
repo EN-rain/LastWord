@@ -25,10 +25,26 @@ public partial class PlayerController : CharacterBody3D
 
 	public override void _Ready()
 	{
+		// Parse peer authority ID from node name (e.g. if spawned named "1234567")
+		if (long.TryParse(Name, out long peerId))
+		{
+			SetMultiplayerAuthority((int)peerId);
+		}
+
 		// Recursively find the AnimationPlayer
 		_animationPlayer = FindAnimationPlayer(this);
 		_visuals = GetNodeOrNull<Node3D>("BaseCharacter");
 		_cameraManager = GetNodeOrNull<Node3D>("CameraManager");
+
+		// If this node is not the local multiplayer authority, disable inputs and remove camera
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
+		{
+			if (_cameraManager != null)
+			{
+				_cameraManager.QueueFree();
+				_cameraManager = null;
+			}
+		}
 		
 		if (_animationPlayer != null)
 		{
@@ -68,6 +84,24 @@ public partial class PlayerController : CharacterBody3D
 
 	public override void _PhysicsProcess(double delta)
 	{
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
+		{
+			Vector3 horizVel = new Vector3(Velocity.X, 0, Velocity.Z);
+			bool remoteMoving = horizVel.Length() > 0.1f;
+			bool remoteRunning = horizVel.Length() > WalkSpeed + 0.5f;
+			
+			if (remoteMoving && _visuals != null)
+			{
+				float targetAngle = Mathf.Atan2(Velocity.X, Velocity.Z);
+				Vector3 rot = _visuals.Rotation;
+				rot.Y = Mathf.LerpAngle(rot.Y, targetAngle, 10f * (float)delta);
+				_visuals.Rotation = rot;
+			}
+			
+			UpdateAnimation(remoteMoving, remoteRunning);
+			return;
+		}
+
 		Vector3 velocity = Velocity;
 
 		// --- Gravity always applies regardless of menu state ---

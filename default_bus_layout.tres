@@ -1,4 +1,4 @@
-[gd_resource type="AudioBusLayout" load_steps=2 format=3]
+[gd_resource type="AudioBusLayout" format=3 uid="uid://djtsw6r18ojat"]
 
 [sub_resource type="AudioEffectCapture" id="AudioEffectCapture_1"]
 resource_name = "Capture"
@@ -6,10 +6,6 @@ resource_name = "Capture"
 [sub_resource type="AudioEffectCompressor" id="AudioEffectCompressor_1"]
 resource_name = "Compressor"
 threshold = -20.0
-ratio = 4.0
-gain = 0.0
-attack_us = 20.0
-release_ms = 250.0
 
 [resource]
 bus/1/name = &"Microphone"

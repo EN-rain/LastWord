@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b8y4r8w8y8y8y"]
 
 [ext_resource type="Script" path="res://Scripts/UI/HUDManager.cs" id="1_hud"]
-[ext_resource type="Texture2D" uid="uid://c6l8l8l8l8l8l" path="res://icon.svg" id="2_skull"]
+[ext_resource type="Texture2D" uid="uid://fuf3j2w5mf48" path="res://icon.svg" id="2_skull"]
 
 [node name="HUD" type="CanvasLayer"]
 
@@ -17,6 +17,7 @@ script = ExtResource("1_hud")
 TierLabelPath = NodePath("VoiceInfo/TierLabel")
 VolumeMeterPath = NodePath("VoiceInfo/VolumeMeter")
 TokenIndicatorPath = NodePath("TokenIndicator")
+RoomCodeLabelPath = NodePath("RoomCodeLabel")
 
 [node name="VoiceInfo" type="VBoxContainer" parent="HUDManager"]
 layout_mode = 1
@@ -56,4 +57,20 @@ pivot_offset = Vector2(32, 32)
 texture = ExtResource("2_skull")
 expand_mode = 1
 stretch_mode = 5
+mouse_filter = 2
+
+[node name="RoomCodeLabel" type="Label" parent="HUDManager"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 43.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.6, 0.6, 0.65, 0.7)
+theme_override_font_sizes/font_size = 12
+text = "ROOM CODE: OFFLINE"
+horizontal_alignment = 2
 mouse_filter = 2

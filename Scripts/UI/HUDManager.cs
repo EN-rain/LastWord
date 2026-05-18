@@ -5,10 +5,12 @@ public partial class HUDManager : Control
 	[Export] public NodePath TierLabelPath;
 	[Export] public NodePath VolumeMeterPath;
 	[Export] public NodePath TokenIndicatorPath;
+	[Export] public NodePath RoomCodeLabelPath;
 
 	private Label _tierLabel;
 	private ProgressBar _volumeMeter;
 	private TextureRect _tokenIndicator;
+	private Label _roomCodeLabel;
 
 	private static readonly Color ColorSilent   = new Color(0.45f, 0.45f, 0.45f);
 	private static readonly Color ColorWhisper  = new Color(0.2f,  0.85f, 0.2f);
@@ -21,6 +23,20 @@ public partial class HUDManager : Control
 		_tierLabel       = GetNodeOrNull<Label>(TierLabelPath);
 		_volumeMeter     = GetNodeOrNull<ProgressBar>(VolumeMeterPath);
 		_tokenIndicator  = GetNodeOrNull<TextureRect>(TokenIndicatorPath);
+		_roomCodeLabel   = GetNodeOrNull<Label>(RoomCodeLabelPath);
+
+		// Update the room code display
+		if (_roomCodeLabel != null)
+		{
+			if (NetworkManager.Instance != null && !string.IsNullOrEmpty(NetworkManager.Instance.CurrentRoomCode))
+			{
+				_roomCodeLabel.Text = $"ROOM CODE: {NetworkManager.Instance.CurrentRoomCode}";
+			}
+			else
+			{
+				_roomCodeLabel.Text = "ROOM CODE: OFFLINE";
+			}
+		}
 
 		// Connect to VoiceManager
 		if (VoiceManager.Instance != null)

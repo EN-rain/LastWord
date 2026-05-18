@@ -8,21 +8,27 @@
 
 config_version=5
 
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
 [application]
 
 config/name=":LastWord"
-run/main_scene="res://Scenes/Main.tscn"
-config/features=PackedStringArray("4.3", "C#", "Forward Plus")
+run/main_scene="res://Scenes/MainMenu.tscn"
+config/features=PackedStringArray("4.6", "C#", "Forward Plus")
 config/icon="res://icon.svg"
 
 [audio]
 
+buses/default_bus_layout="uid://djtsw6r18ojat"
 driver/enable_input=true
 default_bus_layout="res://default_bus_layout.tres"
 
 [autoload]
 
 VoiceManager="*res://Scripts/Core/VoiceManager.cs"
+NetworkManager="*res://Scripts/Networking/NetworkManager.cs"
 
 [dotnet]
 
@@ -41,7 +47,3 @@ import/blender/enabled=false
 [physics]
 
 3d/physics_engine="GodotPhysics3D"
-
-[rendering]
-
-renderer/rendering_method="forward_plus"
