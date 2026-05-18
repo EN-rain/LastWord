@@ -7,6 +7,10 @@ public partial class PlayerController : CharacterBody3D
 	[Export] public float RunSpeed = 8.0f;
 	[Export] public float JumpVelocity = 4.5f;
 	[Export] public float Gravity = 9.8f;
+
+	[ExportGroup("Node References")]
+	[Export] public NodePath VisualsPath = "BaseCharacter";
+	[Export] public NodePath CameraManagerPath = "CameraManager";
 	
 	// Node references
 	private AnimationPlayer _animationPlayer;
@@ -33,8 +37,8 @@ public partial class PlayerController : CharacterBody3D
 
 		// Recursively find the AnimationPlayer
 		_animationPlayer = FindAnimationPlayer(this);
-		_visuals = GetNodeOrNull<Node3D>("BaseCharacter");
-		_cameraManager = GetNodeOrNull<Node3D>("CameraManager");
+		if (VisualsPath != null) _visuals = GetNodeOrNull<Node3D>(VisualsPath);
+		if (CameraManagerPath != null) _cameraManager = GetNodeOrNull<Node3D>(CameraManagerPath);
 
 		// If this node is not the local multiplayer authority, disable inputs and remove camera
 		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
@@ -49,7 +53,7 @@ public partial class PlayerController : CharacterBody3D
 		if (_animationPlayer != null)
 		{
 			string[] allAnims = _animationPlayer.GetAnimationList();
-			GD.Print("Available Animations: " + string.Join(", ", allAnims));
+			// GD.Print("Available Animations: " + string.Join(", ", allAnims));
 			
 			// Map animations using fuzzy matching
 			foreach (string anim in allAnims)
@@ -116,16 +120,11 @@ public partial class PlayerController : CharacterBody3D
 		if (!PauseMenu.IsOpen)
 		{
 			// Jump
-			if (Input.IsKeyPressed(Key.Space) && IsOnFloor())
+			if (Input.IsActionPressed("move_jump") && IsOnFloor())
 				velocity.Y = JumpVelocity;
 
 			// WASD direction
-			Vector2 inputDir = Vector2.Zero;
-			if (Input.IsKeyPressed(Key.W)) inputDir.Y -= 1;
-			if (Input.IsKeyPressed(Key.S)) inputDir.Y += 1;
-			if (Input.IsKeyPressed(Key.A)) inputDir.X -= 1;
-			if (Input.IsKeyPressed(Key.D)) inputDir.X += 1;
-			inputDir = inputDir.Normalized();
+			Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_backward");
 
 			if (_cameraManager != null)
 			{
@@ -141,7 +140,7 @@ public partial class PlayerController : CharacterBody3D
 				direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized();
 			}
 
-			isRunning    = Input.IsKeyPressed(Key.Shift);
+			isRunning    = Input.IsActionPressed("move_sprint");
 			currentSpeed = isRunning ? RunSpeed : WalkSpeed;
 		}
 

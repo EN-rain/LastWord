@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://customlobby"]
+
+[ext_resource type="Script" path="res://Scripts/UI/CustomLobby.cs" id="1_customlobby"]
+
+[node name="CustomLobby" type="CanvasLayer"]
+script = ExtResource("1_customlobby")
+RoomCodeLabelPath = NodePath("Root/VBox/LabelRoomCode")
+PlayerCountLabelPath = NodePath("Root/VBox/LabelPlayerCount")
+PlayerListPath = NodePath("Root/VBox/PlayerList")
+ChatLogPath = NodePath("Root/VBox/ChatPanel/ChatLog")
+ChatInputPath = NodePath("Root/VBox/ChatPanel/HBox/ChatInput")
+SendBtnPath = NodePath("Root/VBox/ChatPanel/HBox/BtnSend")
+ReadyBtnPath = NodePath("Root/VBox/HBoxButtons/BtnReady")
+StartRunBtnPath = NodePath("Root/VBox/HBoxButtons/BtnStartRun")
+CancelBtnPath = NodePath("Root/VBox/HBoxButtons/BtnCancel")
+OrientationLabelPath = NodePath("Root/VBox/LabelOrientation")
+ConsentLabelPath = NodePath("Root/VBox/LabelConsent")
+PrivacyLabelPath = NodePath("Root/VBox/LabelPrivacy")
+
+[node name="Root" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Root"]
+layout_mode = 2
+
+[node name="LabelTitle" type="Label" parent="Root/VBox"]
+text = "CUSTOM GAME LOBBY"
+
+[node name="LabelRoomCode" type="Label" parent="Root/VBox"]
+text = "ROOM CODE: ..."
+
+[node name="LabelPlayerCount" type="Label" parent="Root/VBox"]
+text = "PLAYERS: 0 / 4"
+
+[node name="PlayerList" type="ItemList" parent="Root/VBox"]
+custom_minimum_size = Vector2(0, 120)
+
+[node name="LabelOrientation" type="Label" parent="Root/VBox"]
+text = ""
+visible = false
+
+[node name="LabelConsent" type="Label" parent="Root/VBox"]
+text = ""
+autowrap_mode = 3
+
+[node name="LabelPrivacy" type="Label" parent="Root/VBox"]
+text = ""
+autowrap_mode = 3
+
+[node name="ChatPanel" type="VBoxContainer" parent="Root/VBox"]
+
+[node name="ChatLog" type="RichTextLabel" parent="Root/VBox/ChatPanel"]
+custom_minimum_size = Vector2(0, 100)
+bbcode_enabled = true
+text = "[b]System:[/b] Welcome to the custom lobby."
+
+[node name="HBox" type="HBoxContainer" parent="Root/VBox/ChatPanel"]
+
+[node name="ChatInput" type="LineEdit" parent="Root/VBox/ChatPanel/HBox"]
+size_flags_horizontal = 3
+placeholder_text = "Type a message..."
+
+[node name="BtnSend" type="Button" parent="Root/VBox/ChatPanel/HBox"]
+text = "SEND"
+
+[node name="HSeparator" type="HSeparator" parent="Root/VBox"]
+
+[node name="HBoxButtons" type="HBoxContainer" parent="Root/VBox"]
+
+[node name="BtnCancel" type="Button" parent="Root/VBox/HBoxButtons"]
+text = "CANCEL"
+
+[node name="BtnReady" type="Button" parent="Root/VBox/HBoxButtons"]
+text = "READY"
+
+[node name="BtnStartRun" type="Button" parent="Root/VBox/HBoxButtons"]
+text = "START RUN"
+disabled = true
+visible = false
+
+[connection signal="pressed" from="Root/VBox/HBoxButtons/BtnCancel" to="." method="OnCancelPressed"]
+[connection signal="pressed" from="Root/VBox/HBoxButtons/BtnReady" to="." method="OnReadyPressed"]
+[connection signal="pressed" from="Root/VBox/HBoxButtons/BtnStartRun" to="." method="OnStartRunPressed"]
+[connection signal="pressed" from="Root/VBox/ChatPanel/HBox/BtnSend" to="." method="OnSendPressed"]
+[connection signal="text_submitted" from="Root/VBox/ChatPanel/HBox/ChatInput" to="." method="OnSendPressed"]

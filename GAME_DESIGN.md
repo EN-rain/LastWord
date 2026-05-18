@@ -1,4 +1,4 @@
-﻿# Last Word â€” Game Design Document
+# Last Word â€” Game Design Document
 ### Version 2.5 Engine: Godot 4.x (.NET/C#)
 
 
@@ -894,11 +894,10 @@ The HUD is minimal. Horror is undermined by excessive UI. Players should feel li
 First-time setup activates automatically on first launch, before the main menu. It covers the following steps in sequence:
 
 1. **Region selection:** Player selects their preferred region from the list in Â§18.5. Used for matchmaking and Relay server routing. Can be changed later in Settings > General.
-2. **Role preference:** Player selects a preferred role (or "No preference"). Used as a best-effort signal in Quick Join matchmaking. Can be changed in Settings > General or the lobby screen.
-3. **Mic calibration:** The full calibration flow from Â§3.2. Mandatory on first launch, cannot be skipped here. Can be re-run later from Settings > Audio.
-4. **Accessibility options:** Player is shown three toggles â€” Proximity Pulse, Subtitles, and Text Broadcaster mode â€” with brief descriptions. All off by default. Can be changed at any time in Settings > Accessibility.
-5. **Keybind review:** Player is shown the default controls table (Â§3.7 "All Keys at a Glance") with a prompt: *"All keys are remappable in Settings > Controls."* No action required; this is informational.
-6. **Privacy notice acknowledgement:** The voice data privacy statement (Â§13.3) is shown in full with an explicit "I understand" confirmation button. Players cannot proceed without acknowledging. This acknowledgement is logged locally and displayed as "acknowledged" in Settings > Privacy. **In Early Access, the privacy notice should clearly state: "Voice recording is not active in this version. This notice describes a planned post-launch feature. Your acknowledgement is recorded for when the feature activates."**
+2. **Mic calibration:** The full calibration flow from Â§3.2. Mandatory on first launch, cannot be skipped here. Can be re-run later from Settings > Audio.
+3. **Accessibility options:** Player is shown three toggles â€” Proximity Pulse, Subtitles, and Text Broadcaster mode â€” with brief descriptions. All off by default. Can be changed at any time in Settings > Accessibility.
+4. **Keybind review:** Player is shown the default controls table (Â§3.7 "All Keys at a Glance") with a prompt: *"All keys are remappable in Settings > Controls."* No action required; this is informational.
+5. **Privacy notice acknowledgement:** The voice data privacy statement (Â§13.3) is shown in full with an explicit "I understand" confirmation button. Players cannot proceed without acknowledging. This acknowledgement is logged locally and displayed as "acknowledged" in Settings > Privacy. **In Early Access, the privacy notice should clearly state: "Voice recording is not active in this version. This notice describes a planned post-launch feature. Your acknowledgement is recorded for when the feature activates."**
 
 After setup completes, the player proceeds to the main menu. Returning players who have completed setup skip directly to the main menu. All setup values are stored in the local save file (Â§14.5).
 
@@ -906,7 +905,6 @@ After setup completes, the player proceeds to the main menu. Returning players w
 
 **Settings > General:**
 - **Region selection** â€” player's preferred region for matchmaking and Relay routing (changeable post-setup)
-- **Role preference** â€” preferred role for Quick Join matchmaking, or "No preference" (changeable post-setup)
 - **Language** â€” game language selection (TBD at launch â€” English only for Early Access)
 - **Display mode** â€” fullscreen / windowed / borderless (standard Godot options)
 - **VSync** â€” on / off
@@ -1376,8 +1374,6 @@ The matchmaking feature is listed as an MVP requirement (Â§16.1) because its a
 Players in an active run are visible as "In Run" but cannot be joined mid-session.
 
 **Quick join:** A single button matches the player to the most populated available lobby in their preferred region. If no lobby exists in their region, it expands to adjacent regions. If no lobby exists at all, the player becomes host and a new public lobby is created. **Region adjacency for Quick Join fallback:** NA East â†’ NA West â†’ EU West â†’ EU Central (and reverse). SEA â†’ OCE â†’ NA West (and reverse). No direct adjacency between EU and SEA/OCE. If no lobby exists in any adjacent region, Quick Join creates a new public lobby in the player's home region rather than expanding to non-adjacent regions. Cross-region private sessions remain possible via session code regardless of adjacency.
-
-**Role preferences:** Players can set a preferred role in their profile. Quick Join attempts to place them in a lobby where that role is still available â€” best-effort, not guaranteed.
 
 ### 18.3 Session Structure for Random Lobbies
 

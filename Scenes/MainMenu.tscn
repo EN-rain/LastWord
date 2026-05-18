@@ -1,102 +1,118 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://ci0rr0xu3dqpm"]
 
-[ext_resource type="Script" path="res://Scripts/UI/MainMenu.cs" id="1_mainmenu"]
+[ext_resource type="Script" uid="uid://d3yimcwaseq4" path="res://Scripts/UI/MainMenu.cs" id="1_mainmenu"]
+[ext_resource type="PackedScene" uid="uid://b82ukaxaseq4a" path="res://Scenes/SettingsMenu.tscn" id="2_settings"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_glass"]
-bg_color = Color(0.0627451, 0.0627451, 0.0784314, 0.82)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0.08)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
-shadow_color = Color(0, 0, 0, 0.5)
-shadow_size = 20
-shadow_offset = Vector2(0, 8)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
-bg_color = Color(0.04, 0.04, 0.05, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0.05)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-expand_margin_left = 6
-expand_margin_right = 6
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
-bg_color = Color(0.12, 0.12, 0.15, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 1, 1, 0.04)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_hover"]
-bg_color = Color(0.16, 0.16, 0.2, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.2, 0.85, 0.2, 0.4)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
-bg_color = Color(0.08, 0.08, 0.1, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.9, 0.2, 0.2, 0.6)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[node name="MainMenu" type="CanvasLayer"]
+[node name="MainMenu" type="CanvasLayer" unique_id=382916097]
 script = ExtResource("1_mainmenu")
-PlayRandomBtnPath = NodePath("Root/Card/VBox/BtnPlayRandom")
-CreateCustomBtnPath = NodePath("Root/Card/VBox/BtnCreateCustom")
-JoinRoomBtnPath = NodePath("Root/Card/VBox/JoinRow/BtnJoinRoom")
-QuitBtnPath = NodePath("Root/Card/VBox/BtnQuit")
-AddressInputPath = NodePath("Root/Card/VBox/JoinRow/AddressInput")
-NameInputPath = NodePath("Root/Card/VBox/NameInput")
-StatusLabelPath = NodePath("Root/Card/VBox/StatusLabel")
-CodeInputPath = NodePath("Root/Card/VBox/CodeRow/CodeInput")
-JoinByCodeBtnPath = NodePath("Root/Card/VBox/CodeRow/BtnJoinByCode")
+PlayRandomBtnPath = NodePath("Root/VBoxContainer/BtnPlayRandom")
+CreateCustomBtnPath = NodePath("Root/VBoxContainer/BtnCreateCustom")
+QuitBtnPath = NodePath("Root/VBoxContainer/BtnQuit")
+NameInputPath = NodePath("Root/VBoxContainer/NameInput")
+StatusLabelPath = NodePath("Root/StatusLabel")
+CodeInputPath = NodePath("Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/CodeInput")
+JoinByCodeBtnPath = NodePath("Root/VBoxContainer/BtnJoinLobby")
+SettingsBtnPath = NodePath("Root/VBoxContainer/BtnSettings")
+GDPRPanelPath = NodePath("Root/GDPRPanel")
+GDPRAcceptBtnPath = NodePath("Root/GDPRPanel/VBox/BtnAccept")
+SettingsMenuPath = NodePath("SettingsMenu")
+JoinCodePopupPath = NodePath("Root/JoinCodePopup")
+ConfirmJoinBtnPath = NodePath("Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/HBox/BtnJoin")
+CancelJoinBtnPath = NodePath("Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/HBox/BtnCancel")
+GDPRNoticeTextLabelPath = NodePath("Root/GDPRPanel/VBox/Text")
 
-[node name="Root" type="Control" parent="."]
+[node name="Root" type="Control" parent="." unique_id=629861889]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+metadata/_edit_use_anchors_ = true
 
-[node name="Background" type="ColorRect" parent="Root"]
+[node name="Title" type="Label" parent="Root" unique_id=144821396]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -543.0
+offset_bottom = 116.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 44
+text = "LAST WORD"
+horizontal_alignment = 1
+vertical_alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Root" unique_id=1895102246]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.045138888
+anchor_top = 0.47299382
+anchor_right = 0.045138888
+anchor_bottom = 0.52700615
+offset_top = -250.0
+offset_right = 320.0
+offset_bottom = 250.0
+grow_vertical = 2
+theme_override_constants/separation = 8
+metadata/_edit_use_anchors_ = true
+
+[node name="NameLabel2" type="Label" parent="Root/VBoxContainer" unique_id=1595706661]
+layout_mode = 2
+text = "Character Name:"
+
+[node name="NameInput" type="LineEdit" parent="Root/VBoxContainer" unique_id=227579335]
+layout_mode = 2
+placeholder_text = "Enter profile name..."
+
+[node name="HSeparator" type="HSeparator" parent="Root/VBoxContainer" unique_id=940068872]
+layout_mode = 2
+
+[node name="BtnPlayRandom" type="Button" parent="Root/VBoxContainer" unique_id=1258925898]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "PLAY RANDOM (MATCHMAKING)"
+alignment = 0
+
+[node name="BtnCreateCustom" type="Button" parent="Root/VBoxContainer" unique_id=819665258]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "CREATE CUSTOM ROOM"
+alignment = 0
+
+[node name="BtnJoinLobby" type="Button" parent="Root/VBoxContainer" unique_id=1550153089]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "JOIN LOBBY BY CODE"
+alignment = 0
+
+[node name="BtnSettings" type="Button" parent="Root/VBoxContainer" unique_id=294257878]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "AUDIO & MIC SETTINGS"
+alignment = 0
+
+[node name="BtnQuit" type="Button" parent="Root/VBoxContainer" unique_id=1460972695]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "QUIT"
+alignment = 0
+
+[node name="StatusLabel" type="Label" parent="Root" unique_id=1450216184]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -60.0
 grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.0352941, 0.0352941, 0.0470588, 1)
+grow_vertical = 0
+text = "READY"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="BackgroundVignette" type="ColorRect" parent="Root"]
+[node name="GDPRPanel" type="ColorRect" parent="Root" unique_id=231124860]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -104,173 +120,111 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.4)
+color = Color(0, 0, 0, 0.95)
 
-[node name="Card" type="PanelContainer" parent="Root"]
+[node name="VBox" type="VBoxContainer" parent="Root/GDPRPanel" unique_id=386030095]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -290.0
-offset_right = 220.0
-offset_bottom = 290.0
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_glass")
+theme_override_constants/separation = 20
 
-[node name="VBox" type="VBoxContainer" parent="Root/Card"]
+[node name="Title" type="Label" parent="Root/GDPRPanel/VBox" unique_id=1258880975]
 layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="Header" type="VBoxContainer" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Spacer" type="Control" parent="Root/Card/VBox/Header"]
-custom_minimum_size = Vector2(0, 10)
-layout_mode = 2
-
-[node name="Title" type="Label" parent="Root/Card/VBox/Header"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 38
-text = "L A S T   W O R D"
+text = "PRIVACY & AUDIO NOTICE"
 horizontal_alignment = 1
 
-[node name="SubTitle" type="Label" parent="Root/Card/VBox/Header"]
+[node name="Text" type="Label" parent="Root/GDPRPanel/VBox" unique_id=314301036]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.5, 0.6, 1)
-theme_override_font_sizes/font_size = 11
-text = "COOPERATIVE VOID HORROR"
-horizontal_alignment = 1
+text = "EARLY ACCESS NOTICE: Voice recording is not active in this version. This notice describes a planned post-launch feature. Your acknowledgement is recorded for when the feature activates.
 
-[node name="Separator" type="HSeparator" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
+This game requires a working microphone. Your voice audio is processed locally to detect amplitude (volume) and drive core gameplay mechanics. No voice data is transmitted externally or saved to disk.
 
-[node name="NameLabel" type="Label" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "PLAYER IDENTITY Profile Name"
+By continuing, you consent to local microphone processing."
+autowrap_mode = 2
 
-[node name="NameInput" type="LineEdit" parent="Root/Card/VBox"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
-theme_override_colors/placeholder_color = Color(0.4, 0.4, 0.5, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_input")
-placeholder_text = "Enter Survivor Name..."
-max_length = 24
-
-[node name="Separator0" type="HSeparator" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="BtnPlayRandom" type="Button" parent="Root/Card/VBox"]
+[node name="BtnAccept" type="Button" parent="Root/GDPRPanel/VBox" unique_id=2003998625]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 16
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-text = "⚡  PLAY RANDOM (MATCHMAKING)"
+text = "I AGREE"
 
-[node name="BtnCreateCustom" type="Button" parent="Root/Card/VBox"]
-custom_minimum_size = Vector2(0, 42)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-text = "🛠️  CREATE CUSTOM ROOM"
+[node name="JoinCodePopup" type="ColorRect" parent="Root" unique_id=231124861]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.85)
 
-[node name="Separator1" type="HSeparator" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
+[node name="PanelContainer" type="PanelContainer" parent="Root/JoinCodePopup" unique_id=1152505938]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="JoinRow" type="HBoxContainer" parent="Root/Card/VBox"]
+[node name="MarginContainer" type="MarginContainer" parent="Root/JoinCodePopup/PanelContainer" unique_id=1572502487]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
 
-[node name="AddressInput" type="LineEdit" parent="Root/Card/VBox/JoinRow"]
-custom_minimum_size = Vector2(0, 36)
+[node name="VBox" type="VBoxContainer" parent="Root/JoinCodePopup/PanelContainer/MarginContainer" unique_id=1133505093]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
-theme_override_colors/placeholder_color = Color(0.4, 0.4, 0.5, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_input")
-text = "127.0.0.1"
-placeholder_text = "Server IP / Address..."
+theme_override_constants/separation = 15
 
-[node name="BtnJoinRoom" type="Button" parent="Root/Card/VBox/JoinRow"]
-custom_minimum_size = Vector2(120, 36)
+[node name="Title" type="Label" parent="Root/JoinCodePopup/PanelContainer/MarginContainer/VBox" unique_id=153212943]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_font_sizes/font_size = 13
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-text = "🔌  JOIN ROOM"
-
-[node name="Separator2" type="HSeparator" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="CodeRow" type="HBoxContainer" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="CodeInput" type="LineEdit" parent="Root/Card/VBox/CodeRow"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
-theme_override_colors/placeholder_color = Color(0.4, 0.4, 0.5, 1)
-theme_override_styles/normal = SubResource("StyleBoxFlat_input")
-placeholder_text = "Enter Room Code (e.g. Z8UFLP)..."
-max_length = 12
-
-[node name="BtnJoinByCode" type="Button" parent="Root/Card/VBox/CodeRow"]
-custom_minimum_size = Vector2(120, 36)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
-theme_override_font_sizes/font_size = 13
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-text = "🔑  JOIN BY CODE"
-
-[node name="Separator3" type="HSeparator" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="BtnQuit" type="Button" parent="Root/Card/VBox"]
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
-text = "✕  QUIT TO DESKTOP"
-
-[node name="Separator3" type="HSeparator" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="StatusLabel" type="Label" parent="Root/Card/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.85f, 0.85f, 0.85f, 1)
-theme_override_font_sizes/font_size = 12
-text = "READY TO ENTER THE ESTEEMED ESTATE..."
+theme_override_font_sizes/font_size = 18
+text = "ENTER ROOM CODE TO JOIN"
 horizontal_alignment = 1
 
-[node name="BottomSpacer" type="Control" parent="Root/Card/VBox"]
-custom_minimum_size = Vector2(0, 4)
+[node name="CodeInput" type="LineEdit" parent="Root/JoinCodePopup/PanelContainer/MarginContainer/VBox" unique_id=1154084031]
 layout_mode = 2
+placeholder_text = "Enter Code..."
+alignment = 1
+max_length = 12
+
+[node name="HBox" type="HBoxContainer" parent="Root/JoinCodePopup/PanelContainer/MarginContainer/VBox" unique_id=1032502482]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="BtnCancel" type="Button" parent="Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/HBox" unique_id=2089458744]
+custom_minimum_size = Vector2(100, 36)
+layout_mode = 2
+text = "CANCEL"
+
+[node name="BtnJoin" type="Button" parent="Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/HBox" unique_id=1003217356]
+custom_minimum_size = Vector2(100, 36)
+layout_mode = 2
+text = "JOIN"
+
+[node name="SettingsMenu" parent="." unique_id=368719866 instance=ExtResource("2_settings")]
+visible = false
+
+[connection signal="pressed" from="Root/VBoxContainer/BtnPlayRandom" to="." method="OnPlayRandomPressed"]
+[connection signal="pressed" from="Root/VBoxContainer/BtnCreateCustom" to="." method="OnCustomRoomPressed"]
+[connection signal="pressed" from="Root/VBoxContainer/BtnJoinLobby" to="." method="OnJoinByCodePressed"]
+[connection signal="pressed" from="Root/VBoxContainer/BtnSettings" to="." method="OnSettingsPressed"]
+[connection signal="pressed" from="Root/VBoxContainer/BtnQuit" to="." method="OnQuitPressed"]
+[connection signal="pressed" from="Root/GDPRPanel/VBox/BtnAccept" to="." method="OnGDPRAccepted"]

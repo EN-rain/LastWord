@@ -1,10 +1,17 @@
-[gd_scene format=3 uid="uid://dblixul2w7k1a"]
+[gd_scene load_steps=3 format=3 uid="uid://dblixul2w7k1a"]
 
 [ext_resource type="Script" uid="uid://dm3efnuc54nbu" path="res://Scripts/UI/PauseMenu.cs" id="1_pausemenu"]
+[ext_resource type="PackedScene" uid="uid://b82ukaxaseq4a" path="res://Scenes/SettingsMenu.tscn" id="2_settings"]
 
 [node name="PauseMenu" type="CanvasLayer" groups=["PauseMenu"]]
 process_mode = 3
 script = ExtResource("1_pausemenu")
+OverlayPath = NodePath("Overlay")
+MenuPanelPath = NodePath("MenuPanel")
+ResumeButtonPath = NodePath("MenuPanel/VBox/MarginButtons/ButtonContainer/ResumeButton")
+SettingsButtonPath = NodePath("MenuPanel/VBox/MarginButtons/ButtonContainer/SettingsButton")
+QuitButtonPath = NodePath("MenuPanel/VBox/MarginButtons/ButtonContainer/QuitButton")
+SettingsMenuPath = NodePath("SettingsMenu")
 
 [node name="Overlay" type="ColorRect" parent="." unique_id=2079246451]
 anchors_preset = 15
@@ -13,245 +20,66 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0.0, 0.0, 0.0, 0.55)
 
 [node name="MenuPanel" type="PanelContainer" parent="." unique_id=1443341828]
+custom_minimum_size = Vector2(320, 220)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -283.0
-offset_right = 220.0
-offset_bottom = 287.0
+offset_left = -160.0
+offset_top = -110.0
+offset_right = 160.0
+offset_bottom = 110.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="MenuPanel" unique_id=1229661927]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="MenuPanel/VBox" unique_id=338409062]
+[node name="Margin" type="MarginContainer" parent="MenuPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 24
-text = "⚙  SETTINGS"
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 4
+
+[node name="Title" type="Label" parent="MenuPanel/VBox/Margin" unique_id=338409062]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "GAME PAUSED"
 horizontal_alignment = 1
 
 [node name="Separator0" type="HSeparator" parent="MenuPanel/VBox" unique_id=411478227]
 layout_mode = 2
 
-[node name="AudioSection" type="VBoxContainer" parent="MenuPanel/VBox" unique_id=234935106]
+[node name="MarginButtons" type="MarginContainer" parent="MenuPanel/VBox"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
 
-[node name="AudioLabel" type="Label" parent="MenuPanel/VBox/AudioSection" unique_id=1858698973]
+[node name="ButtonContainer" type="VBoxContainer" parent="MenuPanel/VBox/MarginButtons"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 13
-text = "AUDIO"
+theme_override_constants/separation = 10
 
-[node name="MasterRow" type="HBoxContainer" parent="MenuPanel/VBox/AudioSection" unique_id=489022275]
+[node name="ResumeButton" type="Button" parent="MenuPanel/VBox/MarginButtons/ButtonContainer" unique_id=1934285540]
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
+text = "Resume Game"
 
-[node name="MasterLabel" type="Label" parent="MenuPanel/VBox/AudioSection/MasterRow" unique_id=685190793]
-custom_minimum_size = Vector2(130, 0)
+[node name="SettingsButton" type="Button" parent="MenuPanel/VBox/MarginButtons/ButtonContainer"]
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-text = "Master Volume"
-vertical_alignment = 1
+text = "Open Settings"
 
-[node name="MasterSlider" type="HSlider" parent="MenuPanel/VBox/AudioSection/MasterRow" unique_id=1580449646]
+[node name="QuitButton" type="Button" parent="MenuPanel/VBox/MarginButtons/ButtonContainer" unique_id=781925727]
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-size_flags_horizontal = 3
-value = 100.0
+text = "Quit To Desktop"
 
-[node name="MasterValueLabel" type="Label" parent="MenuPanel/VBox/AudioSection/MasterRow" unique_id=1421224737]
-custom_minimum_size = Vector2(48, 0)
-layout_mode = 2
-text = "100%"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="SFXRow" type="HBoxContainer" parent="MenuPanel/VBox/AudioSection" unique_id=2067819830]
-layout_mode = 2
-
-[node name="SFXLabel" type="Label" parent="MenuPanel/VBox/AudioSection/SFXRow" unique_id=593046330]
-custom_minimum_size = Vector2(130, 0)
-layout_mode = 2
-text = "SFX Volume"
-vertical_alignment = 1
-
-[node name="SFXSlider" type="HSlider" parent="MenuPanel/VBox/AudioSection/SFXRow" unique_id=1834913349]
-layout_mode = 2
-size_flags_horizontal = 3
-value = 80.0
-
-[node name="SFXValueLabel" type="Label" parent="MenuPanel/VBox/AudioSection/SFXRow" unique_id=143568]
-custom_minimum_size = Vector2(48, 0)
-layout_mode = 2
-text = "80%"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Separator1" type="HSeparator" parent="MenuPanel/VBox" unique_id=221257303]
-layout_mode = 2
-
-[node name="ControlsSection" type="VBoxContainer" parent="MenuPanel/VBox" unique_id=1959714849]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ControlsLabel" type="Label" parent="MenuPanel/VBox/ControlsSection" unique_id=1257635389]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 13
-text = "CONTROLS"
-
-[node name="MouseRow" type="HBoxContainer" parent="MenuPanel/VBox/ControlsSection" unique_id=721942529]
-layout_mode = 2
-
-[node name="MouseLabel" type="Label" parent="MenuPanel/VBox/ControlsSection/MouseRow" unique_id=2004884202]
-custom_minimum_size = Vector2(130, 0)
-layout_mode = 2
-text = "Mouse Sensitivity"
-vertical_alignment = 1
-
-[node name="MouseSlider" type="HSlider" parent="MenuPanel/VBox/ControlsSection/MouseRow" unique_id=14193027]
-layout_mode = 2
-size_flags_horizontal = 3
-min_value = 0.05
-max_value = 1.0
-step = 0.05
-value = 0.2
-
-[node name="MouseValueLabel" type="Label" parent="MenuPanel/VBox/ControlsSection/MouseRow" unique_id=1241012032]
-custom_minimum_size = Vector2(48, 0)
-layout_mode = 2
-text = "0.2"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="Separator2" type="HSeparator" parent="MenuPanel/VBox" unique_id=564549311]
-layout_mode = 2
-
-[node name="DevicesSection" type="VBoxContainer" parent="MenuPanel/VBox" unique_id=1214713054]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="DevicesLabel" type="Label" parent="MenuPanel/VBox/DevicesSection" unique_id=1914586774]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 13
-text = "DEVICES"
-
-[node name="OutputRow" type="HBoxContainer" parent="MenuPanel/VBox/DevicesSection" unique_id=1750723183]
-layout_mode = 2
-
-[node name="OutputLabel" type="Label" parent="MenuPanel/VBox/DevicesSection/OutputRow" unique_id=1169641046]
-custom_minimum_size = Vector2(130, 0)
-layout_mode = 2
-text = "Sound Output"
-vertical_alignment = 1
-
-[node name="OutputDevice" type="OptionButton" parent="MenuPanel/VBox/DevicesSection/OutputRow" unique_id=501160489]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="MicRow" type="HBoxContainer" parent="MenuPanel/VBox/DevicesSection" unique_id=1046519471]
-layout_mode = 2
-
-[node name="MicLabel" type="Label" parent="MenuPanel/VBox/DevicesSection/MicRow" unique_id=2088517883]
-custom_minimum_size = Vector2(130, 0)
-layout_mode = 2
-text = "Microphone Input"
-vertical_alignment = 1
-
-[node name="MicDevice" type="OptionButton" parent="MenuPanel/VBox/DevicesSection/MicRow" unique_id=1449568851]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="MonitorRow" type="HBoxContainer" parent="MenuPanel/VBox/DevicesSection" unique_id=1046519472]
-layout_mode = 2
-
-[node name="MonitorLabel" type="Label" parent="MenuPanel/VBox/DevicesSection/MonitorRow" unique_id=2088517884]
-custom_minimum_size = Vector2(130, 0)
-layout_mode = 2
-text = "Test Microphone"
-vertical_alignment = 1
-
-[node name="MicTestMeter" type="ProgressBar" parent="MenuPanel/VBox/DevicesSection/MonitorRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-max_value = 100.0
-show_percentage = false
-
-[node name="MicMonitorToggle" type="CheckButton" parent="MenuPanel/VBox/DevicesSection/MonitorRow" unique_id=1449568852]
-layout_mode = 2
-size_flags_horizontal = 8
-
-[node name="CalibrationRow" type="HBoxContainer" parent="MenuPanel/VBox/DevicesSection"]
-layout_mode = 2
-
-[node name="CalibrateButton" type="Button" parent="MenuPanel/VBox/DevicesSection/CalibrationRow"]
-custom_minimum_size = Vector2(100, 0)
-layout_mode = 2
-text = "CALIBRATE"
-
-[node name="CalibrationProgress" type="ProgressBar" parent="MenuPanel/VBox/DevicesSection/CalibrationRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-max_value = 100.0
-show_percentage = false
-
-[node name="CalibrationStatus" type="Label" parent="MenuPanel/VBox/DevicesSection/CalibrationRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-text = "READY"
-horizontal_alignment = 1
-
-[node name="SensitivityRow" type="HBoxContainer" parent="MenuPanel/VBox/DevicesSection"]
-layout_mode = 2
-
-[node name="SenseLabel" type="Label" parent="MenuPanel/VBox/DevicesSection/SensitivityRow"]
-custom_minimum_size = Vector2(130, 0)
-layout_mode = 2
-text = "Sensitivity"
-
-[node name="SensitivitySlider" type="HSlider" parent="MenuPanel/VBox/DevicesSection/SensitivityRow"]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 4
-min_value = 0.001
-max_value = 0.5
-step = 0.001
-value = 0.05
-
-[node name="ResetRow" type="HBoxContainer" parent="MenuPanel/VBox/DevicesSection"]
-layout_mode = 2
-
-[node name="TroubleshootLabel" type="Label" parent="MenuPanel/VBox/DevicesSection/ResetRow"]
-custom_minimum_size = Vector2(130, 0)
-layout_mode = 2
-text = "Troubleshoot"
-
-[node name="ResetButton" type="Button" parent="MenuPanel/VBox/DevicesSection/ResetRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Fix / Reset Microphone"
-
-[node name="Separator3" type="HSeparator" parent="MenuPanel/VBox" unique_id=1701184831]
-layout_mode = 2
-
-[node name="ResumeButton" type="Button" parent="MenuPanel/VBox" unique_id=1934285540]
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 2
-text = "▶  Resume"
-
-[node name="QuitButton" type="Button" parent="MenuPanel/VBox" unique_id=781925727]
-custom_minimum_size = Vector2(0, 40)
-layout_mode = 2
-text = "✕  Quit to Desktop"
+[node name="SettingsMenu" parent="." instance=ExtResource("2_settings")]
+visible = false

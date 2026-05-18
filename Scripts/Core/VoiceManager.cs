@@ -22,6 +22,7 @@ public partial class VoiceManager : Node
     [Signal] public delegate void CalibrationFinishedEventHandler(float newBaseline);
 
     [Export] public string MicBusName = "Microphone";
+    [Export] public string MicSendBusName = "Master";
     [Export] public float AnalysisInterval = 0.05f;
 
     private int _micBusIndex = -1;
@@ -31,14 +32,15 @@ public partial class VoiceManager : Node
     private VoiceTier _currentTier = VoiceTier.Silent;
     private float _timer = 0f;
     private float _smoothedRms = 0f;
-    private const float SmoothingFactor = 0.2f; // 0.0 to 1.0 (lower = smoother/slower)
+    [Export] public float SmoothingFactor = 0.2f; // 0.0 to 1.0 (lower = smoother/slower)
 
     // Calibration
     public float BaselineAmplitude { get; set; } = 0.05f; // Default baseline
+    public bool IsGdprAccepted { get; private set; } = false;
     public bool IsCalibrating { get; private set; } = false;
     private float _calibrationTimer = 0f;
     private System.Collections.Generic.List<float> _calibrationSamples = new();
-    private const float CalibrationDuration = 3.0f;
+    [Export] public float CalibrationDuration = 3.0f;
 
     // Token System
     private Node3D _tokenHolder = null;
@@ -53,7 +55,6 @@ public partial class VoiceManager : Node
 
     public override async void _Ready()
     {
-        GD.Print("VoiceManager: _Ready starting...");
         LoadBaseline();
 
         // Wait a few frames for the AudioServer and Windows drivers to stabilize
@@ -61,7 +62,6 @@ public partial class VoiceManager : Node
         
         SetupMicBus();
         SetupMicInput();
-        GD.Print("VoiceManager: _Ready finished.");
     }
 
     private void SetupMicBus()
@@ -70,11 +70,10 @@ public partial class VoiceManager : Node
 
         if (_micBusIndex == -1)
         {
-            GD.Print($"VoiceManager: Creating new bus '{MicBusName}'...");
             AudioServer.AddBus();
             _micBusIndex = AudioServer.BusCount - 1;
             AudioServer.SetBusName(_micBusIndex, MicBusName);
-            AudioServer.SetBusSend(_micBusIndex, "Master");
+            AudioServer.SetBusSend(_micBusIndex, MicSendBusName);
         }
         
         // Ensure volume is up and bus is 'technically' muted to prevent loopback
@@ -88,7 +87,6 @@ public partial class VoiceManager : Node
             if (AudioServer.GetBusEffect(_micBusIndex, i) is AudioEffectCapture existing)
             {
                 _captureEffect = existing;
-                GD.Print("VoiceManager: Found existing AudioEffectCapture.");
                 break;
             }
         }
@@ -101,16 +99,11 @@ public partial class VoiceManager : Node
             // The resource itself is the object we query — no separate instance needed
             int idx = AudioServer.GetBusEffectCount(_micBusIndex) - 1;
             _captureEffect = (AudioEffectCapture)AudioServer.GetBusEffect(_micBusIndex, idx);
-            GD.Print($"VoiceManager: Added AudioEffectCapture to bus '{MicBusName}'.");
         }
-
-        GD.Print($"VoiceManager: Bus '{MicBusName}' ready at index {_micBusIndex}.");
     }
 
     private void SetupMicInput()
     {
-        GD.Print("\n--- VoiceManager: Initializing Audio Input ---");
-        
         string[] inputDevices = AudioServer.GetInputDeviceList();
         
         // Validation: If the current device is missing, fallback to Default
@@ -126,13 +119,8 @@ public partial class VoiceManager : Node
 
         if (!deviceFound && AudioServer.InputDevice != "Default")
         {
-            GD.Print($"VoiceManager: Saved device '{AudioServer.InputDevice}' not found. Resetting to 'Default'.");
             AudioServer.InputDevice = "Default";
         }
-
-        GD.Print("Available Input Devices:");
-        foreach (var dev in inputDevices) GD.Print($"- {dev}");
-        GD.Print($"Current Active Device: {AudioServer.InputDevice}");
 
         try
         {
@@ -146,8 +134,6 @@ public partial class VoiceManager : Node
             _micInput.Bus = MicBusName;
             _micInput.Stream = new AudioStreamMicrophone();
             _micInput.Play();
-            
-            GD.Print("VoiceManager: MicStreamPlayer started successfully.");
         }
         catch (Exception e)
         {
@@ -160,8 +146,6 @@ public partial class VoiceManager : Node
     // ------------------------------------------------------------------ //
     public void RestartCapture()
     {
-        GD.Print("VoiceManager: Restarting microphone capture...");
-        
         if (_micInput != null)
         {
             _micInput.Stop();
@@ -173,7 +157,6 @@ public partial class VoiceManager : Node
         
         SetupMicBus();
         _currentTier = VoiceTier.Silent; // Force re-classification
-        GD.Print("VoiceManager: Capture restarted.");
     }
 
     // ------------------------------------------------------------------ //
@@ -181,6 +164,24 @@ public partial class VoiceManager : Node
     // ------------------------------------------------------------------ //
     public override void _Process(double delta)
     {
+        // Auto-assign token to server host or first spawned player if currently unassigned
+        if (Multiplayer.IsServer() && _tokenHolder == null)
+        {
+            Node3D firstPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
+            if (firstPlayer != null)
+            {
+                if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+                {
+                    Rpc(nameof(SyncTokenHolder), (long)Multiplayer.GetUniqueId());
+                }
+                else
+                {
+                    _tokenHolder = firstPlayer;
+                    EmitSignal(SignalName.TokenTransferred, _tokenHolder);
+                }
+            }
+        }
+
         _timer += (float)delta;
         if (_timer >= AnalysisInterval)
         {
@@ -189,19 +190,51 @@ public partial class VoiceManager : Node
             AnalyzeVoice(dt);
         }
     }
-
     public void StartCalibration()
     {
         IsCalibrating = true;
         _calibrationTimer = 0f;
         _calibrationSamples.Clear();
-        GD.Print("VoiceManager: Calibration started. Speak naturally...");
+    }
+
+    public void SetGdprAccepted(bool accepted)
+    {
+        IsGdprAccepted = accepted;
+
+        if (accepted)
+            return;
+
+        IsCalibrating = false;
+        _calibrationTimer = 0f;
+        _calibrationSamples.Clear();
+        _smoothedRms = 0f;
+        _tokenHolder = null;
+        _tokenHolderPeerId = 0;
+
+        if (_currentTier != VoiceTier.Silent)
+        {
+            _currentTier = VoiceTier.Silent;
+            EmitSignal(SignalName.TierChanged, (int)_currentTier);
+        }
+
+        EmitSignal(SignalName.VolumeUpdated, -80f);
+        EmitSignal(SignalName.TokenTransferred, (Node3D)null);
     }
 
     private void AnalyzeVoice(float delta)
     {
+        if (!IsGdprAccepted)
+        {
+            if (_currentTier != VoiceTier.Silent)
+            {
+                _currentTier = VoiceTier.Silent;
+                EmitSignal(SignalName.TierChanged, (int)_currentTier);
+            }
+            EmitSignal(SignalName.VolumeUpdated, -80f);
+            return;
+        }
+
         float db = -80f;
-        float currentRms = 0f;
 
         // --- Primary: read actual audio frames from the capture buffer ---
         float instantaneousRms = 0f;
@@ -253,7 +286,11 @@ public partial class VoiceManager : Node
             if (_currentTier >= VoiceTier.Whisper)
                 UpdateTokenHolder();
 
-            GD.Print($"VoiceManager: Tier → {_currentTier} ({db:F1} dB)");
+            BroadcastNoiseEvent((int)_currentTier);
+        }
+        else if (_currentTier >= VoiceTier.Normal)
+        {
+            BroadcastNoiseEvent((int)_currentTier);
         }
     }
 
@@ -271,10 +308,7 @@ public partial class VoiceManager : Node
             float sum = 0;
             foreach (float s in _calibrationSamples) sum += s;
             
-            // Set new baseline, ensuring it's not zero to avoid div by zero
             BaselineAmplitude = Mathf.Max(sum / Mathf.Max(_calibrationSamples.Count, 1), 0.001f);
-            
-            GD.Print($"VoiceManager: Calibration finished. New baseline: {BaselineAmplitude:F4}");
             EmitSignal(SignalName.CalibrationFinished, BaselineAmplitude);
         }
     }
@@ -287,14 +321,14 @@ public partial class VoiceManager : Node
         // We require a higher threshold to ENTER a tier than to STAY in it.
         // This prevents flickering between states.
         
-        float enterWhisper = 0.45f;
+        float enterWhisper = 0.35f;
         float exitWhisper = 0.30f;
         
-        float enterNormal = 1.10f;
-        float exitNormal = 0.90f;
+        float enterNormal = 1.00f;
+        float exitNormal = 0.95f;
         
-        float enterShouting = 2.20f;
-        float exitShouting = 1.80f;
+        float enterShouting = 2.00f;
+        float exitShouting = 1.90f;
 
         if (_currentTier == VoiceTier.Silent)
         {
@@ -329,7 +363,7 @@ public partial class VoiceManager : Node
             long myPeerId = Multiplayer.GetUniqueId();
             if (_tokenHolderPeerId != myPeerId)
             {
-                RpcId(1, nameof(RequestTokenTransfer), myPeerId);
+                RpcId(NetworkManager.ServerPeerId, nameof(RequestTokenTransfer), myPeerId);
             }
         }
         else
@@ -339,16 +373,29 @@ public partial class VoiceManager : Node
             {
                 _tokenHolder = localPlayer;
                 EmitSignal(SignalName.TokenTransferred, _tokenHolder);
-                GD.Print($"VoiceManager: Token → {localPlayer.Name}");
             }
         }
     }
 
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
-    private void RequestTokenTransfer(long peerId)
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    private void RequestTokenTransfer(long _ignoredPeerId)
     {
+        // Security: derive sender identity from transport layer, never from payload.
         if (!Multiplayer.IsServer()) return;
-        Rpc(nameof(SyncTokenHolder), peerId);
+        long trustedPeerId = Multiplayer.GetRemoteSenderId();
+
+        if (trustedPeerId == 0)
+        {
+            // Host is calling locally: resolve via group rather than peer-id name match.
+            Node3D hostPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
+            if (hostPlayer != null && _tokenHolder != hostPlayer)
+            {
+                Rpc(nameof(SyncTokenHolder), (long)Multiplayer.GetUniqueId());
+            }
+            return;
+        }
+
+        Rpc(nameof(SyncTokenHolder), trustedPeerId);
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
@@ -360,7 +407,6 @@ public partial class VoiceManager : Node
         {
             _tokenHolder = playerNode;
             EmitSignal(SignalName.TokenTransferred, _tokenHolder);
-            GD.Print($"VoiceManager: Token synced over network → {playerNode.Name} (Peer {peerId})");
         }
     }
 
@@ -371,26 +417,53 @@ public partial class VoiceManager : Node
             return GetTree().GetFirstNodeInGroup("Player") as Node3D;
         }
 
-        var playersContainer = GetTree().Root.GetNodeOrNull("Main/Players");
-        if (playersContainer != null)
-        {
-            var pNode = playersContainer.GetNodeOrNull<Node3D>(peerId.ToString());
-            if (pNode != null) return pNode;
-        }
-
+        // Search by group membership first (robust against scene-root naming changes)
         var playerNodes = GetTree().GetNodesInGroup("Player");
         foreach (Node node in playerNodes)
         {
-            if (node is Node3D node3D)
-            {
-                if (node3D.Name == peerId.ToString() || node3D.Name == "Player")
-                {
-                    return node3D;
-                }
-            }
+            if (node is Node3D node3D && node3D.Name == peerId.ToString())
+                return node3D;
         }
 
+        // Fallback: any Player node
         return GetTree().GetFirstNodeInGroup("Player") as Node3D;
+    }
+
+    private void BroadcastNoiseEvent(int tier)
+    {
+        Node3D localPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
+        if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+        {
+            long myId = Multiplayer.GetUniqueId();
+            localPlayer = FindPlayerNodeByPeerId(myId);
+        }
+
+        if (localPlayer != null)
+        {
+            if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+            {
+                RpcId(NetworkManager.ServerPeerId, nameof(ReportNoiseEvent), localPlayer.GlobalPosition, tier);
+            }
+            else
+            {
+                ReportNoiseEvent(localPlayer.GlobalPosition, tier);
+            }
+        }
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
+    private void ReportNoiseEvent(Vector3 playerPosition, int tier)
+    {
+        if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !Multiplayer.IsServer()) return;
+
+        var listeners = GetTree().GetNodesInGroup("Listener");
+        foreach (var node in listeners)
+        {
+            if (node is ListenerAI ai)
+            {
+                ai.HearNoise(playerPosition, tier);
+            }
+        }
     }
 
     private void LoadBaseline()
@@ -400,7 +473,7 @@ public partial class VoiceManager : Node
         {
             // Safety: Ensure we never load a baseline of 0
             BaselineAmplitude = Mathf.Max((float)cfg.GetValue("audio", "baseline", 0.05f), 0.001f);
-            GD.Print($"VoiceManager: Loaded baseline {BaselineAmplitude:F4}");
+            SetGdprAccepted((bool)cfg.GetValue("settings", "gdpr_accepted", false));
         }
     }
 }

@@ -1,0 +1,410 @@
+[gd_scene format=3 uid="uid://b82ukaxaseq4a"]
+
+[ext_resource type="Script" uid="uid://54kkbickcx15" path="res://Scripts/UI/SettingsMenu.cs" id="1_settings"]
+
+[node name="SettingsMenu" type="PanelContainer" unique_id=980673033]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+BtnGameControlsPath = NodePath("HBox/Sidebar/VBox/BtnGameControls")
+BtnAudioMicPath = NodePath("HBox/Sidebar/VBox/BtnAudioMic")
+BtnOtherOptionsPath = NodePath("HBox/Sidebar/VBox/BtnOtherOptions")
+BtnAccountPath = NodePath("HBox/Sidebar/VBox/BtnAccount")
+PanelGameControlsPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel")
+PanelAudioMicPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel")
+PanelOtherOptionsPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel")
+PanelAccountPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel")
+ProfileNameInputPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/ProfileNameRow/ProfileNameInput")
+BtnSaveProfileNamePath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/BtnSaveProfileName")
+ProfileRunsValueLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/RunsRow/ProfileRunsValueLabel")
+ProfileStatusLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/ProfileStatusLabel")
+MouseSensitivitySliderPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/MouseSensRow/MouseSensSlider")
+MouseSensValueLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/MouseSensRow/MouseSensValueLabel")
+KeybindGridContainerPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/KeybindGrid")
+AnalogWarningBoxPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/AnalogWarningBox")
+BtnResetControlsPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/BtnResetControls")
+MasterVolumeSliderPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MasterRow/MasterVolumeSlider")
+MasterVolumeValueLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MasterRow/MasterVolumeValueLabel")
+SFXVolumeSliderPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/SFXRow/SFXVolumeSlider")
+SFXVolumeValueLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/SFXRow/SFXVolumeValueLabel")
+VCVolumeSliderPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/VCRow/VCVolumeSlider")
+VCVolumeValueLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/VCRow/VCVolumeValueLabel")
+ListenerVolumeSliderPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/ListenerRow/ListenerVolumeSlider")
+ListenerVolumeValueLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/ListenerRow/ListenerVolumeValueLabel")
+ListenerWarningBoxPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/ListenerWarningBox")
+OutputDeviceOptionPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/DeviceRow/OutputDeviceOption")
+MicDeviceOptionPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MicRow/MicDeviceOption")
+MicMonitorTogglePath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MonitorRow/MicMonitorToggle")
+MicTestMeterPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MeterRow/MicTestMeter")
+ResetAudioButtonPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/BtnResetAudio")
+CalibrateButtonPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/CalibrateRow/CalibrateButton")
+CalibrationProgressBarPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/CalibrateRow/CalibrationProgressBar")
+CalibrationStatusLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/CalibrateRow/CalibrationStatusLabel")
+ToggleSubtitlesPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/SubtitlesRow/ToggleSubtitles")
+ToggleProximityPulsePath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/ProximityRow/ToggleProximityPulse")
+ToggleTextBroadcasterPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/BroadcasterRow/ToggleTextBroadcaster")
+TextBroadcasterWarningPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/BroadcasterWarning")
+PrivacyStatusLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/PrivacyStatusLabel")
+BtnViewPrivacyPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/BtnViewPrivacy")
+BtnRevokeConsentPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/BtnRevokeConsent")
+
+[node name="HBox" type="HBoxContainer" parent="." unique_id=1386540031]
+layout_mode = 2
+
+[node name="Sidebar" type="PanelContainer" parent="HBox" unique_id=1120136019]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="HBox/Sidebar" unique_id=1563568170]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="HBox/Sidebar/VBox" unique_id=1127677927]
+layout_mode = 2
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="HBox/Sidebar/VBox" unique_id=1325429470]
+layout_mode = 2
+
+[node name="BtnAccount" type="Button" parent="HBox/Sidebar/VBox" unique_id=647001122]
+layout_mode = 2
+text = "Account"
+
+[node name="BtnGameControls" type="Button" parent="HBox/Sidebar/VBox" unique_id=1129831044]
+layout_mode = 2
+text = "Game Controls"
+
+[node name="BtnAudioMic" type="Button" parent="HBox/Sidebar/VBox" unique_id=859243075]
+layout_mode = 2
+text = "Audio & Mic"
+
+[node name="BtnOtherOptions" type="Button" parent="HBox/Sidebar/VBox" unique_id=1882319964]
+layout_mode = 2
+text = "Other Options"
+
+[node name="ContentArea" type="PanelContainer" parent="HBox" unique_id=170853000]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Margin" type="MarginContainer" parent="HBox/ContentArea" unique_id=724976651]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Scroll" type="ScrollContainer" parent="HBox/ContentArea/Margin" unique_id=1494816064]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="ControlPanel" type="VBoxContainer" parent="HBox/ContentArea/Margin/Scroll" unique_id=919445555]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="AccountPanel" type="VBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel" unique_id=1633512401]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=109111257]
+layout_mode = 2
+text = "Account Settings"
+
+[node name="ProfileNameRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=777223118]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/ProfileNameRow" unique_id=1135984310]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Player Name"
+
+[node name="ProfileNameInput" type="LineEdit" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/ProfileNameRow" unique_id=473777781]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Enter player name..."
+
+[node name="RunsRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=455410802]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/RunsRow" unique_id=139198191]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Completed Runs"
+
+[node name="ProfileRunsValueLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/RunsRow" unique_id=1523974218]
+layout_mode = 2
+text = "0"
+
+[node name="BtnSaveProfileName" type="Button" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=166796413]
+layout_mode = 2
+text = "Save Player Name"
+
+[node name="ProfileStatusLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=1474351602]
+layout_mode = 2
+autowrap_mode = 3
+text = "Change your public player name here."
+
+[node name="HSeparator" type="HSeparator" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=1942275003]
+layout_mode = 2
+
+[node name="GameControlsPanel" type="VBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel" unique_id=1519674173]
+visible = false
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel" unique_id=825593360]
+layout_mode = 2
+text = "Game Controls"
+
+[node name="MouseSensRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel" unique_id=1579787106]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/MouseSensRow" unique_id=1785661008]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mouse Sensitivity"
+
+[node name="MouseSensSlider" type="HSlider" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/MouseSensRow" unique_id=1105416679]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.1
+max_value = 5.0
+step = 0.1
+value = 1.0
+
+[node name="MouseSensValueLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/MouseSensRow" unique_id=2097373431]
+layout_mode = 2
+text = "1.0"
+
+[node name="HSeparator" type="HSeparator" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel" unique_id=26609611]
+layout_mode = 2
+
+[node name="KeybindsLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel" unique_id=851148480]
+layout_mode = 2
+text = "Keybindings"
+
+[node name="KeybindGrid" type="GridContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel" unique_id=297272864]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 2
+
+[node name="AnalogWarningBox" type="PanelContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel" unique_id=2085443665]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel/AnalogWarningBox" unique_id=2114256939]
+layout_mode = 2
+text = "WARNING: Analog Input Detected"
+
+[node name="BtnResetControls" type="Button" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/GameControlsPanel" unique_id=2104286594]
+layout_mode = 2
+text = "Reset Controls"
+
+[node name="AudioMicPanel" type="VBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel" unique_id=1113826651]
+visible = false
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=792108037]
+layout_mode = 2
+text = "Audio & Microphone"
+
+[node name="MasterRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=558719920]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MasterRow" unique_id=83390936]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Master Volume"
+
+[node name="MasterVolumeSlider" type="HSlider" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MasterRow" unique_id=1831783147]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 100.0
+
+[node name="MasterVolumeValueLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MasterRow" unique_id=1037287927]
+layout_mode = 2
+text = "100%"
+
+[node name="SFXRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=1023369603]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/SFXRow" unique_id=196042189]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SFX Volume"
+
+[node name="SFXVolumeSlider" type="HSlider" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/SFXRow" unique_id=2136049957]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 80.0
+
+[node name="SFXVolumeValueLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/SFXRow" unique_id=475782381]
+layout_mode = 2
+text = "100%"
+
+[node name="VCRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=759985779]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/VCRow" unique_id=1336850173]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Voice Chat Volume"
+
+[node name="VCVolumeSlider" type="HSlider" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/VCRow" unique_id=222337258]
+layout_mode = 2
+size_flags_horizontal = 3
+value = 80.0
+
+[node name="VCVolumeValueLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/VCRow" unique_id=1368076510]
+layout_mode = 2
+text = "100%"
+
+[node name="ListenerRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=71636906]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/ListenerRow" unique_id=905732688]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Listener Volume"
+
+[node name="ListenerVolumeSlider" type="HSlider" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/ListenerRow" unique_id=178429852]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 20.0
+value = 80.0
+
+[node name="ListenerVolumeValueLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/ListenerRow" unique_id=1094050242]
+layout_mode = 2
+text = "100%"
+
+[node name="ListenerWarningBox" type="PanelContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=462026307]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/ListenerWarningBox" unique_id=191785978]
+layout_mode = 2
+text = "Cannot mute Listener Volume entirely."
+
+[node name="DeviceRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=1958679533]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/DeviceRow" unique_id=1585373347]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Output Device"
+
+[node name="OutputDeviceOption" type="OptionButton" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/DeviceRow" unique_id=2142565691]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MicRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=280371090]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MicRow" unique_id=85717686]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mic Device"
+
+[node name="MicDeviceOption" type="OptionButton" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MicRow" unique_id=362947028]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MonitorRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=975542403]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MonitorRow" unique_id=1133391011]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Monitor Mic"
+
+[node name="MicMonitorToggle" type="CheckButton" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MonitorRow" unique_id=347068233]
+layout_mode = 2
+
+[node name="MeterRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=1414988843]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MeterRow" unique_id=314006777]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mic Level"
+
+[node name="MicTestMeter" type="ProgressBar" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/MeterRow" unique_id=2056848834]
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+
+[node name="CalibrateRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=1795091430]
+layout_mode = 2
+
+[node name="CalibrateButton" type="Button" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/CalibrateRow" unique_id=1722479972]
+layout_mode = 2
+text = "Calibrate Mic"
+
+[node name="CalibrationProgressBar" type="ProgressBar" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/CalibrateRow" unique_id=1538144777]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CalibrationStatusLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel/CalibrateRow" unique_id=2126600237]
+layout_mode = 2
+text = "Ready"
+
+[node name="BtnResetAudio" type="Button" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel" unique_id=2022604338]
+layout_mode = 2
+text = "Reset Audio"
+
+[node name="OtherOptionsPanel" type="VBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel" unique_id=1131673240]
+visible = false
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=728397485]
+layout_mode = 2
+text = "Other Options"
+
+[node name="SubtitlesRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=1505873141]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/SubtitlesRow" unique_id=2025968155]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Subtitles"
+
+[node name="ToggleSubtitles" type="CheckButton" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/SubtitlesRow" unique_id=1198092967]
+layout_mode = 2
+
+[node name="ProximityRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=374723958]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/ProximityRow" unique_id=678364999]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Proximity Pulse"
+
+[node name="ToggleProximityPulse" type="CheckButton" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/ProximityRow" unique_id=1968471976]
+layout_mode = 2
+
+[node name="BroadcasterRow" type="HBoxContainer" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=416997337]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/BroadcasterRow" unique_id=1398149840]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Text Broadcaster"
+
+[node name="ToggleTextBroadcaster" type="CheckButton" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel/BroadcasterRow" unique_id=1925516919]
+layout_mode = 2
+
+[node name="BroadcasterWarning" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=1711376778]
+layout_mode = 2
+text = "Warning: Modifies chat behavior."
+
+[node name="PrivacyStatusLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=1724371534]
+layout_mode = 2
+text = "Privacy Status: Consent Granted"
+
+[node name="BtnViewPrivacy" type="Button" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=1616837119]
+layout_mode = 2
+text = "View Privacy Policy"
+
+[node name="BtnRevokeConsent" type="Button" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel" unique_id=1605140532]
+layout_mode = 2
+text = "Revoke Voice Consent"

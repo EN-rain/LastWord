@@ -3,294 +3,477 @@ using System;
 
 public partial class MainMenu : CanvasLayer
 {
-    [Export] public NodePath PlayRandomBtnPath;
-    [Export] public NodePath CreateCustomBtnPath;
-    [Export] public NodePath JoinRoomBtnPath;
-    [Export] public NodePath QuitBtnPath;
-    [Export] public NodePath AddressInputPath;
-    [Export] public NodePath NameInputPath;
-    [Export] public NodePath StatusLabelPath;
-    [Export] public NodePath CodeInputPath;
-    [Export] public NodePath JoinByCodeBtnPath;
+	[Export] public NodePath PlayRandomBtnPath;
+	[Export] public NodePath CreateCustomBtnPath;
+	[Export] public NodePath QuitBtnPath;
+	[Export] public NodePath NameInputPath;
+	[Export] public NodePath StatusLabelPath;
+	[Export] public NodePath CodeInputPath;
+	[Export] public NodePath JoinByCodeBtnPath;
+	[Export] public NodePath SettingsBtnPath;
+	[Export] public NodePath GDPRPanelPath;
+	[Export] public NodePath GDPRAcceptBtnPath;
+	[Export] public NodePath SettingsMenuPath;
+	[Export] public NodePath JoinCodePopupPath;
+	[Export] public NodePath ConfirmJoinBtnPath;
+	[Export] public NodePath CancelJoinBtnPath;
+	[Export] public NodePath GDPRNoticeTextLabelPath;
+	[Export(PropertyHint.MultilineText)] public string GDPRNoticeText = "EARLY ACCESS NOTICE: Voice recording is not active in this version. This notice describes a planned post-launch feature. Your acknowledgement is recorded for when the feature activates.\n\nThis game requires a working microphone. Your voice audio is processed locally to detect amplitude (volume) and drive core gameplay mechanics. No voice data is transmitted externally or saved to disk.\n\nBy continuing, you consent to local microphone processing.";
 
-    private Button _playRandomBtn;
-    private Button _createCustomBtn;
-    private Button _joinRoomBtn;
-    private Button _quitBtn;
-    private LineEdit _addressInput;
-    private LineEdit _nameInput;
-    private Label _statusLabel;
-    private LineEdit _codeInput;
-    private Button _joinByCodeBtn;
 
-    private SceneTreeTimer _matchmakingTimer;
-    private bool _isConnectingRandom = false;
-    private int _matchmakingAttemptCount = 0;
+	private Button   _playRandomBtn;
+	private Button   _createCustomBtn;
+	private Button   _quitBtn;
+	private LineEdit _nameInput;
+	private Label    _statusLabel;
+	private LineEdit _codeInput;
+	private Button   _joinByCodeBtn;
+	private Button   _settingsBtn;
+	private Control  _gdprPanel;
+	private Button   _gdprAcceptBtn;
+	private Control  _settingsMenu;
+	private Control  _joinCodePopup;
+	private Button   _confirmJoinBtn;
+	private Button   _cancelJoinBtn;
 
-    private static readonly Color ColorTextNormal = new Color(0.85f, 0.85f, 0.85f);
-    private static readonly Color ColorTextAccent = new Color(0.9f, 0.2f, 0.2f); // Glow Crimson
-    private static readonly Color ColorTextSuccess = new Color(0.2f, 0.85f, 0.2f); // Neon Green
 
-    public override void _Ready()
-    {
-        GD.Print("MainMenu: _Ready starting...");
+	private bool _isConnectingRandom   = false;
+	private bool _isConnectedToMatchmaker = false;
+	private int  _matchmakingAttemptCount = 0;
 
-        _playRandomBtn  = GetNodeOrNull<Button>(PlayRandomBtnPath);
-        _createCustomBtn = GetNodeOrNull<Button>(CreateCustomBtnPath);
-        _joinRoomBtn    = GetNodeOrNull<Button>(JoinRoomBtnPath);
-        _quitBtn        = GetNodeOrNull<Button>(QuitBtnPath);
-        _addressInput   = GetNodeOrNull<LineEdit>(AddressInputPath);
-        _nameInput      = GetNodeOrNull<LineEdit>(NameInputPath);
-        _statusLabel    = GetNodeOrNull<Label>(StatusLabelPath);
-        _codeInput      = GetNodeOrNull<LineEdit>(CodeInputPath);
-        _joinByCodeBtn   = GetNodeOrNull<Button>(JoinByCodeBtnPath);
+	// --- Scene Paths ---
+	[Export(PropertyHint.File, "*.tscn")] public string CustomLobbyScenePath = "res://Scenes/CustomLobby.tscn";
+	[Export(PropertyHint.File, "*.tscn")] public string MatchmakingLobbyScenePath = "res://Scenes/MatchmakingLobby.tscn";
 
-        // Dynamic Hover and Press Style Overrides for Premium Aesthetic
-        StyleButtons();
+	// --- Hardcoded Texts ---
+	[Export] public string StatusReadyText = "READY TO ENTER THE ESTEEMED ESTATE...";
+	[Export] public string StatusConnectingText = "CONNECTING TO MATCHMAKING SERVER...";
+	[Export] public string StatusFailedMatchmakerText = "FAILED TO REACH MATCHMAKING SERVER";
+	[Export] public string StatusMatchmakerOfflineText = "MATCHMAKER OFFLINE";
+	[Export] public string StatusCreatingCustomText = "CREATING CUSTOM ROOM...";
+	[Export] public string StatusRoomReadyText = "ROOM READY. OPENING LOBBY...";
+	[Export] public string StatusPleaseEnterCodeText = "PLEASE ENTER A ROOM CODE";
+	[Export] public string StatusInvalidCodeText = "INVALID ROOM CODE FORMAT";
+	[Export] public string StatusSettingsSceneMissingText = "ERROR: SETTINGS SCENE NOT FOUND";
+	[Export] public string StatusNetworkUnavailableText = "NETWORK SYSTEM NOT READY";
+	[Export] public string StatusConnectingPrivateText = "ROOM CODE ACCEPTED. CONNECTING...";
+	[Export] public string StatusDirectCodeWarningText = "PRIVATE CODES USE DIRECT-IP DEV/LAN MODE UNTIL STEAM RELAY IS INTEGRATED.";
 
-        // Connect button press events
-        if (_playRandomBtn != null) _playRandomBtn.Pressed += OnPlayRandomPressed;
-        if (_createCustomBtn != null) _createCustomBtn.Pressed += OnCustomRoomPressed;
-        if (_joinRoomBtn != null) _joinRoomBtn.Pressed += OnJoinRoomPressed;
-        if (_joinByCodeBtn != null) _joinByCodeBtn.Pressed += OnJoinByCodePressed;
-        if (_quitBtn != null) _quitBtn.Pressed += OnQuitPressed;
+	// --- Hardcoded Colors ---
+	[Export] public Color ColorTextNormal  = new Color(0.85f, 0.85f, 0.85f);
+	[Export] public Color ColorTextAccent  = new Color(0.9f,  0.2f,  0.2f);
+	[Export] public Color ColorTextSuccess = new Color(0.2f,  0.85f, 0.2f);
 
-        // Connect to NetworkManager signals
-        if (NetworkManager.Instance != null)
-        {
-            NetworkManager.Instance.ConnectionSuccess += OnConnectionSuccess;
-            NetworkManager.Instance.ConnectionFailed += OnConnectionFailed;
-            NetworkManager.Instance.ServerDisconnected += OnServerDisconnected;
-        }
+	// --- Timeouts ---
+	[Export] public float MatchmakingTimeoutSeconds = 10.0f;
 
-        UpdateStatus("READY TO ENTER THE ESTEEMED ESTATE...", ColorTextNormal);
-    }
+	public override void _Ready()
+	{
 
-    private void StyleButtons()
-    {
-        // Add dynamic mouse hover micro-animations to buttons
-        foreach (var btn in new[] { _playRandomBtn, _createCustomBtn, _joinRoomBtn, _joinByCodeBtn, _quitBtn })
-        {
-            if (btn == null) continue;
-            
-            btn.MouseEntered += () =>
-            {
-                btn.PivotOffset = btn.Size / 2;
-                var tween = CreateTween();
-                tween.SetParallel(true);
-                tween.TweenProperty(btn, "scale", new Vector2(1.03f, 1.03f), 0.1f);
-                tween.TweenProperty(btn, "modulate", ColorTextSuccess, 0.1f);
-            };
+		_playRandomBtn   = GetNodeOrNull<Button>(PlayRandomBtnPath);
+		_createCustomBtn = GetNodeOrNull<Button>(CreateCustomBtnPath);
+		_quitBtn         = GetNodeOrNull<Button>(QuitBtnPath);
+		_nameInput       = GetNodeOrNull<LineEdit>(NameInputPath);
+		_statusLabel     = GetNodeOrNull<Label>(StatusLabelPath);
+		_codeInput       = GetNodeOrNull<LineEdit>(CodeInputPath);
+		_joinByCodeBtn   = GetNodeOrNull<Button>(JoinByCodeBtnPath);
+		_settingsBtn     = GetNodeOrNull<Button>(SettingsBtnPath);
+		_gdprPanel       = GetNodeOrNull<Control>(GDPRPanelPath);
+		_gdprAcceptBtn   = GetNodeOrNull<Button>(GDPRAcceptBtnPath);
+		_settingsMenu    = GetNodeOrNull<Control>(SettingsMenuPath);
+		_joinCodePopup   = GetNodeOrNull<Control>(JoinCodePopupPath);
+		_confirmJoinBtn  = GetNodeOrNull<Button>(ConfirmJoinBtnPath);
+		_cancelJoinBtn   = GetNodeOrNull<Button>(CancelJoinBtnPath);
 
-            btn.MouseExited += () =>
-            {
-                btn.PivotOffset = btn.Size / 2;
-                var tween = CreateTween();
-                tween.SetParallel(true);
-                tween.TweenProperty(btn, "scale", new Vector2(1.0f, 1.0f), 0.1f);
-                tween.TweenProperty(btn, "modulate", new Color(1, 1, 1), 0.1f);
-            };
-        }
-    }
+		if (GDPRNoticeTextLabelPath != null)
+		{
+			var gdprLabel = GetNodeOrNull<Label>(GDPRNoticeTextLabelPath);
+			if (gdprLabel != null)
+				gdprLabel.Text = GDPRNoticeText;
+		}
 
-    private void UpdateStatus(string text, Color color)
-    {
-        if (_statusLabel == null) return;
-        _statusLabel.Text = text.ToUpper();
-        _statusLabel.Modulate = color;
-    }
+		// Warn about missing critical nodes so failures are never silent
+		if (_nameInput == null)
+			GD.PushWarning("MainMenu: NameInput node not found — player name will fall back to random.");
+		if (_statusLabel == null)
+			GD.PushWarning("MainMenu: StatusLabel node not found — status updates will be silent.");
 
-    private void CancelMatchmaking()
-    {
-        _isConnectingRandom = false;
-        _matchmakingAttemptCount++;
-    }
+		if (_settingsMenu != null)
+			_settingsMenu.Visible = false;
 
-    private void PrepareNetworkCleanSlate()
-    {
-        CancelMatchmaking();
-        if (NetworkManager.Instance != null)
-        {
-            NetworkManager.Instance.Disconnect();
-        }
-    }
+		if (_joinCodePopup != null)
+			_joinCodePopup.Visible = false;
 
-    private void OnPlayRandomPressed()
-    {
-        SavePlayerName();
-        PrepareNetworkCleanSlate();
+		if (_confirmJoinBtn != null)
+			_confirmJoinBtn.Pressed += OnConfirmJoinPressed;
 
-        _isConnectingRandom = true;
-        int currentAttempt = _matchmakingAttemptCount;
-        UpdateStatus("FINDING AN ACTIVE ROOM...", ColorTextAccent);
+		if (_cancelJoinBtn != null)
+			_cancelJoinBtn.Pressed += OnCancelJoinPressed;
 
-        if (NetworkManager.Instance != null)
-        {
-            // Step A: Attempt to join as a client first
-            Error err = NetworkManager.Instance.JoinLobby(NetworkManager.DefaultAddress, NetworkManager.DefaultPort);
-            if (err != Error.Ok)
-            {
-                // Fallback immediately if client initialization fails
-                HostAutoLobby();
-                return;
-            }
+		if (_codeInput != null)
+			_codeInput.TextSubmitted += (_) => OnConfirmJoinPressed();
 
-            // Step B: Set a matchmaking time-out timer of 1.5 seconds.
-            // If connection success signal doesn't fire by then, we auto-host.
-            _matchmakingTimer = GetTree().CreateTimer(1.5f);
-            _matchmakingTimer.Timeout += () =>
-            {
-                if (_isConnectingRandom && _matchmakingAttemptCount == currentAttempt)
-                {
-                    GD.Print("MainMenu: Matchmaking client connection timed out. Autohosting room...");
-                    NetworkManager.Instance.Disconnect();
-                    HostAutoLobby();
-                }
-            };
-        }
-    }
+		if (_nameInput != null)
+			_nameInput.TextSubmitted += (_) =>
+			{
+				SavePlayerProfile();
+				_nameInput.ReleaseFocus();
+			};
 
-    private void HostAutoLobby()
-    {
-        _isConnectingRandom = false;
-        if (NetworkManager.Instance != null)
-        {
-            Error err = NetworkManager.Instance.CreateHost(NetworkManager.DefaultPort);
-            if (err == Error.Ok)
-            {
-                UpdateStatus("HOSTED RANDOM MATCHROOM", ColorTextSuccess);
-                LoadGameScene();
-            }
-            else
-            {
-                UpdateStatus("MATCHMAKING ENCOUNTERED ERROR", ColorTextAccent);
-            }
-        }
-    }
+		// Load saved profile into NetworkManager so it's available on connect
+		LoadPlayerProfile();
 
-    private void OnCustomRoomPressed()
-    {
-        SavePlayerName();
-        PrepareNetworkCleanSlate();
-        UpdateStatus("CREATING CUSTOM MATCHROOM...", ColorTextSuccess);
+		// Pre-fill name input with saved profile name
+		if (_nameInput != null && NetworkManager.Instance != null)
+			_nameInput.Text = NetworkManager.Instance.PlayerName;
 
-        if (NetworkManager.Instance != null)
-        {
-            Error err = NetworkManager.Instance.CreateHost(NetworkManager.DefaultPort);
-            if (err == Error.Ok)
-            {
-                UpdateStatus("ROOM INITIALIZED SUCCESSFULLY!", ColorTextSuccess);
-                LoadGameScene();
-            }
-            else
-            {
-                UpdateStatus($"FAILED TO HOST ON PORT {NetworkManager.DefaultPort}", ColorTextAccent);
-            }
-        }
-    }
+		CheckGDPR();
 
-    private void OnJoinRoomPressed()
-    {
-        SavePlayerName();
-        PrepareNetworkCleanSlate();
-        string address = _addressInput != null ? _addressInput.Text.Trim() : NetworkManager.DefaultAddress;
-        if (string.IsNullOrEmpty(address)) address = NetworkManager.DefaultAddress;
+		// Subscribe to NetworkManager signals
+		if (NetworkManager.Instance != null)
+		{
+			NetworkManager.Instance.ConnectionSuccess        += OnConnectionSuccess;
+			NetworkManager.Instance.ConnectionFailed         += OnConnectionFailed;
+			NetworkManager.Instance.ServerDisconnected       += OnServerDisconnected;
+			NetworkManager.Instance.MatchmakingStatusUpdated += OnMatchmakingStatusUpdated;
+			NetworkManager.Instance.LobbyFormed              += OnLobbyFormed;
+		}
 
-        UpdateStatus($"CONNECTING TO SERVER AT {address}...", ColorTextAccent);
+		UpdateStatus(StatusReadyText, ColorTextNormal);
+	}
 
-        if (NetworkManager.Instance != null)
-        {
-            Error err = NetworkManager.Instance.JoinLobby(address, NetworkManager.DefaultPort);
-            if (err != Error.Ok)
-            {
-                UpdateStatus("FAILED TO INITIATE NETWORK PEER", ColorTextAccent);
-            }
-        }
-    }
+	public override void _ExitTree()
+	{
+		// Unsubscribe all NetworkManager signals to prevent stale callbacks
+		// after scene transitions. Forgetting this causes callbacks to fire
+		// on freed objects which leads to hard-to-trace crashes.
+		if (NetworkManager.Instance != null)
+		{
+			NetworkManager.Instance.ConnectionSuccess        -= OnConnectionSuccess;
+			NetworkManager.Instance.ConnectionFailed         -= OnConnectionFailed;
+			NetworkManager.Instance.ServerDisconnected       -= OnServerDisconnected;
+			NetworkManager.Instance.MatchmakingStatusUpdated -= OnMatchmakingStatusUpdated;
+			NetworkManager.Instance.LobbyFormed              -= OnLobbyFormed;
+		}
+	}
 
-    private void OnJoinByCodePressed()
-    {
-        SavePlayerName();
-        PrepareNetworkCleanSlate();
+	// ---------------------------------------------------------------------------
+	// Profile helpers
+	// ---------------------------------------------------------------------------
+	private void LoadPlayerProfile()
+	{
+		var cfg = new ConfigFile();
+		cfg.Load("user://settings.cfg");
 
-        string code = _codeInput != null ? _codeInput.Text.Trim().ToUpper() : "";
-        if (string.IsNullOrEmpty(code))
-        {
-            UpdateStatus("PLEASE ENTER A ROOM CODE", ColorTextAccent);
-            return;
-        }
+		string name = (string)cfg.GetValue("player", "name", "Player_" + new Random().Next(1000, 9999));
+		int    runs = (int)   cfg.GetValue("player", "runs", 0);
 
-        string ip = NetworkManager.RoomCodeToIp(code);
-        if (string.IsNullOrEmpty(ip) || ip == "0.0.0.0" || ip == "INVALID")
-        {
-            UpdateStatus("INVALID ROOM CODE FORMAT", ColorTextAccent);
-            return;
-        }
+		if (NetworkManager.Instance != null)
+		{
+			NetworkManager.Instance.PlayerName = name;
+			NetworkManager.Instance.PlayerRuns = runs;
+		}
+	}
 
-        UpdateStatus($"DECODED CODE... CONNECTING TO {ip}...", ColorTextAccent);
+	private void SavePlayerProfile()
+	{
+		if (_nameInput == null)
+		{
+			GD.PushError("MainMenu: _nameInput is null! Cannot save player name properly. Falling back to random.");
+			UpdateStatus("ERROR: NAME INPUT NODE MISSING", ColorTextAccent);
+		}
 
-        if (NetworkManager.Instance != null)
-        {
-            Error err = NetworkManager.Instance.JoinLobby(ip, NetworkManager.DefaultPort);
-            if (err != Error.Ok)
-            {
-                UpdateStatus("FAILED TO INITIATE NETWORK PEER", ColorTextAccent);
-            }
-        }
-    }
+		string name = _nameInput != null ? _nameInput.Text.Trim() : "";
+		name = name.Replace(":", "").Replace("|", ""); // Sanitize for serialization
+		if (string.IsNullOrEmpty(name))
+			name = "Player_" + new Random().Next(1000, 9999);
 
-    private void OnQuitPressed()
-    {
-        CancelMatchmaking();
-        GetTree().Quit();
-    }
+		var cfg = new ConfigFile();
+		cfg.Load("user://settings.cfg");
+		cfg.SetValue("player", "name", name);
+		cfg.Save("user://settings.cfg");
 
-    // ------------------------------------------------------------------ //
-    //  Network Event callbacks
-    // ------------------------------------------------------------------ //
-    private void OnConnectionSuccess()
-    {
-        CancelMatchmaking();
-        UpdateStatus("CONNECTED! SYNCING STATE...", ColorTextSuccess);
-        
-        // Add subtle screen flash before transition
-        var tween = CreateTween();
-        tween.TweenInterval(0.2f);
-        tween.Finished += LoadGameScene;
-    }
+		if (NetworkManager.Instance != null)
+		{
+			NetworkManager.Instance.PlayerName = name;
+		}
+	}
 
-    private void OnConnectionFailed()
-    {
-        CancelMatchmaking();
-        UpdateStatus("CONNECTION ATTEMPT FAILED!", ColorTextAccent);
-    }
+	private void CheckGDPR()
+	{
+		var cfg = new ConfigFile();
+		cfg.Load("user://settings.cfg");
+		bool accepted = (bool)cfg.GetValue("settings", "gdpr_accepted", false);
 
-    private void OnServerDisconnected()
-    {
-        CancelMatchmaking();
-        UpdateStatus("DISCONNECTED FROM HOST SERVER", ColorTextAccent);
-    }
+		if (!accepted && _gdprPanel != null)
+		{
+			_gdprPanel.Visible = true;
+		}
+	}
 
-    private void SavePlayerName()
-    {
-        string name = _nameInput != null ? _nameInput.Text.Trim() : "";
-        if (string.IsNullOrEmpty(name))
-        {
-            name = "Player_" + new Random().Next(1000, 9999);
-        }
+	private void OnGDPRAccepted()
+	{
+		var cfg = new ConfigFile();
+		cfg.Load("user://settings.cfg");
+		cfg.SetValue("settings", "gdpr_accepted", true);
+		cfg.SetValue("settings", "gdpr_timestamp", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+		cfg.Save("user://settings.cfg");
 
-        // Store name locally in project Config to persist across scenes
-        var cfg = new ConfigFile();
-        cfg.Load("user://settings.cfg");
-        cfg.SetValue("player", "name", name);
-        cfg.Save("user://settings.cfg");
-        
-        GD.Print($"MainMenu: Saved active player profile name: {name}");
-    }
+		if (VoiceManager.Instance != null)
+		{
+			VoiceManager.Instance.SetGdprAccepted(true);
+		}
 
-    private void LoadGameScene()
-    {
-        GD.Print("MainMenu: Transitioning to game world...");
-        GetTree().ChangeSceneToFile("res://Scenes/Main.tscn");
-    }
+		if (_settingsMenu is SettingsMenu menu)
+			menu.LoadSettings();
+
+		if (_gdprPanel != null)
+		{
+			_gdprPanel.Visible = false;
+		}
+	}
+
+	private void UpdateStatus(string text, Color color)
+	{
+		if (_statusLabel == null) return;
+		_statusLabel.Text     = text.ToUpper();
+		_statusLabel.Modulate = color;
+	}
+
+	private void CancelMatchmaking()
+	{
+		_isConnectingRandom      = false;
+		_isConnectedToMatchmaker = false;
+		_matchmakingAttemptCount++;
+	}
+
+	private void PrepareNetworkCleanSlate()
+	{
+		CancelMatchmaking();
+		NetworkManager.Instance?.Disconnect();
+	}
+
+	// ---------------------------------------------------------------------------
+	// Button handlers
+	// ---------------------------------------------------------------------------
+
+	// PLAY RANDOM — connects to the configured matchmaking server, then transitions
+	// to MatchmakingLobby.tscn once the server sends LobbyFormed.
+	// NOTE: MatchmakerAddress defaults to 127.0.0.1 (dev only). Set a real
+	// server address via the Inspector or --matchmaker-address= CLI flag before shipping.
+	private void OnPlayRandomPressed()
+	{
+		SavePlayerProfile();
+		PrepareNetworkCleanSlate();
+
+		_isConnectingRandom = true;
+		int currentAttempt  = _matchmakingAttemptCount;
+		UpdateStatus(StatusConnectingText, ColorTextNormal);
+
+		if (NetworkManager.Instance == null)
+		{
+			_isConnectingRandom = false;
+			UpdateStatus(StatusNetworkUnavailableText, ColorTextAccent);
+			return;
+		}
+
+		// Use the configurable address/port — never hardcode DefaultAddress here.
+		string addr = NetworkManager.Instance.MatchmakerAddress;
+		int    port = NetworkManager.Instance.MatchmakerPort;
+
+		Error err = NetworkManager.Instance.JoinLobby(addr, port, NetworkManager.ConnectionMode.Matchmaking);
+
+		if (err != Error.Ok)
+		{
+			_isConnectingRandom = false;
+			UpdateStatus(StatusFailedMatchmakerText, ColorTextAccent);
+			return;
+		}
+
+		// Connection timeout guard
+		var timer = GetTree().CreateTimer(MatchmakingTimeoutSeconds);
+		timer.Timeout += () =>
+		{
+			if (_isConnectingRandom && !_isConnectedToMatchmaker
+					&& _matchmakingAttemptCount == currentAttempt)
+			{
+				NetworkManager.Instance?.Disconnect();
+				_isConnectingRandom = false;
+				UpdateStatus(StatusMatchmakerOfflineText, ColorTextAccent);
+			}
+		};
+	}
+
+	// CREATE CUSTOM — hosts a listen-server on the configured port and opens CustomLobby.tscn.
+	private void OnCustomRoomPressed()
+	{
+		SavePlayerProfile();
+		PrepareNetworkCleanSlate();
+		UpdateStatus(StatusCreatingCustomText, ColorTextNormal);
+
+		if (NetworkManager.Instance == null)
+		{
+			UpdateStatus(StatusNetworkUnavailableText, ColorTextAccent);
+			return;
+		}
+
+		// Use the configurable port — never hardcode DefaultPort here.
+		int port = NetworkManager.Instance.HostPort;
+		Error err = NetworkManager.Instance.CreateHost(port);
+		if (err == Error.Ok)
+		{
+			UpdateStatus(StatusRoomReadyText, ColorTextSuccess);
+			GetTree().ChangeSceneToFile(CustomLobbyScenePath);
+		}
+		else
+		{
+			UpdateStatus($"FAILED TO HOST ON PORT {port}", ColorTextAccent);
+		}
+	}
+
+	// JOIN BY CODE — opens the popup.
+	private void OnJoinByCodePressed()
+	{
+		if (_joinCodePopup != null)
+		{
+			_joinCodePopup.Visible = true;
+			if (_codeInput != null)
+			{
+				_codeInput.Text = "";
+				_codeInput.GrabFocus();
+			}
+		}
+		else
+		{
+			OnConfirmJoinPressed();
+		}
+	}
+
+	private void OnCancelJoinPressed()
+	{
+		if (_joinCodePopup != null)
+		{
+			_joinCodePopup.Visible = false;
+		}
+		UpdateStatus(StatusReadyText, ColorTextNormal);
+	}
+
+	private void OnConfirmJoinPressed()
+	{
+		SavePlayerProfile();
+		PrepareNetworkCleanSlate();
+
+		string code = _codeInput != null ? _codeInput.Text.Trim().ToUpper() : "";
+		if (string.IsNullOrEmpty(code))
+		{
+			UpdateStatus(StatusPleaseEnterCodeText, ColorTextAccent);
+			return;
+		}
+
+		if (NetworkManager.Instance == null)
+		{
+			UpdateStatus(StatusNetworkUnavailableText, ColorTextAccent);
+			return;
+		}
+
+		if (!NetworkManager.Instance.TryRoomCodeToIp(code, out string ip, out string decodeError))
+		{
+			UpdateStatus(StatusInvalidCodeText, ColorTextAccent);
+			return;
+		}
+
+		if (_joinCodePopup != null)
+		{
+			_joinCodePopup.Visible = false;
+		}
+
+		UpdateStatus(StatusConnectingPrivateText, ColorTextNormal);
+
+		// 4.5: Warn about direct IP connection for internet sessions without relay
+		if (ip != "127.0.0.1" && !ip.StartsWith("192.168.") && !ip.StartsWith("10.") && !ip.StartsWith("172."))
+		{
+			GD.PushWarning($"MainMenu: Direct-IP connect to {ip} attempted. This will fail for internet hosts behind NAT until Steam Relay is integrated.");
+		}
+
+		NetworkManager.Instance.CurrentRoomCode = code;
+		Error err = NetworkManager.Instance.JoinLobby(ip, NetworkManager.Instance.HostPort, NetworkManager.ConnectionMode.PrivateCode);
+		if (err != Error.Ok)
+		{
+			UpdateStatus("FAILED TO INITIATE CONNECTION", ColorTextAccent);
+		}
+		// Transition to CustomLobby fires from OnConnectionSuccess (non-matchmaking path)
+	}
+
+	private void OnQuitPressed()
+	{
+		CancelMatchmaking();
+		GetTree().Quit();
+	}
+
+	private void OnSettingsPressed()
+	{
+		if (_settingsMenu != null)
+		{
+			_settingsMenu.Visible = !_settingsMenu.Visible;
+			if (_settingsMenu.Visible && _settingsMenu is SettingsMenu menu)
+				menu.LoadSettings();
+		}
+		else
+		{
+			GD.PushError("MainMenu: SettingsMenu scene not found. Check SettingsMenuPath export.");
+			UpdateStatus(StatusSettingsSceneMissingText, ColorTextAccent);
+		}
+	}
+
+
+	// ---------------------------------------------------------------------------
+	// NetworkManager callbacks
+	// ---------------------------------------------------------------------------
+	private void OnConnectionSuccess()
+	{
+		if (_isConnectingRandom)
+		{
+			// Matchmaking path — wait in the queue until server fires MatchStarted
+			_isConnectedToMatchmaker = true;
+			UpdateStatus("IN QUEUE. WAITING FOR PLAYERS...", ColorTextSuccess);
+		}
+		else
+		{
+			// Custom join path — go straight to CustomLobby
+			CancelMatchmaking();
+			UpdateStatus("CONNECTED! OPENING LOBBY...", ColorTextSuccess);
+			GetTree().ChangeSceneToFile(CustomLobbyScenePath);
+		}
+	}
+
+	private void OnMatchmakingStatusUpdated(int currentCount, int requiredCount, bool isCountdownActive)
+	{
+		if (!_isConnectingRandom) return;
+
+		string status = isCountdownActive
+			? $"MATCHMAKING: {currentCount}/{requiredCount} PLAYERS — STARTING SOON..."
+			: $"MATCHMAKING: {currentCount}/{requiredCount} PLAYERS FOUND...";
+
+		UpdateStatus(status, ColorTextSuccess);
+	}
+
+	private void OnLobbyFormed()
+	{
+		if (!_isConnectingRandom) return;
+		CancelMatchmaking();
+		UpdateStatus("MATCH FOUND! ENTERING LOBBY...", ColorTextSuccess);
+		GetTree().ChangeSceneToFile(MatchmakingLobbyScenePath);
+	}
+
+	private void OnConnectionFailed()
+	{
+		CancelMatchmaking();
+		UpdateStatus("CONNECTION FAILED!", ColorTextAccent);
+	}
+
+	private void OnServerDisconnected()
+	{
+		CancelMatchmaking();
+		UpdateStatus("DISCONNECTED FROM HOST", ColorTextAccent);
+	}
 }

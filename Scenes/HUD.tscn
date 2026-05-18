@@ -18,6 +18,8 @@ TierLabelPath = NodePath("VoiceInfo/TierLabel")
 VolumeMeterPath = NodePath("VoiceInfo/VolumeMeter")
 TokenIndicatorPath = NodePath("TokenIndicator")
 RoomCodeLabelPath = NodePath("RoomCodeLabel")
+HolderNameLabelPath = NodePath("TokenInfo/HolderNameLabel")
+HoldTimerLabelPath = NodePath("TokenInfo/HoldTimerLabel")
 
 [node name="VoiceInfo" type="VBoxContainer" parent="HUDManager"]
 layout_mode = 1
@@ -74,3 +76,27 @@ theme_override_font_sizes/font_size = 12
 text = "ROOM CODE: OFFLINE"
 horizontal_alignment = 2
 mouse_filter = 2
+
+[node name="TokenInfo" type="VBoxContainer" parent="HUDManager"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_top = 60.0
+offset_right = -20.0
+offset_bottom = 120.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="HolderNameLabel" type="Label" parent="HUDManager/TokenInfo"]
+layout_mode = 2
+text = "Token: None"
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+
+[node name="HoldTimerLabel" type="Label" parent="HUDManager/TokenInfo"]
+layout_mode = 2
+text = "00:00.00"
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)

@@ -4,8 +4,8 @@ using System;
 public partial class CameraManager : Node3D
 {
     [Export] public NodePath TargetPath;
-    [Export] public NodePath CameraPivotPath;
-    [Export] public NodePath CameraTransformPath;
+    [Export] public NodePath CameraPivotPath = "Pivot";
+    [Export] public NodePath CameraTransformPath = "Pivot/MainCamera";
     
     // In Godot, physics layers are stored as bitmasks (uint)
     [Export(PropertyHint.Layers3DPhysics)] public uint CollisionLayers = 1;
@@ -52,16 +52,15 @@ public partial class CameraManager : Node3D
 
     public override void _Ready()
     {
+        AddToGroup("CameraManager");
+
         if (TargetPath != null) _targetTransform = GetNodeOrNull<Node3D>(TargetPath);
-        
+
         // If no target is set, default to the parent node (the Player)
         if (_targetTransform == null) _targetTransform = GetParent<Node3D>();
 
         if (CameraPivotPath != null) _cameraPivot = GetNodeOrNull<Node3D>(CameraPivotPath);
-        else _cameraPivot = GetNodeOrNull<Node3D>("Pivot");
-
         if (CameraTransformPath != null) _cameraTransform = GetNodeOrNull<Camera3D>(CameraTransformPath);
-        else _cameraTransform = _cameraPivot?.GetNodeOrNull<Camera3D>("MainCamera");
 
         if (_cameraTransform != null)
         {
@@ -71,6 +70,13 @@ public partial class CameraManager : Node3D
 
         Input.MouseMode = Input.MouseModeEnum.Captured;
         
+        // Load saved mouse sensitivity from settings.cfg
+        var cfg = new ConfigFile();
+        if (cfg.Load("user://settings.cfg") == Error.Ok)
+        {
+            CameraSensitivity = (float)cfg.GetValue("controls", "mouse_sens", 0.2f);
+        }
+
         // Store the initial local position (e.g. Y=1.5) to use as an offset from the player's feet
         _followOffset = Position;
         
@@ -107,8 +113,7 @@ public partial class CameraManager : Node3D
                 && Input.MouseMode != Input.MouseModeEnum.Captured)
             {
                 // Only recapture if the pause menu is NOT open
-                var pause = GetTree().GetFirstNodeInGroup("PauseMenu");
-                if (pause == null)
+                if (!PauseMenu.IsOpen)
                     Input.MouseMode = Input.MouseModeEnum.Captured;
             }
         }

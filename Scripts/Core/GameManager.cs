@@ -5,11 +5,22 @@ public partial class GameManager : Node3D
 {
     [Export] public PackedScene PlayerScene;
 
-    private Node _playersContainer;
+    private Node  _playersContainer;
+    private float _sessionElapsed    = 0.0f;
+    private bool  _runLogged         = false;
+    private float _orientationTimer  = 0.0f;
+    private bool  _orientationActive = false;
+
+    private const float RunLogThreshold         = 300.0f; // 5 minutes
+    private const float OrientationDuration     = 210.0f; // 3 min 30 sec
 
     public override void _Ready()
     {
-        GD.Print("GameManager: _Ready starting...");
+        // Ensure PlayerScene is resolved early so we can safely read its ResourcePath
+        if (PlayerScene == null)
+        {
+            PlayerScene = GD.Load<PackedScene>("res://Scenes/Player.tscn");
+        }
 
         _playersContainer = GetNodeOrNull("Players");
         if (_playersContainer == null)
@@ -19,75 +30,145 @@ public partial class GameManager : Node3D
             AddChild(_playersContainer);
         }
 
-        // Check if there is an active multiplayer connection
+        // ------------------------------------------------------------------
+        // Orientation Mode — lock a 3m30s tutorial phase if any player in the
+        // matched lobby has fewer than 3 prior runs (§18.3)
+        // ------------------------------------------------------------------
+        if (NetworkManager.Instance != null && NetworkManager.Instance.IsOrientationModeActive)
+        {
+            _orientationActive = true;
+            _orientationTimer  = OrientationDuration;
+        }
+
+        // ------------------------------------------------------------------
+        // Multiplayer spawn setup
+        // ------------------------------------------------------------------
         if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
         {
-            GD.Print("GameManager: Multiplayer session detected. Activating network spawning...");
-
             // 1. Remove the static offline player node if it exists to avoid duplicates
             var offlinePlayer = GetNodeOrNull("Player");
             if (offlinePlayer != null)
             {
-                GD.Print("GameManager: Removing offline player instance...");
                 offlinePlayer.QueueFree();
             }
 
             // 2. Setup the MultiplayerSpawner dynamically
             MultiplayerSpawner spawner = new MultiplayerSpawner();
-            spawner.SpawnPath = _playersContainer.GetPath();
-            spawner.AddSpawnableScene("res://Scenes/Player.tscn");
             AddChild(spawner);
+            spawner.SpawnPath = _playersContainer.GetPath();
+            spawner.AddSpawnableScene(PlayerScene.ResourcePath);
 
             // 3. Only the server/host handles spawning player instances
             if (Multiplayer.IsServer())
             {
-                Multiplayer.PeerConnected += OnPeerConnected;
                 Multiplayer.PeerDisconnected += OnPeerDisconnected;
 
-                // Spawn host player character (Peer ID 1)
-                SpawnPlayer(1);
-
-                // Spawn characters for clients already in session
-                foreach (var peerId in Multiplayer.GetPeers())
+                // Dedicated server runs headlessly and does not have a local host player
+                bool isDedicatedServer = OS.HasFeature("dedicated_server") || DisplayServer.GetName() == "headless";
+                if (!isDedicatedServer)
                 {
-                    SpawnPlayer(peerId);
+                    // Spawn host player character (Peer ID 1) immediately for local listen server/host
+                    SpawnPlayer(1);
                 }
             }
+            else
+            {
+                // Send ready signal to server/host so they spawn our player node
+                RpcId(NetworkManager.ServerPeerId, nameof(RegisterReadyClient));
+            }
         }
-        else
+    }
+
+    // ---------------------------------------------------------------------------
+    // _Process — track session duration and orientation countdown
+    // ---------------------------------------------------------------------------
+    public override void _Process(double delta)
+    {
+        float dt = (float)delta;
+
+        // -- 5-minute run logging (§18.2) --
+        if (!_runLogged)
         {
-            GD.Print("GameManager: Offline single-player mode. Utilizing default static player node.");
+            _sessionElapsed += dt;
+            if (_sessionElapsed >= RunLogThreshold)
+            {
+                _runLogged = true;
+                IncrementRunCount();
+            }
         }
+
+        // -- Orientation Mode countdown (§18.3) --
+        if (_orientationActive)
+        {
+            _orientationTimer -= dt;
+            if (_orientationTimer <= 0.0f)
+            {
+                _orientationActive = false;
+                GD.Print("GameManager: Orientation Mode timer expired. Active run phase begins.");
+                OnOrientationComplete();
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Run count logging
+    // ---------------------------------------------------------------------------
+    private void IncrementRunCount()
+    {
+        var cfg = new ConfigFile();
+        cfg.Load("user://settings.cfg");
+
+        int currentRuns = (int)cfg.GetValue("player", "runs", 0);
+        currentRuns++;
+        cfg.SetValue("player", "runs", currentRuns);
+        cfg.Save("user://settings.cfg");
+
+        GD.Print($"GameManager: Session reached 5-minute mark. Run logged. Total runs: {currentRuns}");
+
+        // Keep NetworkManager in sync so subsequent lobby checks are correct
+        if (NetworkManager.Instance != null)
+            NetworkManager.Instance.PlayerRuns = currentRuns;
+    }
+
+    // ---------------------------------------------------------------------------
+    // Orientation complete callback (extend here to hide tutorial HUD etc.)
+    // ---------------------------------------------------------------------------
+    private void OnOrientationComplete()
+    {
+        // TODO: Signal HUDManager to hide orientation overlay when it is implemented
+        GD.Print("GameManager: OnOrientationComplete — tutorial overlay should be dismissed.");
+    }
+
+    // ---------------------------------------------------------------------------
+    // Multiplayer spawn helpers
+    // ---------------------------------------------------------------------------
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    private void RegisterReadyClient()
+    {
+        if (!Multiplayer.IsServer()) return;
+
+        long senderId = Multiplayer.GetRemoteSenderId();
+        SpawnPlayer(senderId);
     }
 
     private void SpawnPlayer(long peerId)
     {
-        GD.Print($"GameManager: Spawning character node for peer {peerId}");
-        if (PlayerScene == null)
+        if (_playersContainer.HasNode(peerId.ToString()))
         {
-            PlayerScene = GD.Load<PackedScene>("res://Scenes/Player.tscn");
+            return;
         }
 
         var playerInstance = PlayerScene.Instantiate<Node3D>();
-        playerInstance.Name = peerId.ToString();
+        playerInstance.Name      = peerId.ToString();
         playerInstance.Transform = new Transform3D(Basis.Identity, new Vector3(0, 1, 0));
-        
+
         _playersContainer.AddChild(playerInstance);
     }
 
     private void DespawnPlayer(long peerId)
     {
-        GD.Print($"GameManager: Despawning character node for peer {peerId}");
         var playerNode = _playersContainer.GetNodeOrNull(peerId.ToString());
-        if (playerNode != null)
-        {
-            playerNode.QueueFree();
-        }
-    }
-
-    private void OnPeerConnected(long peerId)
-    {
-        SpawnPlayer(peerId);
+        playerNode?.QueueFree();
     }
 
     private void OnPeerDisconnected(long peerId)
