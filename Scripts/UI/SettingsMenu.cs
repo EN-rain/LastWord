@@ -807,6 +807,46 @@ public partial class SettingsMenu : PanelContainer
 		_calibrationStatusLabel.AddThemeColorOverride("font_color", targetColor);
 	}
 
+	private void SaveInputBindings(ConfigFile cfg)
+	{
+		foreach (string action in _actionNames.Keys)
+		{
+			var events = InputMap.ActionGetEvents(action);
+			string serialized = "";
+			if (events.Count > 0)
+			{
+				if (events[0] is InputEventKey keyEvent)
+					serialized = $"key:{(int)keyEvent.Keycode}";
+				else if (events[0] is InputEventMouseButton mouseEvent)
+					serialized = $"mouse:{(int)mouseEvent.ButtonIndex}";
+			}
+
+			cfg.SetValue("bindings", action, serialized);
+		}
+	}
+
+	private void LoadInputBindings(ConfigFile cfg)
+	{
+		foreach (string action in _actionNames.Keys)
+		{
+			string serialized = (string)cfg.GetValue("bindings", action, "");
+			if (string.IsNullOrEmpty(serialized))
+				continue;
+
+			InputEvent parsedEvent = null;
+			if (serialized.StartsWith("key:") && int.TryParse(serialized[4..], out int keycode))
+				parsedEvent = new InputEventKey { Keycode = (Key)keycode };
+			else if (serialized.StartsWith("mouse:") && int.TryParse(serialized[6..], out int buttonIndex))
+				parsedEvent = new InputEventMouseButton { ButtonIndex = (MouseButton)buttonIndex };
+
+			if (parsedEvent == null)
+				continue;
+
+			InputMap.ActionEraseEvents(action);
+			InputMap.ActionAddEvent(action, parsedEvent);
+		}
+	}
+
 	// ------------------------------------------------------------------ //
 	//  Persistence Methods
 	// ------------------------------------------------------------------ //
@@ -840,6 +880,7 @@ public partial class SettingsMenu : PanelContainer
 		if (_toggleSubtitles != null) cfg.SetValue("settings", "subtitles", _toggleSubtitles.ButtonPressed);
 		if (_toggleProximityPulse != null) cfg.SetValue("settings", "proximity_pulse", _toggleProximityPulse.ButtonPressed);
 		if (_toggleTextBroadcaster != null) cfg.SetValue("settings", "text_broadcaster", _toggleTextBroadcaster.ButtonPressed);
+		SaveInputBindings(cfg);
 
 		// NOTE: gdpr_accepted and gdpr_timestamp are intentionally NOT written here.
 		// Consent is a deliberate, one-time user action — it must only be recorded
@@ -890,6 +931,8 @@ public partial class SettingsMenu : PanelContainer
 				NetworkManager.Instance.PlayerName = profileName;
 				NetworkManager.Instance.PlayerRuns = profileRuns;
 			}
+
+			LoadInputBindings(cfg);
 
 			// Apply values
 			if (_masterVolumeSlider != null) _masterVolumeSlider.Value = master;
@@ -1022,7 +1065,7 @@ public partial class SettingsMenu : PanelContainer
 			if (VoiceManager.Instance != null)
 			{
 				VoiceManager.Instance.SetGdprAccepted(false);
-				GD.Print("SettingsMenu: Live GDPR state revoked in VoiceManager.");
+				// GD.Print("SettingsMenu: Live GDPR state revoked in VoiceManager.");
 			}
 
 			if (_privacyStatusLabel != null)

@@ -143,9 +143,10 @@ layout_mode = 2
 text = "Save Player Name"
 
 [node name="ProfileStatusLabel" type="Label" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=1474351602]
+custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
-autowrap_mode = 3
 text = "Change your public player name here."
+autowrap_mode = 3
 
 [node name="HSeparator" type="HSeparator" parent="HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel" unique_id=1942275003]
 layout_mode = 2

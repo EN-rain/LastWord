@@ -29,7 +29,7 @@
 
 **Title:** Last Word
 **Genre:** Multiplayer Co-op Horror Survival
-**Players:** 2â€“4 online, voice chat required
+**Players:** 1â€“4 online, voice chat required
 **Platform:** PC (Steam)
 **Engine:** Godot 4.x (.NET/C#)
 **Target Session Length:** 25â€“35 minutes per run
@@ -984,7 +984,7 @@ Player VC is processed to add subtle reverb matching the acoustic properties of 
 - **Godot Multiplayer API** â€” handles player state, object sync, Listener position
 - **Host-authoritative model** â€” one player hosts, Listener AI runs on host machine
 - **Relay servers** â€” Steamworks.NET / Godot Steam Relay prevents NAT traversal issues
-- **Session size:** 2â€“4 players maximum
+- **Session size:** 2â€“4 players maximum for matchmaking. Private/custom lobbies allow starting with a minimum of 1 player (the host) to facilitate solo play and developer testing.
 - **Lobby system:** Steam Lobby service â€” code-based friend joining and public random matchmaking (see Â§18)
 
 **Pause / ESC menu behaviour during live sessions (v1.3):** There is **no pause functionality** in multiplayer sessions. Opening the ESC menu brings up an overlay (settings, scoreboard, audio sliders, vote-kick) while the game continues running in the background. The Listener keeps moving. Players who open the ESC menu while in a dangerous location do so at their own risk. This is standard for multiplayer horror games and should be communicated in the orientation mode. If a player opens the ESC menu while holding the Token, the Token indicator remains active and the Listener continues navigating toward them.

@@ -16,6 +16,8 @@ public partial class GameManager : Node3D
 
     public override void _Ready()
     {
+        CallDeferred(nameof(SetupNavigationRuntime));
+
         // Ensure PlayerScene is resolved early so we can safely read its ResourcePath
         if (PlayerScene == null)
         {
@@ -79,6 +81,37 @@ public partial class GameManager : Node3D
         }
     }
 
+    public override void _ExitTree()
+    {
+        if (Multiplayer != null)
+            Multiplayer.PeerDisconnected -= OnPeerDisconnected;
+    }
+
+    private void SetupNavigationRuntime()
+    {
+        // Reparent level geometry under the region once the scene tree is fully assembled,
+        // then bake the mesh so agents can query a valid map on their first patrol tick.
+        var navRegion = GetNodeOrNull<NavigationRegion3D>("NavigationRegion3D");
+        if (navRegion == null)
+            return;
+
+        ReparentNodeUnder(navRegion, "Plane");
+        ReparentNodeUnder(navRegion, "Node3D");
+
+        navRegion.BakeNavigationMesh(false);
+        GD.Print("GameManager: Reparented geometry and baked Navigation Mesh.");
+    }
+
+    private void ReparentNodeUnder(Node newParent, string childName)
+    {
+        var node = GetNodeOrNull(childName);
+        if (node == null || node.GetParent() == newParent)
+            return;
+
+        node.GetParent().RemoveChild(node);
+        newParent.AddChild(node);
+    }
+
     // ---------------------------------------------------------------------------
     // _Process — track session duration and orientation countdown
     // ---------------------------------------------------------------------------
@@ -104,7 +137,7 @@ public partial class GameManager : Node3D
             if (_orientationTimer <= 0.0f)
             {
                 _orientationActive = false;
-                GD.Print("GameManager: Orientation Mode timer expired. Active run phase begins.");
+                // GD.Print("GameManager: Orientation Mode timer expired. Active run phase begins.");
                 OnOrientationComplete();
             }
         }
@@ -123,7 +156,7 @@ public partial class GameManager : Node3D
         cfg.SetValue("player", "runs", currentRuns);
         cfg.Save("user://settings.cfg");
 
-        GD.Print($"GameManager: Session reached 5-minute mark. Run logged. Total runs: {currentRuns}");
+        // GD.Print($"GameManager: Session reached 5-minute mark. Run logged. Total runs: {currentRuns}");
 
         // Keep NetworkManager in sync so subsequent lobby checks are correct
         if (NetworkManager.Instance != null)
@@ -136,7 +169,7 @@ public partial class GameManager : Node3D
     private void OnOrientationComplete()
     {
         // TODO: Signal HUDManager to hide orientation overlay when it is implemented
-        GD.Print("GameManager: OnOrientationComplete — tutorial overlay should be dismissed.");
+        // GD.Print("GameManager: OnOrientationComplete — tutorial overlay should be dismissed.");
     }
 
     // ---------------------------------------------------------------------------

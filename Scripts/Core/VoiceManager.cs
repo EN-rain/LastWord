@@ -164,23 +164,8 @@ public partial class VoiceManager : Node
     // ------------------------------------------------------------------ //
     public override void _Process(double delta)
     {
-        // Auto-assign token to server host or first spawned player if currently unassigned
-        if (Multiplayer.IsServer() && _tokenHolder == null)
-        {
-            Node3D firstPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
-            if (firstPlayer != null)
-            {
-                if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
-                {
-                    Rpc(nameof(SyncTokenHolder), (long)Multiplayer.GetUniqueId());
-                }
-                else
-                {
-                    _tokenHolder = firstPlayer;
-                    EmitSignal(SignalName.TokenTransferred, _tokenHolder);
-                }
-            }
-        }
+        // Token is intentionally left null until the first validated speech event.
+        // Auto-assigning here would bypass the speech-driven transfer design.
 
         _timer += (float)delta;
         if (_timer >= AnalysisInterval)
@@ -223,6 +208,61 @@ public partial class VoiceManager : Node
 
     private void AnalyzeVoice(float delta)
     {
+        // --- Keyboard simulated voice input overrides (dev testing, GDPR-gated) ---
+        // Only active when GDPR consent has been given so it cannot be abused on startup.
+        if (IsGdprAccepted)
+        {
+            bool forceWhisper = Input.IsKeyPressed(Key.Key1);
+            bool forceNormal  = Input.IsKeyPressed(Key.Key2);
+            bool forceScream  = Input.IsKeyPressed(Key.Key3);
+            bool isForced     = forceWhisper || forceNormal || forceScream;
+
+            if (isForced)
+            {
+                VoiceTier forcedTier = VoiceTier.Silent;
+                float forcedRms = 0f;
+                float forcedDb  = -80f;
+
+                if (forceWhisper)
+                {
+                    forcedTier = VoiceTier.Whisper;
+                    forcedRms  = BaselineAmplitude * 0.5f;
+                    forcedDb   = -40f;
+                }
+                else if (forceNormal)
+                {
+                    forcedTier = VoiceTier.Normal;
+                    forcedRms  = BaselineAmplitude * 1.2f;
+                    forcedDb   = -25f;
+                }
+                else if (forceScream)
+                {
+                    forcedTier = VoiceTier.Shouting;
+                    forcedRms  = BaselineAmplitude * 2.5f;
+                    forcedDb   = -5f;
+                }
+
+                _smoothedRms = forcedRms;
+                EmitSignal(SignalName.VolumeUpdated, forcedDb);
+
+                if (forcedTier != _currentTier)
+                {
+                    _currentTier = forcedTier;
+                    EmitSignal(SignalName.TierChanged, (int)_currentTier);
+
+                    if (_currentTier >= VoiceTier.Whisper)
+                        UpdateTokenHolder();
+
+                    BroadcastNoiseEvent((int)_currentTier);
+                }
+                else if (_currentTier >= VoiceTier.Normal)
+                {
+                    BroadcastNoiseEvent((int)_currentTier);
+                }
+                return;
+            }
+        }
+
         if (!IsGdprAccepted)
         {
             if (_currentTier != VoiceTier.Silent)
@@ -363,7 +403,14 @@ public partial class VoiceManager : Node
             long myPeerId = Multiplayer.GetUniqueId();
             if (_tokenHolderPeerId != myPeerId)
             {
-                RpcId(NetworkManager.ServerPeerId, nameof(RequestTokenTransfer), myPeerId);
+                if (Multiplayer.IsServer())
+                {
+                    RequestTokenTransfer(0);
+                }
+                else
+                {
+                    RpcId(NetworkManager.ServerPeerId, nameof(RequestTokenTransfer), myPeerId);
+                }
             }
         }
         else
@@ -401,10 +448,10 @@ public partial class VoiceManager : Node
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
     private void SyncTokenHolder(long peerId)
     {
-        _tokenHolderPeerId = peerId;
         Node3D playerNode = FindPlayerNodeByPeerId(peerId);
         if (playerNode != null)
         {
+            _tokenHolderPeerId = peerId;
             _tokenHolder = playerNode;
             EmitSignal(SignalName.TokenTransferred, _tokenHolder);
         }
@@ -429,40 +476,50 @@ public partial class VoiceManager : Node
         return GetTree().GetFirstNodeInGroup("Player") as Node3D;
     }
 
-    private void BroadcastNoiseEvent(int tier)
+    public void BroadcastNoiseEvent(int tier)
     {
-        Node3D localPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
-        if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+        tier = Mathf.Clamp(tier, 0, 3);
+        if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !Multiplayer.IsServer())
         {
-            long myId = Multiplayer.GetUniqueId();
-            localPlayer = FindPlayerNodeByPeerId(myId);
+            // Client sends only the tier — position is derived server-side from the sender's node.
+            RpcId(NetworkManager.ServerPeerId, nameof(ReportNoiseEventRPC), tier);
         }
-
-        if (localPlayer != null)
+        else
         {
-            if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
-            {
-                RpcId(NetworkManager.ServerPeerId, nameof(ReportNoiseEvent), localPlayer.GlobalPosition, tier);
-            }
-            else
-            {
+            // Offline / Server / Solo host: resolve locally and immediately without RPC.
+            Node3D localPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
+            if (localPlayer != null)
                 ReportNoiseEvent(localPlayer.GlobalPosition, tier);
-            }
         }
     }
 
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
-    private void ReportNoiseEvent(Vector3 playerPosition, int tier)
+    // Security: position is NOT accepted from clients — it is derived server-side
+    // from the sender's owned player node to prevent position spoofing.
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    private void ReportNoiseEventRPC(int tier)
     {
-        if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !Multiplayer.IsServer()) return;
+        if (!Multiplayer.IsServer()) return;
 
+        long senderId = Multiplayer.GetRemoteSenderId();
+        Node3D senderPlayer = FindPlayerNodeByPeerId(senderId == 0 ? (long)Multiplayer.GetUniqueId() : senderId);
+        if (senderPlayer == null) return;
+
+        DispatchNoiseToListeners(senderPlayer.GlobalPosition, Mathf.Clamp(tier, 0, 3));
+    }
+
+    // Local (offline / host) entry-point — always safe because position is read from the actual node.
+    public void ReportNoiseEvent(Vector3 trustedPosition, int tier)
+    {
+        DispatchNoiseToListeners(trustedPosition, Mathf.Clamp(tier, 0, 3));
+    }
+
+    private void DispatchNoiseToListeners(Vector3 position, int tier)
+    {
         var listeners = GetTree().GetNodesInGroup("Listener");
         foreach (var node in listeners)
         {
             if (node is ListenerAI ai)
-            {
-                ai.HearNoise(playerPosition, tier);
-            }
+                ai.HearNoise(position, tier);
         }
     }
 

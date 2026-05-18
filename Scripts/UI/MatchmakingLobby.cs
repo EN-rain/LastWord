@@ -75,6 +75,7 @@ public partial class MatchmakingLobby : CanvasLayer
             NetworkManager.Instance.ChatMessageReceived    += OnChatReceived;
             NetworkManager.Instance.PlayerMicVolumeSynced += OnMicVolumeReceived;
             NetworkManager.Instance.MatchStarted           += OnMatchStarted;
+            NetworkManager.Instance.RoomCodeUpdated        += OnRoomCodeUpdated;
         }
 
         if (VoiceManager.Instance != null)
@@ -97,6 +98,7 @@ public partial class MatchmakingLobby : CanvasLayer
             NetworkManager.Instance.ChatMessageReceived    -= OnChatReceived;
             NetworkManager.Instance.PlayerMicVolumeSynced -= OnMicVolumeReceived;
             NetworkManager.Instance.MatchStarted           -= OnMatchStarted;
+            NetworkManager.Instance.RoomCodeUpdated        -= OnRoomCodeUpdated;
         }
 
         if (_sendingMicLevel && VoiceManager.Instance != null)
@@ -111,6 +113,11 @@ public partial class MatchmakingLobby : CanvasLayer
         if (_labelRoomCode == null || NetworkManager.Instance == null) return;
         string mode = NetworkManager.Instance.IsMatchmakingSession ? "MATCHMAKING" : NetworkManager.Instance.DirectIpRoomCodeLabel;
         _labelRoomCode.Text = $"ROOM CODE: {NetworkManager.Instance.CurrentRoomCode} ({mode})";
+    }
+
+    private void OnRoomCodeUpdated(string newCode)
+    {
+        UpdateRoomCodeLabel();
     }
 
     private void RefreshPlayerList()
@@ -160,6 +167,14 @@ public partial class MatchmakingLobby : CanvasLayer
                 // Host can start if there are at least 2 players and everyone else is ready
                 _btnReady.Disabled = players.Count < 2 || !othersReady;
             }
+        }
+        else if (_btnReady != null)
+        {
+            long localId = Multiplayer.GetUniqueId();
+            var local = players.Find(p => p.PeerId == localId);
+            bool isReady = local != null && local.IsReady;
+            _btnReady.Text = isReady ? "UNREADY" : "READY";
+            _btnReady.Disabled = false;
         }
     }
 

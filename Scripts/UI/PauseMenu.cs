@@ -25,7 +25,7 @@ public partial class PauseMenu : CanvasLayer
 
     public override void _Ready()
     {
-        GD.Print("PauseMenu: Initializing dynamic overlay...");
+        // GD.Print("PauseMenu: Initializing dynamic overlay...");
 
         _overlay = GetNodeOrNull<ColorRect>(OverlayPath);
         _menuPanel = GetNodeOrNull<Control>(MenuPanelPath);
@@ -54,6 +54,9 @@ public partial class PauseMenu : CanvasLayer
 
     public override void _ExitTree()
     {
+        if (_resumeButton != null) _resumeButton.Pressed -= OnResumePressed;
+        if (_settingsButton != null) _settingsButton.Pressed -= OnSettingsPressed;
+        if (_quitButton != null) _quitButton.Pressed -= OnQuitPressed;
         IsOpen = false;
     }
 

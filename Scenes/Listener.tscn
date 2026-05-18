@@ -33,14 +33,14 @@ avoidance_enabled = true
 [node name="BaseCharacter" parent="Visuals" unique_id=72685386 instance=ExtResource("2_base")]
 
 [node name="Eyes" type="Node3D" parent="Visuals" unique_id=394242653]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4859242, 0.62814593)
 
 [node name="LeftEye" type="MeshInstance3D" parent="Visuals/Eyes" unique_id=1513406992]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1.8291428, 0, 0, 0, 1, -0.24821731, 0.040231228, -0.048401833)
 mesh = SubResource("SphereMesh_eye")
 
 [node name="RightEye" type="MeshInstance3D" parent="Visuals/Eyes" unique_id=238902305]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0, -0.2)
+transform = Transform3D(1, 0, 0, 0, 1.8291428, 0, 0, 0, 1, 0.24200684, 0.040231228, -0.058315158)
 mesh = SubResource("SphereMesh_eye")
 
 [node name="HumPlayer" type="AudioStreamPlayer3D" parent="." unique_id=1131047838]

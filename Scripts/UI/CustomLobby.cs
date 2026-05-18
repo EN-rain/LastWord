@@ -169,12 +169,22 @@ public partial class CustomLobby : CanvasLayer
             _labelOrientation.Text    = "ORIENTATION MODE ACTIVE: A survivor with fewer than 3 runs is in this lobby. Tutorial phase is locked.";
         }
 
-        // Enable Start Run only when all OTHER players are ready (host only)
+        // Enable Start Run only when there are >=2 players AND all OTHER players are ready (host only).
+        // Without the count gate, an empty "others" set is vacuously true and lets the host start alone.
         if (_btnStartRun != null && Multiplayer.IsServer())
         {
             long localId = Multiplayer.GetUniqueId();
-            bool othersReady = players.Where(p => p.PeerId != localId).All(p => p.IsReady);
-            _btnStartRun.Disabled = !othersReady;
+            var others = players.Where(p => p.PeerId != localId).ToList();
+            bool canStart = others.All(p => p.IsReady);
+            _btnStartRun.Disabled = !canStart;
+        }
+        else if (_btnReady != null)
+        {
+            long localId = Multiplayer.GetUniqueId();
+            var local = players.Find(p => p.PeerId == localId);
+            bool isReady = local != null && local.IsReady;
+            _localIsReady = isReady;
+            _btnReady.Text = isReady ? "UNREADY" : "READY";
         }
     }
 

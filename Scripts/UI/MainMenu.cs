@@ -389,8 +389,10 @@ public partial class MainMenu : CanvasLayer
 
 		UpdateStatus(StatusConnectingPrivateText, ColorTextNormal);
 
-		// 4.5: Warn about direct IP connection for internet sessions without relay
-		if (ip != "127.0.0.1" && !ip.StartsWith("192.168.") && !ip.StartsWith("10.") && !ip.StartsWith("172."))
+		// Warn about direct IP connection for internet sessions without relay.
+		// Only 172.16.0.0/12 (second octet 16-31) is RFC1918 private space;
+		// addresses like 172.1.x.x or 172.32.x.x are public.
+		if (!IsRfc1918(ip))
 		{
 			GD.PushWarning($"MainMenu: Direct-IP connect to {ip} attempted. This will fail for internet hosts behind NAT until Steam Relay is integrated.");
 		}
@@ -402,6 +404,22 @@ public partial class MainMenu : CanvasLayer
 			UpdateStatus("FAILED TO INITIATE CONNECTION", ColorTextAccent);
 		}
 		// Transition to CustomLobby fires from OnConnectionSuccess (non-matchmaking path)
+	}
+
+	/// <summary>Returns true for all RFC1918 private IPv4 addresses.</summary>
+	private static bool IsRfc1918(string ip)
+	{
+		if (ip == "127.0.0.1") return true;
+		if (ip.StartsWith("10.")) return true;
+		if (ip.StartsWith("192.168.")) return true;
+		// 172.16.0.0/12 → second octet must be 16–31
+		if (ip.StartsWith("172."))
+		{
+			var parts = ip.Split('.');
+			if (parts.Length >= 2 && int.TryParse(parts[1], out int octet2))
+				return octet2 >= 16 && octet2 <= 31;
+		}
+		return false;
 	}
 
 	private void OnQuitPressed()

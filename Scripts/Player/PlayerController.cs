@@ -7,6 +7,7 @@ public partial class PlayerController : CharacterBody3D
 	[Export] public float RunSpeed = 8.0f;
 	[Export] public float JumpVelocity = 4.5f;
 	[Export] public float Gravity = 9.8f;
+	[Export] public float RemoteSyncInterval = 0.05f;
 
 	[ExportGroup("Node References")]
 	[Export] public NodePath VisualsPath = "BaseCharacter";
@@ -27,8 +28,16 @@ public partial class PlayerController : CharacterBody3D
 	private bool _wasAirborne = false;
 	private bool _jumpAnimFinished = false;
 
+	// Footstep Noise Emission variables
+	private float _footstepTimer = 0.0f;
+	private const float WalkStepInterval = 0.5f;
+	private const float RunStepInterval = 0.3f;
+	private float _remoteSyncTimer = 0.0f;
+
 	public override void _Ready()
 	{
+		AddToGroup("Player");
+
 		// Parse peer authority ID from node name (e.g. if spawned named "1234567")
 		if (long.TryParse(Name, out long peerId))
 		{
@@ -168,20 +177,73 @@ public partial class PlayerController : CharacterBody3D
 		Velocity = velocity;
 		MoveAndSlide();
 
+		// Footstep Noise Emission
+		if (IsOnFloor() && direction != Vector3.Zero && !PauseMenu.IsOpen)
+		{
+			_footstepTimer += (float)delta;
+			float interval = isRunning ? RunStepInterval : WalkStepInterval;
+			if (_footstepTimer >= interval)
+			{
+				_footstepTimer = 0f;
+				EmitFootstepNoise(isRunning);
+			}
+		}
+		else
+		{
+			_footstepTimer = 0f;
+		}
+
 		UpdateAnimation(direction != Vector3.Zero, isRunning);
+
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+		{
+			_remoteSyncTimer += (float)delta;
+			if (_remoteSyncTimer >= RemoteSyncInterval)
+			{
+				_remoteSyncTimer = 0f;
+				Rpc(nameof(SyncRemoteState), GlobalPosition, Velocity, _visuals?.Rotation ?? Vector3.Zero);
+			}
+		}
 	}
 	
 	private void UpdateAnimation(bool isMoving, bool isRunning)
 	{
-		if (_animationPlayer == null) return;
+		// Update visual debug label with movement state
+		string stateText = "IDLE";
+		Color stateColor = Colors.Yellow;
 
 		bool isOnFloor = IsOnFloor();
 		bool isAirborne = !isOnFloor;
+
+		if (isAirborne)
+		{
+			stateText = "JUMPING/AIRBORNE";
+			stateColor = Colors.Cyan;
+		}
+		else if (isMoving)
+		{
+			stateText = isRunning ? "RUNNING" : "WALKING";
+			stateColor = isRunning ? Colors.Red : Colors.Green;
+		}
+
+		if (_wasAirborne && isOnFloor)
+		{
+			stateText = "LANDED";
+			stateColor = Colors.Lime;
+		}
+
+		if (IsMultiplayerAuthority() && HUDManager.Instance != null)
+		{
+			HUDManager.Instance.UpdatePlayerState(stateText, stateColor);
+		}
+
+		if (_animationPlayer == null) return;
 
 		// --- LANDING: just touched the ground this frame ---
 		if (_wasAirborne && isOnFloor)
 		{
 			_jumpAnimFinished = false;
+			EmitLandingNoise();
 			// Resume playback in case we had paused on the last frame (guard against empty animation name)
 			if (!string.IsNullOrEmpty(_animationPlayer.CurrentAnimation))
 				_animationPlayer.Play(_animationPlayer.CurrentAnimation, 0f);
@@ -243,5 +305,64 @@ public partial class PlayerController : CharacterBody3D
 
 		if (!string.IsNullOrEmpty(targetAnim) && _animationPlayer.HasAnimation(targetAnim) && _animationPlayer.CurrentAnimation != targetAnim)
 			_animationPlayer.Play(targetAnim, 0.25f);
+	}
+
+	private void EmitFootstepNoise(bool isRunning)
+	{
+		// Only the local player authority should broadcast their footsteps to the server
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
+			return;
+
+		int tier = isRunning ? 1 : 0; // Running = Tier 1 (Whisper), Walking = Tier 0 (Silent)
+		string tierName = isRunning ? "Tier 1 (Whisper)" : "Tier 0 (Silent)";
+		GD.Print($"{Name}: Emitted Footstep Noise — {tierName} at {GlobalPosition}");
+
+		if (VoiceManager.Instance != null)
+		{
+			if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+			{
+				// Do NOT send position — server derives it from sender node (anti-spoof).
+				VoiceManager.Instance.BroadcastNoiseEvent(tier);
+			}
+			else
+			{
+				VoiceManager.Instance.ReportNoiseEvent(GlobalPosition, tier);
+			}
+		}
+	}
+
+	private void EmitLandingNoise()
+	{
+		// Only the local player authority should broadcast their landing to the server
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
+			return;
+
+		int tier = 2; // Landing = Tier 2 (Normal)
+		GD.Print($"{Name}: Emitted Landing Noise — Tier 2 (Normal) at {GlobalPosition}");
+
+		if (VoiceManager.Instance != null)
+		{
+			if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+			{
+				// Do NOT send position — server derives it from sender node (anti-spoof).
+				VoiceManager.Instance.BroadcastNoiseEvent(tier);
+			}
+			else
+			{
+				VoiceManager.Instance.ReportNoiseEvent(GlobalPosition, tier);
+			}
+		}
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false, TransferMode = MultiplayerPeer.TransferModeEnum.Unreliable)]
+	private void SyncRemoteState(Vector3 position, Vector3 velocity, Vector3 visualsRotation)
+	{
+		if (Multiplayer.MultiplayerPeer == null || !Multiplayer.HasMultiplayerPeer() || IsMultiplayerAuthority())
+			return;
+
+		GlobalPosition = position;
+		Velocity = velocity;
+		if (_visuals != null)
+			_visuals.Rotation = visualsRotation;
 	}
 }

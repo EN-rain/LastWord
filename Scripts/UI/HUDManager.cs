@@ -2,12 +2,15 @@ using Godot;
 
 public partial class HUDManager : Control
 {
+	public static HUDManager Instance { get; private set; }
+
 	[Export] public NodePath TierLabelPath;
 	[Export] public NodePath VolumeMeterPath;
 	[Export] public NodePath TokenIndicatorPath;
 	[Export] public NodePath RoomCodeLabelPath;
 	[Export] public NodePath HolderNameLabelPath;
 	[Export] public NodePath HoldTimerLabelPath;
+	[Export] public NodePath PlayerStateLabelPath;
 
 	private Label _tierLabel;
 	private ProgressBar _volumeMeter;
@@ -15,6 +18,7 @@ public partial class HUDManager : Control
 	private Label _roomCodeLabel;
 	private Label _holderNameLabel;
 	private Label _holdTimerLabel;
+	private Label _playerStateLabel;
 	
 	private float _currentHoldDuration = 0f;
 
@@ -33,12 +37,14 @@ public partial class HUDManager : Control
 
 	public override void _Ready()
 	{
+		Instance = this;
 		_tierLabel       = GetNodeOrNull<Label>(TierLabelPath);
 		_volumeMeter     = GetNodeOrNull<ProgressBar>(VolumeMeterPath);
 		_tokenIndicator  = GetNodeOrNull<TextureRect>(TokenIndicatorPath);
 		_roomCodeLabel   = GetNodeOrNull<Label>(RoomCodeLabelPath);
 		_holderNameLabel = GetNodeOrNull<Label>(HolderNameLabelPath);
 		_holdTimerLabel  = GetNodeOrNull<Label>(HoldTimerLabelPath);
+		_playerStateLabel = GetNodeOrNull<Label>(PlayerStateLabelPath);
 
 		// Update the room code display
 		if (_roomCodeLabel != null)
@@ -53,6 +59,13 @@ public partial class HUDManager : Control
 			}
 		}
 
+		// Reset token UI to a clean hidden state (#7: visible-by-default in tscn)
+		if (_tokenIndicator  != null) _tokenIndicator.Visible  = false;
+		if (_holderNameLabel != null) _holderNameLabel.Text    = "Token: None";
+		if (_holdTimerLabel  != null) _holdTimerLabel.Text     = "00:00.00";
+		_currentHoldDuration = 0f;
+		UpdateTierUI(0);
+
 		// Connect to VoiceManager
 		if (VoiceManager.Instance != null)
 		{
@@ -64,10 +77,15 @@ public partial class HUDManager : Control
 		{
 			GD.PrintErr("HUDManager: VoiceManager.Instance is null! Signals not connected.");
 		}
+
+		if (NetworkManager.Instance != null)
+			NetworkManager.Instance.RoomCodeUpdated += OnRoomCodeUpdated;
 	}
 
 	public override void _ExitTree()
 	{
+		if (Instance == this) Instance = null;
+
 		if (VoiceManager.Instance != null)
 		{
 			VoiceManager.Instance.TierChanged      -= OnTierChanged;
@@ -75,9 +93,13 @@ public partial class HUDManager : Control
 			VoiceManager.Instance.TokenTransferred -= OnTokenTransferred;
 		}
 
+		if (NetworkManager.Instance != null)
+			NetworkManager.Instance.RoomCodeUpdated -= OnRoomCodeUpdated;
+
 		if (_tokenIndicator != null) _tokenIndicator.Visible = false;
 		if (_holderNameLabel != null) _holderNameLabel.Text = "Token: None";
 		if (_holdTimerLabel != null) _holdTimerLabel.Text = "00:00.00";
+		_currentHoldDuration = 0f;
 		
 		UpdateTierUI(0);
 	}
@@ -119,8 +141,11 @@ public partial class HUDManager : Control
 	{
 		if (newHolder == null)
 		{
-			if (_tokenIndicator != null) _tokenIndicator.Visible = false;
-			if (_holderNameLabel != null) _holderNameLabel.Text = "Token: None";
+			// #8: clear stale hold-timer text so it never shows a leftover duration
+			if (_tokenIndicator  != null) _tokenIndicator.Visible  = false;
+			if (_holderNameLabel != null) _holderNameLabel.Text    = "Token: None";
+			if (_holdTimerLabel  != null) _holdTimerLabel.Text     = "00:00.00";
+			_currentHoldDuration = 0f;
 			return;
 		}
 
@@ -138,6 +163,12 @@ public partial class HUDManager : Control
 			tween.TweenProperty(_tokenIndicator, "scale", new Vector2(TokenPulseScale, TokenPulseScale), TokenPulseUpDuration);
 			tween.TweenProperty(_tokenIndicator, "scale", new Vector2(1.0f, 1.0f), TokenPulseDownDuration);
 		}
+	}
+
+	private void OnRoomCodeUpdated(string newCode)
+	{
+		if (_roomCodeLabel != null)
+			_roomCodeLabel.Text = string.IsNullOrEmpty(newCode) ? RoomCodeOfflineText : $"{RoomCodePrefixText}{newCode}";
 	}
 
 	// ------------------------------------------------------------------ //
@@ -158,5 +189,14 @@ public partial class HUDManager : Control
 		};
 		_tierLabel.Modulate = targetColor;
 		if (_volumeMeter != null) _volumeMeter.Modulate = targetColor;
+	}
+
+	public void UpdatePlayerState(string stateText, Color stateColor)
+	{
+		if (_playerStateLabel != null)
+		{
+			_playerStateLabel.Text = $"State: {stateText}";
+			_playerStateLabel.Modulate = stateColor;
+		}
 	}
 }

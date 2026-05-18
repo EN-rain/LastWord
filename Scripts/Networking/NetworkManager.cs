@@ -206,7 +206,14 @@ public partial class NetworkManager : Node
     // ---------------------------------------------------------------------------
     public Error CreateHost(int port = DefaultHostPort, bool isMatchmaking = false)
     {
-        GD.Print($"NetworkManager: Creating host on port {port}...");
+        // GD.Print($"NetworkManager: Creating host on port {port}...");
+        IsLobbyFormed = false;
+        IsMatchStarted = false;
+        IsOrientationModeActive = false;
+        _isCountdownActive = false;
+        _matchmakingQueue.Clear();
+        LobbyPlayers.Clear();
+
         _peer = new ENetMultiplayerPeer();
 
         Error err = _peer.CreateServer(port, 4);
@@ -226,14 +233,18 @@ public partial class NetworkManager : Node
             FetchAndSetPublicRoomCode();
         }
 
-        LobbyPlayers.Clear();
-        LobbyPlayers.Add(new PlayerInfo
+        // Dedicated/headless servers have no local survivor - skip the host entry.
+        bool isDedicated = OS.HasFeature("dedicated_server") || DisplayServer.GetName() == "headless";
+        if (!isDedicated)
         {
-            PeerId        = 1,
-            Name          = PlayerName,
-            Runs          = PlayerRuns,
-            IsReady       = false
-        });
+            LobbyPlayers.Add(new PlayerInfo
+            {
+                PeerId   = 1,
+                Name     = PlayerName,
+                Runs     = PlayerRuns,
+                IsReady  = false
+            });
+        }
         EmitSignal(SignalName.LobbyPlayersUpdated);
 
         return Error.Ok;
@@ -241,6 +252,13 @@ public partial class NetworkManager : Node
 
     public Error JoinLobby(string address, int port, ConnectionMode mode)
     {
+        IsLobbyFormed = false;
+        IsMatchStarted = false;
+        IsOrientationModeActive = false;
+        _isCountdownActive = false;
+        _matchmakingQueue.Clear();
+        LobbyPlayers.Clear();
+
         _peer = new ENetMultiplayerPeer();
 
         Error err = _peer.CreateClient(address, port);
@@ -272,8 +290,10 @@ public partial class NetworkManager : Node
             _peer = null;
         }
         Multiplayer.MultiplayerPeer = null;
+        IsMatchmakingSession        = false;
         IsLobbyFormed               = false;
         IsMatchStarted              = false;
+        IsOrientationModeActive     = false;
         _isCountdownActive          = false;
         CurrentRoomCode             = "";
         _matchmakingQueue.Clear();

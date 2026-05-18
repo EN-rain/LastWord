@@ -68,7 +68,17 @@ public partial class CameraManager : Node3D
             _targetZoom = _defaultPosition;
         }
 
-        Input.MouseMode = Input.MouseModeEnum.Captured;
+        // Only capture mouse for the local authority player.
+        // CameraManager._Ready executes before PlayerController._Ready (child-first order),
+        // so we must check here to avoid briefly capturing input for a remote camera.
+        Node3D parentPlayer = GetParent<Node3D>();
+        bool isLocalAuthority = parentPlayer == null
+            || Multiplayer.MultiplayerPeer == null
+            || !Multiplayer.HasMultiplayerPeer()
+            || (parentPlayer is CharacterBody3D cb && cb.IsMultiplayerAuthority());
+
+        if (isLocalAuthority)
+            Input.MouseMode = Input.MouseModeEnum.Captured;
         
         // Load saved mouse sensitivity from settings.cfg
         var cfg = new ConfigFile();
