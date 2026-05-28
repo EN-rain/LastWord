@@ -6,18 +6,99 @@
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_shape"]
 radius = 0.3
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eye"]
-albedo_color = Color(0.4, 0.4, 0.4, 1)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sub_whisper_debug"]
+transparency = 1
+albedo_color = Color(0.2, 1, 0.45, 0.2)
 
-[sub_resource type="SphereMesh" id="SphereMesh_eye"]
-material = SubResource("StandardMaterial3D_eye")
-radius = 0.06
-height = 0.12
+[sub_resource type="SphereMesh" id="SphereMesh_sub_whisper_debug"]
+material = SubResource("StandardMaterial3D_sub_whisper_debug")
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_whisper_debug"]
+transparency = 1
+albedo_color = Color(1, 1, 0.2, 0.18)
+
+[sub_resource type="SphereMesh" id="SphereMesh_whisper_debug"]
+material = SubResource("StandardMaterial3D_whisper_debug")
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_movement_debug"]
+transparency = 1
+albedo_color = Color(0.2, 0.7, 1, 0.2)
+
+[sub_resource type="SphereMesh" id="SphereMesh_movement_debug"]
+material = SubResource("StandardMaterial3D_movement_debug")
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_normal_debug"]
+transparency = 1
+albedo_color = Color(1, 0.55, 0.1, 0.16)
+
+[sub_resource type="SphereMesh" id="SphereMesh_normal_debug"]
+material = SubResource("StandardMaterial3D_normal_debug")
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_notice_debug"]
+transparency = 1
+albedo_color = Color(0.8, 0.4, 1, 0.15)
+
+[sub_resource type="SphereMesh" id="SphereMesh_notice_debug"]
+material = SubResource("StandardMaterial3D_notice_debug")
+radius = 1.0
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_attack_debug"]
+transparency = 1
+albedo_color = Color(1, 0.05, 0.05, 0.25)
+
+[sub_resource type="SphereMesh" id="SphereMesh_attack_debug"]
+material = SubResource("StandardMaterial3D_attack_debug")
+radius = 1.0
+height = 2.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_sub_whisper_debug"]
+radius = 4.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_whisper_debug"]
+radius = 8.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_movement_debug"]
+radius = 8.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_normal_debug"]
+radius = 20.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_notice_debug"]
+radius = 15.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_attack_debug"]
+radius = 5.0
 
 [node name="Listener" type="CharacterBody3D" unique_id=1037210775 groups=["Listener"]]
 collision_layer = 4
 collision_mask = 3
 script = ExtResource("1_ai")
+NavAgentPath = NodePath("NavAgent")
+VisualsPath = NodePath("Visuals")
+HumPlayerPath = NodePath("HumPlayer")
+PrintAnimationDebug = false
+DebugLabelPath = NodePath("DebugSoundLabel")
+SubWhisperDebugShapePath = NodePath("DebugRanges/SubWhisperArea/CollisionShape3D")
+WhisperDebugShapePath = NodePath("DebugRanges/WhisperArea/CollisionShape3D")
+MovementDebugShapePath = NodePath("DebugRanges/MovementArea/CollisionShape3D")
+NormalDebugShapePath = NodePath("DebugRanges/NormalArea/CollisionShape3D")
+NoticeDebugShapePath = NodePath("DebugRanges/NoticeArea/CollisionShape3D")
+AttackDebugShapePath = NodePath("DebugRanges/AttackArea/CollisionShape3D")
+SubWhisperDebugMeshPath = NodePath("DebugRanges/SubWhisperMesh")
+WhisperDebugMeshPath = NodePath("DebugRanges/WhisperMesh")
+MovementDebugMeshPath = NodePath("DebugRanges/MovementMesh")
+NormalDebugMeshPath = NodePath("DebugRanges/NormalMesh")
+NoticeDebugMeshPath = NodePath("DebugRanges/NoticeMesh")
+AttackDebugMeshPath = NodePath("DebugRanges/AttackMesh")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1192660953]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
@@ -32,18 +113,96 @@ avoidance_enabled = true
 
 [node name="BaseCharacter" parent="Visuals" unique_id=72685386 instance=ExtResource("2_base")]
 
-[node name="Eyes" type="Node3D" parent="Visuals" unique_id=394242653]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4859242, 0.62814593)
-
-[node name="LeftEye" type="MeshInstance3D" parent="Visuals/Eyes" unique_id=1513406992]
-transform = Transform3D(1, 0, 0, 0, 1.8291428, 0, 0, 0, 1, -0.24821731, 0.040231228, -0.048401833)
-mesh = SubResource("SphereMesh_eye")
-
-[node name="RightEye" type="MeshInstance3D" parent="Visuals/Eyes" unique_id=238902305]
-transform = Transform3D(1, 0, 0, 0, 1.8291428, 0, 0, 0, 1, 0.24200684, 0.040231228, -0.058315158)
-mesh = SubResource("SphereMesh_eye")
-
 [node name="HumPlayer" type="AudioStreamPlayer3D" parent="." unique_id=1131047838]
 unit_size = 3.0
 autoplay = true
 max_distance = 12.0
+
+[node name="DebugSoundLabel" type="Label3D" parent="." unique_id=979882851]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.974846, 0)
+billboard = 1
+modulate = Color(0, 1, 0, 1)
+text = "IDLE
+NO SOUND"
+font_size = 44
+outline_size = 10
+
+[node name="DebugRanges" type="Node3D" parent="." unique_id=2100003364]
+
+[node name="SubWhisperMesh" type="MeshInstance3D" parent="DebugRanges" unique_id=1138967638]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_sub_whisper_debug")
+
+[node name="WhisperMesh" type="MeshInstance3D" parent="DebugRanges" unique_id=908102532]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_whisper_debug")
+
+[node name="MovementMesh" type="MeshInstance3D" parent="DebugRanges" unique_id=524245501]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_movement_debug")
+
+[node name="NormalMesh" type="MeshInstance3D" parent="DebugRanges" unique_id=588623349]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_normal_debug")
+
+[node name="NoticeMesh" type="MeshInstance3D" parent="DebugRanges" unique_id=1778398614]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_notice_debug")
+
+[node name="AttackMesh" type="MeshInstance3D" parent="DebugRanges" unique_id=2086699469]
+cast_shadow = 0
+mesh = SubResource("SphereMesh_attack_debug")
+
+[node name="SubWhisperArea" type="Area3D" parent="DebugRanges" unique_id=468369619]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebugRanges/SubWhisperArea" unique_id=1037722418]
+shape = SubResource("SphereShape3D_sub_whisper_debug")
+
+[node name="WhisperArea" type="Area3D" parent="DebugRanges" unique_id=421171432]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebugRanges/WhisperArea" unique_id=1288815330]
+shape = SubResource("SphereShape3D_whisper_debug")
+
+[node name="MovementArea" type="Area3D" parent="DebugRanges" unique_id=1608221436]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebugRanges/MovementArea" unique_id=1007267634]
+shape = SubResource("SphereShape3D_movement_debug")
+
+[node name="NormalArea" type="Area3D" parent="DebugRanges" unique_id=925949432]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebugRanges/NormalArea" unique_id=306449116]
+shape = SubResource("SphereShape3D_normal_debug")
+
+[node name="NoticeArea" type="Area3D" parent="DebugRanges" unique_id=570424549]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebugRanges/NoticeArea" unique_id=2099748366]
+shape = SubResource("SphereShape3D_notice_debug")
+
+[node name="AttackArea" type="Area3D" parent="DebugRanges" unique_id=989721679]
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebugRanges/AttackArea" unique_id=584579158]
+shape = SubResource("SphereShape3D_attack_debug")

@@ -23,8 +23,8 @@ public partial class MatchmakingLobby : CanvasLayer
     [Export] public NodePath PrivacyLabelPath;
 
     // -- Scene Paths --
-    [Export(PropertyHint.File, "*.tscn")] public string MainMenuScenePath = "res://Scenes/MainMenu.tscn";
-    [Export(PropertyHint.File, "*.tscn")] public string MainGameScenePath = "res://Scenes/GameScene.tscn";
+    [Export(PropertyHint.File, "*.tscn")] public string MainMenuScenePath;
+    [Export(PropertyHint.File, "*.tscn")] public string MainGameScenePath;
 
     // -- Hardcoded Texts --
     [Export] public string NoticeConsentText = "NOTICE: In-game voice chat is required. Speaking transfers the monster's attention to you.";

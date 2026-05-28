@@ -16,6 +16,7 @@ public partial class SettingsMenu : PanelContainer
 	[Export] public NodePath PanelAudioMicPath;
 	[Export] public NodePath PanelOtherOptionsPath;
 	[Export] public NodePath PanelAccountPath;
+	[Export] public NodePath SidebarPath;
 
 	[ExportGroup("Account")]
 	[Export] public NodePath ProfileNameInputPath;
@@ -182,7 +183,7 @@ public partial class SettingsMenu : PanelContainer
 
 		if (IsSimplifiedMode)
 		{
-			var sidebar = GetNodeOrNull<Control>("HBox/Sidebar");
+			var sidebar = GetNodeOrNull<Control>(SidebarPath);
 			if (sidebar != null) sidebar.Visible = false;
 			SetActiveTab(2); // Force to Audio & Mic tab
 		}

@@ -4,21 +4,9 @@
 [ext_resource type="PackedScene" uid="uid://b8y4r8w8y8y8y" path="res://Scenes/HUD.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://dblixul2w7k1a" path="res://Scenes/PauseMenu.tscn" id="3_pause"]
 [ext_resource type="Script" uid="uid://dmp8o6eyh5h8k" path="res://Scripts/Core/GameManager.cs" id="4_gamemanager"]
-[ext_resource type="Script" path="res://Scripts/Enemy/PatrolWaypoint.cs" id="5_patrol"]
-[ext_resource type="PackedScene" uid="uid://cxab3x89v9j9h" path="res://Scenes/Listener.tscn" id="6_listener"]
-[ext_resource type="PackedScene" uid="uid://tokenvis1234" path="res://Scenes/TokenVisual.tscn" id="7_token_visual"]
-
-[sub_resource type="NavigationMesh" id="NavigationMesh_main"]
-agent_height = 2.0
-agent_radius = 0.5
-agent_max_climb = 0.5
-agent_max_slope = 45.0
-cell_size = 0.25
-cell_height = 0.25
-filter_low_hanging_obstacles = true
-filter_ledge_spans = true
-filter_walkable_low_height_spans = true
-geometry_parsed_geometry_type = 1
+[ext_resource type="Script" uid="uid://cgboxvid7e2bu" path="res://Scripts/Enemy/PatrolWaypoint.cs" id="5_patrol"]
+[ext_resource type="PackedScene" uid="uid://cxab3yaawakah" path="res://Scenes/Listener.tscn" id="6_listener"]
+[ext_resource type="PackedScene" path="res://Scenes/TokenVisual.tscn" id="7_token_visual"]
 
 [sub_resource type="Shader" id="Shader_grid"]
 code = "shader_type spatial;
@@ -61,12 +49,29 @@ data = PackedVector3Array(10, 0, 10, -10, 0, 10, 10, 0, -10, -10, 0, 10, -10, 0,
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_box"]
 
+[sub_resource type="NavigationMesh" id="NavigationMesh_main"]
+geometry_parsed_geometry_type = 1
+agent_height = 2.0
+agent_max_climb = 0.5
+filter_low_hanging_obstacles = true
+filter_ledge_spans = true
+filter_walkable_low_height_spans = true
+
 [node name="Main" type="Node3D" unique_id=417295634]
 script = ExtResource("4_gamemanager")
+PlayerScene = ExtResource("1_player")
+PlayersContainerPath = NodePath("Players")
+OfflinePlayerPath = NodePath("Player")
+NavigationRegionPath = NodePath("NavigationRegion3D")
+NavigationGeometryRootPath = NodePath("Plane")
+ExtraNavigationGeometryRootPath = NodePath("Node3D")
+PlayerSpawnPosition = Vector3(0, 1, 0)
 
 [node name="HUD" parent="." unique_id=1234231811 instance=ExtResource("2_hud")]
 
 [node name="PauseMenu" parent="." unique_id=1156729821 instance=ExtResource("3_pause")]
+
+[node name="Players" type="Node3D" parent="."]
 
 [node name="Plane" type="MeshInstance3D" parent="." unique_id=956697109]
 transform = Transform3D(4.2617984, 0, 0, 0, 1, 0, 0, 0, 3.9901886, 0, 0, 0)
@@ -78,7 +83,7 @@ mesh = SubResource("PlaneMesh_p1q2r")
 shape = SubResource("ConcavePolygonShape3D_floor")
 
 [node name="Player" parent="." unique_id=559049181 instance=ExtResource("1_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.848698, 1, -27.972298)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=650871301]
 transform = Transform3D(0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, -0.75, 0.433013, 0, 5, 0)
@@ -122,35 +127,35 @@ mesh = SubResource("BoxMesh_box")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Node3D/TestBox4/StaticBody3D" unique_id=1510623088]
 shape = SubResource("BoxShape3D_box")
 
-[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=866672511]
 navigation_mesh = SubResource("NavigationMesh_main")
 
-[node name="PatrolWaypoints" type="Node3D" parent="."]
+[node name="PatrolWaypoints" type="Node3D" parent="." unique_id=1513349198]
 
-[node name="Waypoint1" type="Marker3D" parent="PatrolWaypoints" groups=["Waypoint"]]
+[node name="Waypoint1" type="Marker3D" parent="PatrolWaypoints" unique_id=1371407913 groups=["Waypoint"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, 5)
 script = ExtResource("5_patrol")
 ZoneName = "Alpha"
 
-[node name="Waypoint2" type="Marker3D" parent="PatrolWaypoints" groups=["Waypoint"]]
+[node name="Waypoint2" type="Marker3D" parent="PatrolWaypoints" unique_id=1273876359 groups=["Waypoint"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.1, 5)
 script = ExtResource("5_patrol")
 ZoneName = "Beta"
 
-[node name="Waypoint3" type="Marker3D" parent="PatrolWaypoints" groups=["Waypoint"]]
+[node name="Waypoint3" type="Marker3D" parent="PatrolWaypoints" unique_id=675159153 groups=["Waypoint"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0.1, -5)
 script = ExtResource("5_patrol")
 ZoneName = "Gamma"
 
-[node name="Waypoint4" type="Marker3D" parent="PatrolWaypoints" groups=["Waypoint"]]
+[node name="Waypoint4" type="Marker3D" parent="PatrolWaypoints" unique_id=316136655 groups=["Waypoint"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0.1, -5)
 script = ExtResource("5_patrol")
 ZoneName = "Delta"
 
-[node name="Listener1" parent="." instance=ExtResource("6_listener")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 1, 3)
+[node name="Listener1" parent="." unique_id=1522566461 instance=ExtResource("6_listener")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7552147, 1, 27.119728)
 
-[node name="Listener2" parent="." instance=ExtResource("6_listener")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1, -8)
+[node name="Listener2" parent="." unique_id=971780636 instance=ExtResource("6_listener")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.17066, 1, -24.782309)
 
-[node name="TokenVisual" parent="." instance=ExtResource("7_token_visual")]
+[node name="TokenVisual" parent="." unique_id=1264202887 instance=ExtResource("7_token_visual")]

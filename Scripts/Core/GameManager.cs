@@ -4,6 +4,14 @@ using System;
 public partial class GameManager : Node3D
 {
     [Export] public PackedScene PlayerScene;
+    [Export] public NodePath PlayersContainerPath;
+    [Export] public NodePath OfflinePlayerPath;
+    [Export] public NodePath NavigationRegionPath;
+    [Export] public NodePath NavigationGeometryRootPath;
+    [Export] public NodePath ExtraNavigationGeometryRootPath;
+    [Export] public Vector3 PlayerSpawnPosition = new Vector3(0, 1, 0);
+    [Export] public float RunLogThreshold = 300.0f; // 5 minutes
+    [Export] public float OrientationDuration = 210.0f; // 3 min 30 sec
 
     private Node  _playersContainer;
     private float _sessionElapsed    = 0.0f;
@@ -11,24 +19,21 @@ public partial class GameManager : Node3D
     private float _orientationTimer  = 0.0f;
     private bool  _orientationActive = false;
 
-    private const float RunLogThreshold         = 300.0f; // 5 minutes
-    private const float OrientationDuration     = 210.0f; // 3 min 30 sec
-
     public override void _Ready()
     {
         CallDeferred(nameof(SetupNavigationRuntime));
 
-        // Ensure PlayerScene is resolved early so we can safely read its ResourcePath
         if (PlayerScene == null)
         {
-            PlayerScene = GD.Load<PackedScene>("res://Scenes/Player.tscn");
+            GD.PushError("GameManager: PlayerScene is not assigned. Set it on the GameScene root in the inspector.");
+            return;
         }
 
-        _playersContainer = GetNodeOrNull("Players");
+        _playersContainer = GetNodeOrNull(PlayersContainerPath);
         if (_playersContainer == null)
         {
             _playersContainer = new Node3D();
-            _playersContainer.Name = "Players";
+            _playersContainer.Name = "SpawnedPlayers";
             AddChild(_playersContainer);
         }
 
@@ -48,7 +53,7 @@ public partial class GameManager : Node3D
         if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
         {
             // 1. Remove the static offline player node if it exists to avoid duplicates
-            var offlinePlayer = GetNodeOrNull("Player");
+            var offlinePlayer = GetNodeOrNull(OfflinePlayerPath);
             if (offlinePlayer != null)
             {
                 offlinePlayer.QueueFree();
@@ -91,20 +96,23 @@ public partial class GameManager : Node3D
     {
         // Reparent level geometry under the region once the scene tree is fully assembled,
         // then bake the mesh so agents can query a valid map on their first patrol tick.
-        var navRegion = GetNodeOrNull<NavigationRegion3D>("NavigationRegion3D");
+        var navRegion = GetNodeOrNull<NavigationRegion3D>(NavigationRegionPath);
         if (navRegion == null)
             return;
 
-        ReparentNodeUnder(navRegion, "Plane");
-        ReparentNodeUnder(navRegion, "Node3D");
+        ReparentNodeUnder(navRegion, NavigationGeometryRootPath);
+        ReparentNodeUnder(navRegion, ExtraNavigationGeometryRootPath);
 
         navRegion.BakeNavigationMesh(false);
         GD.Print("GameManager: Reparented geometry and baked Navigation Mesh.");
     }
 
-    private void ReparentNodeUnder(Node newParent, string childName)
+    private void ReparentNodeUnder(Node newParent, NodePath childPath)
     {
-        var node = GetNodeOrNull(childName);
+        if (childPath == null || childPath.IsEmpty)
+            return;
+
+        var node = GetNodeOrNull(childPath);
         if (node == null || node.GetParent() == newParent)
             return;
 
@@ -193,7 +201,7 @@ public partial class GameManager : Node3D
 
         var playerInstance = PlayerScene.Instantiate<Node3D>();
         playerInstance.Name      = peerId.ToString();
-        playerInstance.Transform = new Transform3D(Basis.Identity, new Vector3(0, 1, 0));
+        playerInstance.Transform = new Transform3D(Basis.Identity, PlayerSpawnPosition);
 
         _playersContainer.AddChild(playerInstance);
     }

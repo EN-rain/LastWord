@@ -42,8 +42,8 @@ public partial class MainMenu : CanvasLayer
 	private int  _matchmakingAttemptCount = 0;
 
 	// --- Scene Paths ---
-	[Export(PropertyHint.File, "*.tscn")] public string CustomLobbyScenePath = "res://Scenes/CustomLobby.tscn";
-	[Export(PropertyHint.File, "*.tscn")] public string MatchmakingLobbyScenePath = "res://Scenes/MatchmakingLobby.tscn";
+	[Export(PropertyHint.File, "*.tscn")] public string CustomLobbyScenePath;
+	[Export(PropertyHint.File, "*.tscn")] public string MatchmakingLobbyScenePath;
 
 	// --- Hardcoded Texts ---
 	[Export] public string StatusReadyText = "READY TO ENTER THE ESTEEMED ESTATE...";

@@ -4,8 +4,8 @@ using System;
 public partial class CameraManager : Node3D
 {
     [Export] public NodePath TargetPath;
-    [Export] public NodePath CameraPivotPath = "Pivot";
-    [Export] public NodePath CameraTransformPath = "Pivot/MainCamera";
+    [Export] public NodePath CameraPivotPath;
+    [Export] public NodePath CameraTransformPath;
     
     // In Godot, physics layers are stored as bitmasks (uint)
     [Export(PropertyHint.Layers3DPhysics)] public uint CollisionLayers = 1;

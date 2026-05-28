@@ -20,6 +20,8 @@ JoinCodePopupPath = NodePath("Root/JoinCodePopup")
 ConfirmJoinBtnPath = NodePath("Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/HBox/BtnJoin")
 CancelJoinBtnPath = NodePath("Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/HBox/BtnCancel")
 GDPRNoticeTextLabelPath = NodePath("Root/GDPRPanel/VBox/Text")
+CustomLobbyScenePath = "res://Scenes/CustomLobby.tscn"
+MatchmakingLobbyScenePath = "res://Scenes/MatchmakingLobby.tscn"
 
 [node name="Root" type="Control" parent="." unique_id=629861889]
 layout_mode = 3

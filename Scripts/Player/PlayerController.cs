@@ -8,34 +8,59 @@ public partial class PlayerController : CharacterBody3D
 	[Export] public float JumpVelocity = 4.5f;
 	[Export] public float Gravity = 9.8f;
 	[Export] public float RemoteSyncInterval = 0.05f;
+	[Export] public float ListenerMovementThreshold = 0.12f;
+	[Export] public float RecentListenerNoiseWindow = 0.75f;
+	[Export] public bool SuppressInitialLandingNoise = true;
 
 	[ExportGroup("Node References")]
-	[Export] public NodePath VisualsPath = "BaseCharacter";
-	[Export] public NodePath CameraManagerPath = "CameraManager";
+	[Export] public NodePath VisualsPath;
+	[Export] public NodePath CameraManagerPath;
+
+	[ExportGroup("Debug")]
+	[Export] public bool ShowSoundDebugLabel = true;
+	[Export] public NodePath SoundDebugLabelPath;
+	[Export] public float SoundDebugHoldSeconds = 1.25f;
 	
 	// Node references
 	private AnimationPlayer _animationPlayer;
 	private Node3D _visuals;
 	private Node3D _cameraManager;
+	private Label3D _soundDebugLabel;
 	
 	// Cached animation names to avoid searching every frame
 	private string _animIdle = "";
 	private string _animWalk = "";
 	private string _animRun = "";
 	private string _animJump = "";
+	private string _animDeath = "";
 
 	// Jump state tracking
 	private bool _wasAirborne = false;
 	private bool _jumpAnimFinished = false;
+	private bool _deathAnimFinished = false;
+	private bool _landingNoiseArmed = false;
 
 	// Footstep Noise Emission variables
 	private float _footstepTimer = 0.0f;
 	private const float WalkStepInterval = 0.5f;
 	private const float RunStepInterval = 0.3f;
 	private float _remoteSyncTimer = 0.0f;
+	private float _landingNoiseCooldown = 0f;
+	private const float LandingNoiseCooldownDuration = 0.5f;
+	private double _lastListenerNoiseTime = -999.0;
+	private int _lastListenerNoiseTier = 0;
+	private SoundKind _lastListenerNoiseKind = SoundKind.Movement;
+	private float _soundDebugTimer = 0f;
+
+	public bool IsDead { get; private set; } = false;
+	public bool IsMovingForListener => !IsDead && new Vector3(Velocity.X, 0, Velocity.Z).Length() > ListenerMovementThreshold;
+	public bool HasRecentListenerNoise => !IsDead && Time.GetTicksMsec() / 1000.0 - _lastListenerNoiseTime <= RecentListenerNoiseWindow;
+	public int LastListenerNoiseTier => _lastListenerNoiseTier;
+	public SoundKind LastListenerNoiseKind => _lastListenerNoiseKind;
 
 	public override void _Ready()
 	{
+		ValidateTuningValues();
 		AddToGroup("Player");
 
 		// Parse peer authority ID from node name (e.g. if spawned named "1234567")
@@ -48,6 +73,11 @@ public partial class PlayerController : CharacterBody3D
 		_animationPlayer = FindAnimationPlayer(this);
 		if (VisualsPath != null) _visuals = GetNodeOrNull<Node3D>(VisualsPath);
 		if (CameraManagerPath != null) _cameraManager = GetNodeOrNull<Node3D>(CameraManagerPath);
+		_soundDebugLabel = GetNodeOrNull<Label3D>(SoundDebugLabelPath);
+		if (ShowSoundDebugLabel && _soundDebugLabel == null)
+			GD.PushWarning("PlayerController: SoundDebugLabelPath is not assigned, so player sound debug text will not be visible.");
+
+		UpdateSoundDebugLabel("NO SOUND", Colors.Gray, true);
 
 		// If this node is not the local multiplayer authority, disable inputs and remove camera
 		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
@@ -72,7 +102,13 @@ public partial class PlayerController : CharacterBody3D
 				// Completely ignore any animations related to "carry"
 				if (lower.Contains("carry")) continue;
 				
-				if (lower.Contains("idle")) _animIdle = anim;
+				if (lower.Contains("death"))
+					_animDeath = anim;
+				else if (lower.Contains("defeat") && string.IsNullOrEmpty(_animDeath))
+					_animDeath = anim;
+				else if (lower.Contains("die") && string.IsNullOrEmpty(_animDeath))
+					_animDeath = anim;
+				else if (lower.Contains("idle")) _animIdle = anim;
 				else if (lower.Contains("walk")) _animWalk = anim;
 				else if (lower.Contains("run") || lower.Contains("sprint")) _animRun = anim;
 				else if (lower.Contains("jump")) _animJump = anim;
@@ -82,6 +118,18 @@ public partial class PlayerController : CharacterBody3D
 		{
 			GD.PrintErr("ERROR: No AnimationPlayer found in the player hierarchy!");
 		}
+	}
+
+	private void ValidateTuningValues()
+	{
+		WalkSpeed = Mathf.Max(WalkSpeed, 0.1f);
+		RunSpeed = Mathf.Max(RunSpeed, WalkSpeed);
+		JumpVelocity = Mathf.Max(JumpVelocity, 0f);
+		Gravity = Mathf.Max(Gravity, 0f);
+		RemoteSyncInterval = Mathf.Max(RemoteSyncInterval, 0.01f);
+		ListenerMovementThreshold = Mathf.Max(ListenerMovementThreshold, 0f);
+		RecentListenerNoiseWindow = Mathf.Max(RecentListenerNoiseWindow, 0f);
+		SoundDebugHoldSeconds = Mathf.Max(SoundDebugHoldSeconds, 0f);
 	}
 	
 	private AnimationPlayer FindAnimationPlayer(Node node)
@@ -95,8 +143,30 @@ public partial class PlayerController : CharacterBody3D
 		return null;
 	}
 
+	public override void _Process(double delta)
+	{
+		if (_soundDebugTimer <= 0f)
+			return;
+
+		_soundDebugTimer -= (float)delta;
+		if (_soundDebugTimer <= 0f)
+			UpdateSoundDebugLabel("NO SOUND", Colors.Gray, true);
+	}
+
 	public override void _PhysicsProcess(double delta)
 	{
+		if (IsDead)
+		{
+			Velocity = Vector3.Zero;
+			_footstepTimer = 0f;
+			_landingNoiseCooldown = 0f;
+			PlayDeathAnimation();
+			return;
+		}
+
+		if (_landingNoiseCooldown > 0f)
+			_landingNoiseCooldown -= (float)delta;
+
 		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
 		{
 			Vector3 horizVel = new Vector3(Velocity.X, 0, Velocity.Z);
@@ -238,12 +308,20 @@ public partial class PlayerController : CharacterBody3D
 		}
 
 		if (_animationPlayer == null) return;
+		if (IsDead)
+		{
+			PlayDeathAnimation();
+			return;
+		}
 
 		// --- LANDING: just touched the ground this frame ---
 		if (_wasAirborne && isOnFloor)
 		{
 			_jumpAnimFinished = false;
-			EmitLandingNoise();
+			if (!SuppressInitialLandingNoise || _landingNoiseArmed)
+				EmitLandingNoise();
+
+			_landingNoiseArmed = true;
 			// Resume playback in case we had paused on the last frame (guard against empty animation name)
 			if (!string.IsNullOrEmpty(_animationPlayer.CurrentAnimation))
 				_animationPlayer.Play(_animationPlayer.CurrentAnimation, 0f);
@@ -294,6 +372,7 @@ public partial class PlayerController : CharacterBody3D
 
 		// --- GROUNDED normal logic ---
 		_wasAirborne = false;
+		_landingNoiseArmed = true;
 		
 		string targetAnim = _animIdle;
 		if (isMoving)
@@ -309,6 +388,9 @@ public partial class PlayerController : CharacterBody3D
 
 	private void EmitFootstepNoise(bool isRunning)
 	{
+		if (IsDead)
+			return;
+
 		// Only the local player authority should broadcast their footsteps to the server
 		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
 			return;
@@ -317,47 +399,172 @@ public partial class PlayerController : CharacterBody3D
 		string tierName = isRunning ? "Tier 1 (Whisper)" : "Tier 0 (Silent)";
 		GD.Print($"{Name}: Emitted Footstep Noise — {tierName} at {GlobalPosition}");
 
+		ShowSoundEventDebug(SoundKind.Movement, tier);
+
 		if (VoiceManager.Instance != null)
 		{
 			if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
 			{
 				// Do NOT send position — server derives it from sender node (anti-spoof).
-				VoiceManager.Instance.BroadcastNoiseEvent(tier);
+				VoiceManager.Instance.BroadcastNoiseEvent(tier, SoundKind.Movement);
 			}
 			else
 			{
-				VoiceManager.Instance.ReportNoiseEvent(GlobalPosition, tier);
+				VoiceManager.Instance.ReportNoiseEvent(GlobalPosition, tier, SoundKind.Movement, this);
 			}
 		}
 	}
 
 	private void EmitLandingNoise()
 	{
+		if (IsDead)
+			return;
+
+		// Guard: physics ground flicker can fire landing twice in consecutive frames at the same spot.
+		if (_landingNoiseCooldown > 0f)
+			return;
+
 		// Only the local player authority should broadcast their landing to the server
 		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
 			return;
 
+		_landingNoiseCooldown = LandingNoiseCooldownDuration;
 		int tier = 2; // Landing = Tier 2 (Normal)
 		GD.Print($"{Name}: Emitted Landing Noise — Tier 2 (Normal) at {GlobalPosition}");
+
+		ShowSoundEventDebug(SoundKind.Landing, tier);
 
 		if (VoiceManager.Instance != null)
 		{
 			if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
 			{
 				// Do NOT send position — server derives it from sender node (anti-spoof).
-				VoiceManager.Instance.BroadcastNoiseEvent(tier);
+				VoiceManager.Instance.BroadcastNoiseEvent(tier, SoundKind.Landing);
 			}
 			else
 			{
-				VoiceManager.Instance.ReportNoiseEvent(GlobalPosition, tier);
+				VoiceManager.Instance.ReportNoiseEvent(GlobalPosition, tier, SoundKind.Landing, this);
 			}
 		}
 	}
 
-	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false, TransferMode = MultiplayerPeer.TransferModeEnum.Unreliable)]
+	public void NotifyListenerNoise(int tier, SoundKind kind)
+	{
+		if (IsDead)
+			return;
+
+		_lastListenerNoiseTime = Time.GetTicksMsec() / 1000.0;
+		_lastListenerNoiseTier = Mathf.Clamp(tier, 0, 3);
+		_lastListenerNoiseKind = kind;
+		ShowSoundEventDebug(kind, _lastListenerNoiseTier);
+	}
+
+	private void ShowSoundEventDebug(SoundKind kind, int tier)
+	{
+		_soundDebugTimer = SoundDebugHoldSeconds;
+		UpdateSoundDebugLabel($"{kind.ToString().ToUpper()} T{tier}", GetSoundDebugColor(tier, kind), false);
+	}
+
+	private void UpdateSoundDebugLabel(string text, Color color, bool isIdle)
+	{
+		if (_soundDebugLabel == null)
+			return;
+
+		_soundDebugLabel.Visible = ShowSoundDebugLabel;
+		_soundDebugLabel.Text = isIdle ? text : $"NOISE\n{text}";
+		_soundDebugLabel.Modulate = color;
+	}
+
+	private static Color GetSoundDebugColor(int tier, SoundKind kind)
+	{
+		if (kind != SoundKind.Voice)
+			return Colors.LightBlue;
+
+		return tier switch
+		{
+			1 => Colors.Yellow,
+			2 => Colors.Orange,
+			3 => Colors.Red,
+			_ => Colors.LightGreen
+		};
+	}
+
+	public void KillByListener(Node3D listener, string reason)
+	{
+		if (IsDead)
+			return;
+
+		string listenerName = listener?.Name ?? "Listener";
+		ApplyListenerDeath(reason, listenerName);
+
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && Multiplayer.IsServer())
+		{
+			Rpc(nameof(SyncListenerDeath), reason, listenerName);
+		}
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+	private void SyncListenerDeath(string reason, string listenerName)
+	{
+		if (Multiplayer.MultiplayerPeer != null
+			&& Multiplayer.HasMultiplayerPeer()
+			&& Multiplayer.GetRemoteSenderId() != NetworkManager.ServerPeerId)
+		{
+			return;
+		}
+
+		ApplyListenerDeath(reason, listenerName);
+	}
+
+	private void ApplyListenerDeath(string reason, string listenerName)
+	{
+		if (IsDead)
+			return;
+
+		IsDead = true;
+		Velocity = Vector3.Zero;
+		_footstepTimer = 0f;
+		_deathAnimFinished = false;
+		PlayDeathAnimation();
+		GD.Print($"[PlayerController] {Name} killed by {listenerName}: {reason}");
+
+		if (IsMultiplayerAuthority() && HUDManager.Instance != null)
+		{
+			HUDManager.Instance.UpdatePlayerState($"DEAD - {reason}", Colors.DeepPink);
+		}
+	}
+
+	private void PlayDeathAnimation()
+	{
+		if (_animationPlayer == null || string.IsNullOrEmpty(_animDeath) || !_animationPlayer.HasAnimation(_animDeath))
+			return;
+
+		if (_deathAnimFinished)
+			return;
+
+		if (_animationPlayer.CurrentAnimation != _animDeath)
+		{
+			_animationPlayer.Play(_animDeath, 0.1f);
+			return;
+		}
+
+		double remaining = _animationPlayer.CurrentAnimationLength - _animationPlayer.CurrentAnimationPosition;
+		if (remaining <= 0.05)
+		{
+			_animationPlayer.Seek(_animationPlayer.CurrentAnimationLength, true);
+			_animationPlayer.Pause();
+			_deathAnimFinished = true;
+		}
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = false, TransferMode = MultiplayerPeer.TransferModeEnum.Unreliable)]
 	private void SyncRemoteState(Vector3 position, Vector3 velocity, Vector3 visualsRotation)
 	{
 		if (Multiplayer.MultiplayerPeer == null || !Multiplayer.HasMultiplayerPeer() || IsMultiplayerAuthority())
+			return;
+
+		long senderId = Multiplayer.GetRemoteSenderId();
+		if (senderId != 0 && senderId != GetMultiplayerAuthority())
 			return;
 
 		GlobalPosition = position;

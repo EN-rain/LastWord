@@ -17,6 +17,7 @@ PanelGameControlsPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/Ga
 PanelAudioMicPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AudioMicPanel")
 PanelOtherOptionsPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/OtherOptionsPanel")
 PanelAccountPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel")
+SidebarPath = NodePath("HBox/Sidebar")
 ProfileNameInputPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/ProfileNameRow/ProfileNameInput")
 BtnSaveProfileNamePath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/BtnSaveProfileName")
 ProfileRunsValueLabelPath = NodePath("HBox/ContentArea/Margin/Scroll/ControlPanel/AccountPanel/RunsRow/ProfileRunsValueLabel")

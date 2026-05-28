@@ -10,12 +10,23 @@ height = 1.8
 
 [node name="Player" type="CharacterBody3D" unique_id=2056917474 groups=["Player"]]
 script = ExtResource("1_a2b3c")
+VisualsPath = NodePath("BaseCharacter")
+CameraManagerPath = NodePath("CameraManager")
+SoundDebugLabelPath = NodePath("SoundDebugLabel")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=12414825]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_1")
 
 [node name="BaseCharacter" parent="." unique_id=78718086 instance=ExtResource("2_d4e5f")]
+
+[node name="SoundDebugLabel" type="Label3D" parent="." unique_id=335640006]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2545161, 0)
+billboard = 1
+modulate = Color(0.5, 0.5, 0.5, 1)
+text = "NO SOUND"
+font_size = 34
+outline_size = 8
 
 [node name="CameraManager" type="Node3D" parent="." unique_id=971482928 groups=["CameraManager"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5047812, 0)

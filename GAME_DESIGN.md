@@ -51,7 +51,7 @@ Silence is safety. Speech is power. The tension between those two facts is the e
 - The monster **adapts in real time** to how your group uses voice chat
 - Every objective **requires speech** to complete â€” you cannot stay silent and win
 - No game currently on Steam uses the act of speaking as a primary risk mechanic
-- **Public random matchmaking** supports solo players who want to experience the game without a pre-formed group (see Â§18)
+- **Public random matchmaking** supports solo players who want to find strangers without a pre-formed group, while private custom rooms may also start solo for testing, practice, and challenge runs (see Â§18)
 
 ---
 
@@ -164,7 +164,7 @@ This tier covers all sounds below the whisper threshold â€” including envir
 - Listener **sprints at 1.8Ã— speed** for 12 seconds toward source
 - Nearby physics objects shatter (glasses, picture frames)
 - Other players' screens flash white static briefly
-- Token transfers and previous holder gets a brief **2-second grace period** before the Listener re-locks
+- Token transfers normally, but the scream response follows the Listener target priority rules in Â§4.2.1. A detected scream locks the Listener onto the screamer for the 12-second Scream Frenzy window.
 
 **Design note:** The screen flash for OTHER players is critical. It means a teammate screaming causes everyone to panic simultaneously, which causes more screaming, which is exactly what happens in every great Lethal Company clip.
 
@@ -217,8 +217,8 @@ The 1-second hold triggers a **visible pre-signal**: the activating player's cha
 Once triggered:
 - Immediately locks the Listener's target onto the sacrificing player for **30 seconds**, regardless of who holds the Token
 - Causes the Listener to abandon any current hunt and redirect
-- **Vocal Sacrifice lock overrides all non-Phase-3 Frenzy states â€” the Listener redirects to the sacrificing player even if currently mid-Frenzy sprint.**
-- Gives all other players a **safe window** to speak normally, solve puzzles, or move loudly
+- **Vocal Sacrifice lock overrides Token targeting, Hunting, Alerted, and non-Frenzy sprinting. It does not interrupt Phase 3 Permanent Frenzy or an active Scream Frenzy lock.**
+- Gives all other players a **safe window** to speak normally, solve puzzles, or move loudly without changing the Listener's lock target. This does not protect players who enter the 5-metre attack range while moving or making sound.
 - The sacrificing player must survive alone for those 30 seconds with no VC help from teammates
 - After 30 seconds, the lock expires and normal Token tracking resumes
 - A countdown timer (30â†’0) appears on all players' HUDs during the sacrifice window
@@ -231,7 +231,7 @@ Once triggered:
 
 **Design note:** Vocal Sacrifice is the game's most dramatic mechanic. It requires a player to volunteer themselves as bait, signal their intention via the pre-signal, and trust their teammates to use the window effectively. When it works, it feels heroic. When it fails â€” usually because a teammate panics and speaks during the window â€” it feels like genuine betrayal.
 
-> **Phase 3 broadcaster restriction (see Â§7.3):** During Phase 3, the broadcaster activating Vocal Sacrifice on themselves provides no benefit â€” the Listener is already targeting them during Frenzy. Only a teammate can meaningfully activate Vocal Sacrifice during the broadcast. If the broadcaster is the only surviving player, Vocal Sacrifice is unavailable (no teammates to redirect toward).
+> **Phase 3 broadcaster restriction (see Â§7.3):** During Phase 3 Permanent Frenzy, Vocal Sacrifice cannot redirect the Listener. The broadcaster activating Vocal Sacrifice on themselves provides no benefit, and teammate activations are disabled during the active broadcast window. If the broadcaster is the only surviving player, Vocal Sacrifice is unavailable.
 
 ### 3.7 Silent Communication â€” Gesture System & Controls Reference âš‘
 
@@ -345,6 +345,8 @@ Visually: tall, thin, humanoid, completely white, no facial features except holl
 
 ### 4.2 AI State Machine âš‘
 
+> **Targeting precedence:** The state summaries below describe normal state behaviour. If a state transition, sound response, or target selection conflicts with the Listener priority table in Â§4.2.1, Â§4.2.1 is authoritative.
+
 #### State 1: Idle (Patrol)
 - Follows pre-defined patrol routes through the manor
 - Routes vary slightly each run (randomised waypoint order within floor zones)
@@ -374,11 +376,75 @@ Visually: tall, thin, humanoid, completely white, no facial features except holl
 #### State 4: Frenzy
 - Movement speed: **1.8Ã—** (sprint)
 - Eye sockets: **white, pulsing**
-- Triggered by: scream, Vocal Sacrifice activation, Final Broadcast phase start, Tier 2+ speech while in Hunting state. *(Phase 3 Frenzy is permanent and does not use the standard timer â€” see Â§7.3. Phase 3 Frenzy is exempt from the "Heard Nothing" achievement condition â€” see Â§15.1.)*
+- Triggered by: scream, Final Broadcast phase start, Tier 2+ speech while in Hunting state, and other explicit priority-table cases. *(Phase 3 Frenzy is permanent and does not use the standard timer â€” see Â§7.3. Phase 3 Frenzy is exempt from the "Heard Nothing" achievement condition â€” see Â§15.1.)*
 - Breaks through unlocked doors without animation delay
-- Ignores all non-Token targets unless they scream
+- Frenzy targeting is resolved by the Listener target priority table in Â§4.2.1. Scream Frenzy locks onto the screamer; Phase 3 Permanent Frenzy follows Token/radio targeting.
 - Duration: **12 seconds** (extends to 20s if players screamed frequently earlier â€” adaptive, post-launch). **In Early Access MVP, Frenzy duration is always 12 seconds â€” the adaptive extension to 20 seconds is a post-launch Metric C feature and should not be implemented until the Adaptive system ships.**
-- After Frenzy ends: returns to Hunting if Token still in range, Alerted otherwise
+- After Scream Frenzy ends: resolve the Listener's next target by re-running the priority table in Â§4.2.1, beginning with any active Vocal Sacrifice lock, then Token, then sound investigation. If no valid target exists, return to Alerted.
+
+### 4.2.1 Listener Proximity, Vision, and Sound Revision Plan
+
+> **Implementation status:** Planned revision. The current prototype uses a smaller attack range and simpler proximity checks; this section defines the intended replacement behaviour before implementation.
+
+**Authoritative targeting priority:** When multiple Listener rules could apply at once, resolve them in this order:
+
+1. **Phase 3 Permanent Frenzy:** Target the broadcaster/Token holder. If no Token exists, target the radio location. This cannot be interrupted by normal screams, Vocal Sacrifice, Static bubble, Silence Room, or sprint retargeting.
+2. **Scream Frenzy:** Target the first detected screamer for the standard **12-second Frenzy** window. Other sounds, later screams, Token changes, and Vocal Sacrifice do not retarget the Listener during this lock. If the target dies before the 12 seconds end, Frenzy ends early or falls back to the Token holder if one exists.
+3. **Vocal Sacrifice Lock:** Target the sacrificing player for 30 seconds. This overrides Token targeting, normal Hunting, Alerted, non-Frenzy sprinting, and sprint retargeting, but it does not override Phase 3 Permanent Frenzy or active Scream Frenzy.
+4. **5m Attack / Vision Kill:** Any living player inside the 5-metre attack range can die if they move, speak, run, land, or make sound. Token ownership is irrelevant. Silent stationary players are safe indefinitely unless a scripted room or hiding-spot check explicitly reveals them.
+5. **Second Listener Imprint Target:** The second Listener targets the living player with the highest cumulative speaking time. If that player is unavailable or dead, it falls back to Token holder; if no Token exists, it falls back to last detected sound or Phase 3 radio.
+6. **Last Word Token:** Default primary target in normal play.
+7. **Sound Investigation:** For player movement noise and non-voice player sounds, under 8m creates wary awareness only, while 8m+ lets the Listener investigate the heard area. Whispered voice remains governed by Tier 1 rules in Â§3.3 unless it is also paired with movement noise. Normal/loud detected sound causes a non-Frenzy sprint to the heard location when it is detected at the 20m threshold or by an explicit long-range/special source. Non-Frenzy sprinting may retarget once per second to newer valid 8m+ movement/noise evidence.
+8. **Static Bubble / Silence Room:** These block audio detection according to their own rules but do not suppress Token transfer, do not interrupt active Scream Frenzy after the scream has already been detected, and do not block Phase 3 Permanent Frenzy.
+
+**Design goal:** The Listener should punish careless proximity even when the Last Word Token points somewhere else, while still allowing stationary players to hide in plain sight if they make no sound and do not move.
+
+**Attack range:**
+- Listener attack range becomes **5 metres**.
+- If any living player enters the 5-metre attack range and is eligible to be perceived, the Listener kills that player immediately.
+- Attack range is **Token-agnostic**: the player does not need to hold the Last Word Token to die.
+- Walking inside the 5-metre attack range always makes the player eligible to be perceived, so a walking player in attack range is attacked and dies.
+- If a player is completely stationary inside the 5-metre attack range and does not speak or make any sound, the Listener does not attack them. They remain safe until they move, speak, run, land, or otherwise emit a qualifying sound.
+
+**Vision rule:**
+- Vision is used for immediate danger, not only Token pursuit.
+- Any moving player inside the Listener's vision range/cone can be targeted even if another player holds the Token.
+- Stationary players are visually ignored unless another signal reveals them.
+- A player who does not move and does not make sound remains visually safe indefinitely, even inside the Listener's vision range/cone.
+- Implementation should track a small movement threshold so camera jitter, network correction, or idle animation does not count as movement.
+
+**Sound-to-investigation rule:**
+- Below **8 metres**, player movement noise and non-voice player sounds can still make the Listener wary: it may turn, pause, or enter a heightened awareness cue, but does not pathfind directly to the sound source from that sound alone.
+- At **8 metres or greater**, player movement noise and non-voice player sounds let the Listener record the heard area and move to investigate that location.
+- This rule modifies player-made footstep/movement/noise investigation. It does not change Tier 1 whispered voice behaviour in Â§3.3: whispered voice still creates orientation/eye-glow feedback without pathfinding unless another movement/noise signal also qualifies.
+
+**Normal/loud sound sprint rule:**
+- At the **20-metre detection threshold**, or from an explicit long-range/special source, a qualifying normal/loud sound causes the Listener to sprint to the heard location rather than walk.
+- Scream/loud sound uses this sprint response immediately. Normal speech detected at the 20-metre threshold or by a special source also makes the Listener sprint to the heard noise location.
+- This is a movement-response override: the Listener goes to the sound location, even if it has not visually confirmed the player.
+- If the sound source is later invalid or the player goes silent, the Listener should investigate the last heard location rather than magically track the current position.
+- While sprinting outside Frenzy, the Listener performs a hearing priority check once per second. If it hears valid **8-metre-or-greater** movement/noise evidence within its hearing rules, that newer heard area takes priority over the current sprint destination.
+- This sprint retargeting rule means a non-Frenzy sprint is not locked forever: new 8m+ movement/noise evidence can redirect the Listener before it reaches the original heard location.
+
+**Scream-first chase rule:**
+- The first player to scream becomes the Listener's active chase target immediately.
+- A scream overrides normal Token targeting for the initial chase response.
+- During this scream chase, the Listener pursues the screaming player regardless of who currently holds the Last Word Token.
+- The scream chase uses the standard **12-second Frenzy** window.
+- During Frenzy, the Listener locks onto that player and ignores all other players and all other sounds until the Frenzy ends or the target dies.
+- If multiple screams occur close together, implementation should use the earliest valid scream event as the chase owner until the 12-second Frenzy resolves or the target dies.
+- Vocal Sacrifice, Static bubble visibility, Silence Room safety, Token transfer, and sprint retargeting do not interrupt an active Scream Frenzy after the scream has already been detected.
+
+**Implementation checklist:**
+- Change Listener attack range tuning from the prototype value to **5m**.
+- Add player movement-state/perception checks: stationary, walking, running, landing, speaking.
+- Separate **visual perception** from **audio investigation** so standing still in sight can be safe while moving in sight is dangerous.
+- Add a current scream target field with timeout/clear conditions.
+- Add a once-per-second hearing priority tick during non-Frenzy sprinting so valid 8m+ movement/noise evidence can retarget the Listener.
+- Ensure Frenzy disables retargeting and remains locked to the scream target until timeout or target death.
+- Implement the authoritative target priority table before adding new Listener exceptions.
+- Update death handling so a 5-metre valid attack triggers the same death/spectator flow as other Listener kills.
+- Add debug labels/logging for: vision spotted, ignored stationary player, attack range kill, heard-area investigation, sprint-to-sound, and scream-target override.
 
 ### 4.3 Adaptive Evolution System
 
@@ -474,7 +540,7 @@ Roles are selected at lobby. Each player chooses one. No duplicates allowed. Wit
 These keys (`1`â€“`5`) produce no gesture animation for non-Mute players and are inactive for all other roles. They are remappable via Settings > Controls.
 
 **The Mute and Vocal Sacrifice:** The Mute can activate Vocal Sacrifice. The activation speech is classified as Tier 2.5 (not Tier 3) and does not exceed the Mute's halved detection radii for Tier 2 events (10 metres instead of 20). The Mute's reduced detection does not prevent the lock from activating â€” the lock mechanic is independent of detection radius.
-**Accidental Mute Tier 3 scream:** An accidental Mute Tier 3 still triggers Frenzy at the 30m cap and transfers the Token, but does not satisfy Phase 2 word registration or Phase 3 broadcast requirements. The Mute's puzzle restriction is unchanged by amplitude.
+**Accidental Mute Tier 3 scream:** An accidental Mute Tier 3 triggers Scream Frenzy only if detected within the Mute's 30m Tier 3 cap. Outside 30m, it transfers the Token but does not trigger Listener detection or Frenzy. It does not satisfy Phase 2 word registration or Phase 3 broadcast requirements. The Mute's puzzle restriction is unchanged by amplitude.
 
 ### The Loud âš‘
 **Active ability (`F` key):** Emit a 5-second stun pulse â€” **classified as a special Tier 2.5 ability event** â€” it transfers the Token to The Loud and triggers the 5-second freeze, but does not cause Tier 3 side effects (no screen flash, no physics shatter, no Frenzy sprint). 90-second cooldown.
@@ -498,7 +564,7 @@ These keys (`1`â€“`5`) produce no gesture animation for non-Mute players an
 **Design note:** 2 charges Ã— 40 seconds = 80 seconds total bubble coverage per run. This is intentionally scarce â€” roughly 4% of a 35-minute run. The bubble is an emergency coordination tool, not a sustained safe zone. If playtesting shows groups are burning both charges in Phase 1 and having none for Phase 3, consider reducing charge duration to 30 seconds or requiring a cooldown between charges rather than adding a third charge.
 **Bubble expiry:** When the bubble expires, the Listener immediately targets the current Token holder with no grace period. Players should plan to transfer the Token to a designated safe holder or create distance before the 40-second window ends. There is no transition buffer on bubble expiry.
 **Death interaction:** If The Static dies while a bubble is active, the bubble collapses immediately. Any remaining charges are lost for the run. The on-screen role-disconnect notification informs surviving players, consistent with other role death notifications.
-**Drawback:** The bubble is visible to the Listener as a faint luminous distortion in the air. The Listener cannot hear through it but can *see* it and will navigate toward it during Hunting state. **During Frenzy:** The Listener ignores the bubble's visual distortion â€” it navigates directly toward the Token holder or radio location regardless of bubble position. The bubble's audio-blocking effect still applies in Frenzy; the Listener cannot hear through it but will not alter its Frenzy path to approach the bubble specifically.
+**Drawback:** The bubble is visible to the Listener as a faint luminous distortion in the air. The Listener cannot hear through it but can *see* it and will navigate toward it during Hunting state. **During Frenzy:** The Listener ignores the bubble's visual distortion. During Scream Frenzy it stays locked to the screamer; during Phase 3 Permanent Frenzy it navigates toward the Token holder or radio location regardless of bubble position. The bubble's audio-blocking effect still applies in Frenzy, but it will not alter an already locked Frenzy path.
 **Audio inside the bubble:** VC audio is *not* muffled. Players can hear each other clearly.
 **Visual detection range:** The Static bubble is visible to the Listener from **15 metres** during Hunting state. After Lights Out (minute 25), ambient darkness makes the luminous distortion **more visible** â€” the glow stands out against the dark background, and the Listener can detect it from **20 metres** instead. Players should factor increased bubble visibility into deployment decisions after minute 25.
 **Design note:** The bubble creates a safe speech zone that is also a beacon. Groups must decide whether the coordination value outweighs the positional exposure.
@@ -572,7 +638,7 @@ These keys (`1`â€“`5`) produce no gesture animation for non-Mute players an
 
 **Visual identity:** Floor-to-ceiling bookshelves, reading tables, a fireplace (unlit, ambient)
 **Function:** Puzzle hub, Silence Room location, 2 of 4 coded word note locations
-**Unique mechanic:** The Silence Room â€” a soundproofed study off the main hall. VC is completely muted while inside. Listener cannot detect players inside. Entrance is visible and the Listener knows to check it during Hunting state. **Audio isolation:** The Silence Room suppresses all audio â€” both incoming VC and in-world audio events (intercom broadcasts, Listener hum, Gramophone, environmental sounds). Players inside the Silence Room are fully audio-isolated in both directions. Intercom broadcasts on Floor 3 do not reach players inside the Silence Room. **Frenzy exception:** The Silence Room provides no protection during Frenzy. The Listener enters it freely if the Token holder or radio is inside or beyond it. During Frenzy, the Listener navigates by Token/radio position regardless of room designation. **Broadcaster note:** The broadcaster cannot use the Silence Room during Phase 3 â€” entering it immediately applies the VC mute, which triggers the 2-second silence penalty and freezes the broadcast timer. The Listener also enters the Silence Room freely during Frenzy. The Silence Room offers no benefit to an active broadcaster.
+**Unique mechanic:** The Silence Room â€” a soundproofed study off the main hall. VC is completely muted while inside. Listener cannot detect players inside. Entrance is visible and the Listener knows to check it during Hunting state. **Audio isolation:** The Silence Room suppresses all audio â€” both incoming VC and in-world audio events (intercom broadcasts, Listener hum, Gramophone, environmental sounds). Players inside the Silence Room are fully audio-isolated in both directions. Intercom broadcasts on Floor 3 do not reach players inside the Silence Room. **Frenzy exception:** The Silence Room provides no protection during Frenzy once the Frenzy target is already established. During Scream Frenzy the Listener follows the screamer; during Phase 3 Permanent Frenzy it enters freely if the Token holder or radio is inside or beyond it. **Broadcaster note:** The broadcaster cannot use the Silence Room during Phase 3 â€” entering it immediately applies the VC mute, which triggers the 2-second silence penalty and freezes the broadcast timer. The Listener also enters the Silence Room freely during Phase 3 Permanent Frenzy. The Silence Room offers no benefit to an active broadcaster.
 
 **Silence Room capacity rules (v1.3):** The Silence Room holds a **maximum of 2 players simultaneously**. A third player attempting to enter receives a silent visual prompt: a crossed-out door icon. This prevents the Silence Room from functioning as a whole-team safe house.
 
@@ -691,9 +757,9 @@ The pool weighting: 75% dramatic, 25% absurdist â€” a random draw each run.
 
 **Radio pickup interaction and grab race condition (v1.4):** A player can attempt to pick up the radio even if the Listener is in the same room. The pickup interaction requires a 1-second `E` hold. The Listener's grab animation completes in 0.5 seconds (Â§9.1). This means a player who begins the pickup while the Listener is already within grab range will always lose the race â€” the grab completes before the pickup. This is **intentional**: the radio cannot be rescued from an active grab attempt. Players must create distance or wait for the Listener to disengage before attempting pickup. This should be communicated in a death-card tip for players who die attempting to pick up the radio mid-grab. **Radio break during pickup:** If the radio breaks while a pickup interaction is in progress (E hold not yet completed), the interaction cancels and the radio becomes non-interactable. If the pickup completed before the break, the broadcaster retains the radio but it deactivates mid-broadcast â€” treating this as an immediate broadcast failure.
 
-**Vocal Sacrifice during Phase 3 (v1.4):** During the broadcast window, a **teammate** (not the broadcaster) can activate Vocal Sacrifice to lock the Listener onto themselves for 30 seconds, giving the broadcaster a safe window. The broadcaster activating Vocal Sacrifice on themselves would lock the Listener onto the very player the Listener is already targeting during Frenzy â€” this provides no benefit and is not the intended use. If the broadcaster is the only surviving player, Vocal Sacrifice is unavailable (no teammates to redirect toward). The 2-player Phase 3 exception (see Â§7.3 2-player rules below) allows the defending player â€” not the broadcaster â€” to use Vocal Sacrifice **once during the broadcast window**; a second activation by the same player is disabled for the remainder of the broadcast.
+**Vocal Sacrifice during Phase 3 (v1.4):** During the active broadcast window, Phase 3 Permanent Frenzy has top targeting priority and Vocal Sacrifice cannot redirect the Listener. The broadcaster activating Vocal Sacrifice on themselves provides no benefit, and teammate activations are disabled while the broadcast is active. If a teammate already activated Vocal Sacrifice before Phase 3 Permanent Frenzy begins, the Phase 3 priority overrides the remaining sacrifice lock.
 
-**2-player Phase 3:** One broadcasts, one defends. Listener's sprint speed during Phase 3 Frenzy reduced by 15% in 2-player sessions. The **defending player** (not the broadcaster) can activate a single Vocal Sacrifice charge during the broadcast window.
+**2-player Phase 3:** One broadcasts, one defends. Listener's sprint speed during Phase 3 Frenzy reduced by 15% in 2-player sessions. The defending player cannot redirect Phase 3 Permanent Frenzy with Vocal Sacrifice; their role is to use barricades, timing, and movement to buy the broadcaster time.
 
 **Broadcast rules:**
 - Broadcaster stops speaking for more than **2 seconds**: timer freezes, Listener immediately re-locks
@@ -855,7 +921,7 @@ The HUD is minimal. Horror is undermined by excessive UI. Players should feel li
 
 ### 11.2 Persistent HUD Elements âš‘
 
-**Last Word Token indicator:** Top-centre of screen. Shows the name of the Token holder in a faint red glow. Pulses faster as the Listener gets closer. **Pulse rate thresholds:** slow pulse at Listener distance >12 metres, medium pulse at 8â€“12 metres, fast pulse at 4â€“8 metres, rapid strobe at <4 metres. These thresholds align with the accessibility proximity pulse activation distance (12 metres, Â§11.3) for consistent player feedback across HUD elements. Disappears entirely when Token holder enters the Silence Room, **except during Frenzy state â€” during Frenzy, the indicator is always visible to all players regardless of the Token holder's location.** **Not present at run start** â€” appears only after first speech. **Reappearance after Silence Room exit:** When the Token holder exits the Silence Room, the Token indicator reappears instantly on all players' HUDs with no delay. In a 2-player run where both players are inside the Silence Room, the Token is frozen on its current holder â€” VC muting prevents transfer. The indicator is hidden for both players during this period and reappears for both when the Token holder exits.
+**Last Word Token indicator:** Top-centre of screen. Shows the name of the Token holder in a faint red glow. Pulses faster as the Listener gets closer. **Pulse rate thresholds:** slow pulse at Listener distance >12 metres, medium pulse at 8â€“12 metres, fast pulse at 4â€“8 metres, rapid strobe at <4 metres. These thresholds align with the accessibility proximity pulse activation distance (12 metres, Â§11.3) for consistent player feedback across HUD elements. Disappears entirely when Token holder enters the Silence Room, **except during Frenzy state â€” during Scream Frenzy the indicator shows the locked Frenzy target, and during Phase 3 Permanent Frenzy it shows the Token holder or radio fallback target regardless of Silence Room status.** **Not present at run start** â€” appears only after first speech. **Reappearance after Silence Room exit:** When the Token holder exits the Silence Room, the Token indicator reappears instantly on all players' HUDs with no delay. In a 2-player run where both players are inside the Silence Room, the Token is frozen on its current holder â€” VC muting prevents transfer. The indicator is hidden for both players during this period and reappears for both when the Token holder exits.
 
 **Voice activity indicator:** Bottom-right, glows when the player is speaking. Colour-coded: grey (silent / Tier 0), **light blue (Tier 1 whisper)**, orange (Tier 2 normal), red (Tier 3 loud). The blue Tier 1 HUD colour matches the Listener's Tier 1 visual response (Â§3.3) for consistent player feedback. Shows the player's own tier in real time.
 
@@ -865,7 +931,7 @@ The HUD is minimal. Horror is undermined by excessive UI. Players should feel li
 
 **Battery indicator:** Bottom-left, appears only when torch is equipped. Depletes visually over 90 seconds.
 
-**Teammate status:** Four small icons at screen edge showing each player as: alive (white), Token holder (red pulse), dead (grey), in Silence Room (muted icon), role disconnected (faded icon with strike). **During Frenzy, the Token holder's status icon always shows the red pulse state regardless of their location â€” the Silence Room muted icon is overridden for the duration of Frenzy.**
+**Teammate status:** Four small icons at screen edge showing each player as: alive (white), Token holder (red pulse), dead (grey), in Silence Room (muted icon), role disconnected (faded icon with strike). **During Scream Frenzy, the locked Frenzy target's status icon shows the red pulse state regardless of their location. During Phase 3 Permanent Frenzy, the Token holder or radio fallback target receives the red pulse.** The Silence Room muted icon is overridden for the active Frenzy target.
 
 **Vocal Sacrifice countdown:** When any player activates Vocal Sacrifice, a 30-second countdown appears on all players' HUDs in amber.
 
@@ -1157,9 +1223,9 @@ A local save file (not cloud-synced at launch) stores:
 | **Gaslight** | Cause a teammate's death via the Playback trap | Guilt and laughter simultaneously â€” post-launch |
 | **Final Broadcast** | Complete the monologue without pause on the first attempt | Skilled execution under maximum pressure |
 | **Hot Potato** | Transfer the Token **20 times** in a single run. This requires active passing strategy and deliberate communication beyond normal gameplay flow. **Note:** Token transfers during an active Vocal Sacrifice lock do not count toward Hot Potato.** | Emergent chaos achievement â€” requires coordination |
-| **The Sacrifice** | Use Vocal Sacrifice and survive the 30-second window. **Note:** Vocal Sacrifice triggers Frenzy â€” using it in a run disqualifies the "Heard Nothing" achievement for that run. These two achievements cannot be earned simultaneously. | Heroic moments should be commemorated |
+| **The Sacrifice** | Use Vocal Sacrifice and survive the 30-second window. **Note:** Vocal Sacrifice creates a forced Listener lock, not Frenzy, but still disqualifies the "Heard Nothing" achievement for that run because it is an explicit Listener-targeting override. These two achievements cannot be earned simultaneously. | Heroic moments should be commemorated |
 | **Listener's Favourite** | Be the most-spoken player in 5 consecutive runs. **Tracking:** The game records each player's total speaking time per run in the local save file for achievement purposes only. This data is not displayed on the post-run stats screen and is not visible to other players. At the end of each run, the game checks if the local player had the highest speaking time in that session â€” if yes, a counter increments. Five consecutive qualifying runs awards the achievement. The counter resets to 0 if the player is not the highest speaker in any run. **In 2-player sessions one player is always the highest speaker by definition â€” Listener's Favourite is farmable in this session size. This is accepted; the achievement is a shame mechanic, not a skill one.** | Shame achievement â€” the chatty friend receives this |
-| **Heard Nothing** | Complete a full run without the Listener entering Frenzy **before Phase 3 begins**. Phase 3 Frenzy is exempt from the condition â€” the Final Broadcast inherently triggers it. **Note:** Vocal Sacrifice activation triggers Frenzy and disqualifies this achievement. **Any Tier 2+ speech while the Listener is in Hunting state also triggers Frenzy and disqualifies the run.** Groups attempting this achievement must prevent the Listener from entering Hunting state entirely, or ensure no player speaks above Tier 1 while it is Hunting. Runs attempting Heard Nothing must avoid all pre-Phase 3 Frenzy triggers: no screams, no Vocal Sacrifice, no Tier 2+ speech during Hunting. | Requires extraordinary group control |
+| **Heard Nothing** | Complete a full run without the Listener entering Frenzy **before Phase 3 begins** and without using Vocal Sacrifice. Phase 3 Frenzy is exempt from the condition â€” the Final Broadcast inherently triggers it. **Any Tier 2+ speech while the Listener is in Hunting state also triggers Frenzy and disqualifies the run.** Groups attempting this achievement must prevent the Listener from entering Hunting state entirely, or ensure no player speaks above Tier 1 while it is Hunting. Runs attempting Heard Nothing must avoid all pre-Phase 3 Frenzy triggers: no screams, no Vocal Sacrifice, no Tier 2+ speech during Hunting. | Requires extraordinary group control |
 | **Strangers in the Dark** | Escape with a random matchmaking session where all players are non-friends, regardless of session size. **Friends check timing:** The non-friends check runs at run start and is cached â€” Steam friend status changes during the run do not affect eligibility. **Clarification:** Players who exclusively play with their purchasing group can unlock this achievement by creating or joining a public lobby independently (without their friend group). Quick Join automatically places solo players into random lobbies. The achievement is not permanently blocked for friend-group purchasers â€” it requires a deliberate solo queue session. | Rewards solo queue engagement â€” shareable moment |
 
 **Gaslight** is marked post-launch â€” requires the Playback system to ship first. The Echo role dependency is optional: the achievement triggers when a teammate dies because they responded to a Playback trap, regardless of whether the Echo role was used to set up the scenario. The Listener's native Playback system is sufficient for the achievement condition. **Gaslight detection logic:** The achievement triggers when all three conditions are met within a single Playback event â€” (1) Playback audio plays, (2) a player produces a Tier 1+ voice event within 5 seconds of Playback completing, (3) that player is killed by the Listener within 30 seconds of their response. The 30-second window is used because the Listener's sprint to a Tier 2+ response source takes variable time depending on distance. If the responding player survives past 30 seconds, the Gaslight condition resets. This logic must be implemented as part of the Playback system post-launch.
@@ -1186,7 +1252,7 @@ A local save file (not cloud-synced at launch) stores:
 - First-time setup screen (Â§11.4): region selection, role preference, mic calibration, accessibility options, keybind review, privacy acknowledgement
 - Lobby screen with role selection, mic check UI, host identifier, Text Broadcaster mode indicator
 - Orientation mode (3 minutes 30 seconds â€” see full content spec below)
-- The Listener (4 states: Idle/Alerted/Hunting/Frenzy â€” no Adaptive system)
+- The Listener (4 states: Idle/Alerted/Hunting/Frenzy â€” no Adaptive system, with proximity/vision revision plan in Â§4.2.1)
 - Tier 0 sub-whisper environmental sound detection (4-metre radius, Alerted only)
 - Alerted state dual-timer logic (8-second reset before minute 10 / 15-second Hunting transition after)
 - Phase 1, Phase 2 (with session-size-aware player count scaling and fail state), and Phase 3 objectives
@@ -1196,7 +1262,7 @@ A local save file (not cloud-synced at launch) stores:
 - Phase 3 Listener targeting: Token holder if Token exists; radio location if no Token
 - Clock Tower barricadeable staircase door (Phase 2 evasion)
 - Silence Room capacity limit (2 players max), Aggressive Check behaviour, and 2-player forced-exit rule
-- 2-player mode with adjusted Phase 3 parameters (defending player Vocal Sacrifice only)
+- 2-player mode with adjusted Phase 3 parameters (defender buys time through barricades, movement, and timing; Vocal Sacrifice does not redirect Phase 3 Permanent Frenzy)
 - 2â€“4 player multiplayer via Godot Multiplayer + Godot Voice/WebRTC
 - 3 MVP roles: Mute (with Silent Drop, 5 bonus gestures, and Floor 4 board absence noted), Loud (F key), Static
 - Vocal Sacrifice (G key, grief detection triggers on lock activation not pre-signal)
@@ -1251,10 +1317,10 @@ Prototype mic input â†’ amplitude reading â†’ tier classification (all
 Build mic calibration screen and First-Time Setup screen (Â§11.4). Build lobby screen (role selection, mic check, host label, Text Broadcaster toggle, privacy notice). Build Token system with initial-state logic and Phase 3 no-Token fallback. Implement Vocal Sacrifice pre-signal and countdown HUD (grief detection on lock activation). Implement J-key dead player map marking with Listener phase-around collision. Implement radial gesture wheel (MMB). Build matchmaking backend skeleton.
 
 **Month 3â€“4: The Listener**
-Build estate blockout (grey box). Implement Listener NavMesh AI with all 4 states including dual-timer Alerted logic, Tier 0 detection, dead-target fallback for second Listener, and imprint decay on death. Test Listener response to Token holder and Phase 3 radio-location targeting. Tune detection radii through playtesting. Prototype Playback trap separately in isolation to validate feasibility â€” if not stable by end of Month 4, cut it from post-launch scope. **Playback contingency note:** If Playback is cut post-Month 4 feasibility check, the following must be revised: Â§10.1 (Earmuffs removed from item pool), Â§15.1 (Gaslight achievement removed), Â§13.3 (privacy notice simplified â€” no voice recording), Â§14.2 (Playback stat field removed entirely, not just hidden), Â§18.4 (random lobby Playback danger note removed). Maintain a 'Playback-dependent features' checklist updated at each design revision.
+Build estate blockout (grey box). Implement Listener NavMesh AI with all 4 states including dual-timer Alerted logic, Tier 0 detection, dead-target fallback for second Listener, imprint decay on death, and the proximity/vision revision plan in Â§4.2.1. Test Listener response to Token holder, scream-first chase override, 5-metre attack kills, stationary-player vision safety, and Phase 3 radio-location targeting. Tune detection radii through playtesting. Prototype Playback trap separately in isolation to validate feasibility â€” if not stable by end of Month 4, cut it from post-launch scope. **Playback contingency note:** If Playback is cut post-Month 4 feasibility check, the following must be revised: Â§10.1 (Earmuffs removed from item pool), Â§15.1 (Gaslight achievement removed), Â§13.3 (privacy notice simplified â€” no voice recording), Â§14.2 (Playback stat field removed entirely, not just hidden), Â§18.4 (random lobby Playback danger note removed). Maintain a 'Playback-dependent features' checklist updated at each design revision.
 
 **Month 5â€“6: Objectives and Map**
-Implement Phase 1 (note pickup, voice registration, Mute Silent Drop, Registration Boards on Floors 1â€“3 only). Implement Silence Room with 2-player cap, Aggressive Check, and 2-player forced-exit rule. Implement Phase 2 with session-size-aware player count scaling, single-survivor fail state, total party wipe screen, and Text Broadcaster Phase 2 limitation. Implement Phase 3 with handoff rules, Text Broadcaster mode, radio pickup interaction, teammate-only Vocal Sacrifice rule, and Clock Tower barricadeable door. Add win/loss conditions. Connect matchmaking system to lobby flow.
+Implement Phase 1 (note pickup, voice registration, Mute Silent Drop, Registration Boards on Floors 1â€“3 only). Implement Silence Room with 2-player cap, Aggressive Check, and 2-player forced-exit rule. Implement Phase 2 with session-size-aware player count scaling, single-survivor fail state, total party wipe screen, and Text Broadcaster Phase 2 limitation. Implement Phase 3 with handoff rules, Text Broadcaster mode, radio pickup interaction, Phase 3 Vocal Sacrifice disablement during active broadcast, and Clock Tower barricadeable door. Add win/loss conditions. Connect matchmaking system to lobby flow.
 
 **Month 7â€“8: Art and Sound**
 Validate art direction in Month 7 Week 1 with actual lighting and shaders before full art pass. Replace grey box with final low poly manor art. Add Listener character model. Implement all audio including Tier 0 environmental sound events. Add HUD including Clap cooldown indicator, initial-state Token logic, and session-size-aware fail state display.
@@ -1352,7 +1418,7 @@ At $9.99 with Steam's 30% cut, net per unit is approximately $6.99. Infrastructu
 
 ### 18.1 Design Intent
 
-Random matchmaking solves a core co-op problem: the game requires 2â€“4 players, but not every interested player has a pre-formed group. The system must be simple enough to implement within the solo dev timeline and robust enough that strangers can complete a run together without prior coordination.
+Random matchmaking solves a core co-op problem: the intended public co-op experience targets 2-4 players, but not every interested player has a pre-formed group. The system must be simple enough to implement within the solo dev timeline and robust enough that strangers can complete a run together without prior coordination. Private custom rooms are allowed to start with 1 player for testing, practice, content creation, and self-imposed challenge runs; solo custom play is an intentional exception, not a lobby validation bug.
 
 The matchmaking feature is listed as an MVP requirement (Â§16.1) because its absence limits the addressable audience at launch.
 

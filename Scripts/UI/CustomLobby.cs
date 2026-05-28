@@ -25,8 +25,8 @@ public partial class CustomLobby : CanvasLayer
     [Export] public NodePath PrivacyLabelPath;
 
     // -- Scene Paths --
-    [Export(PropertyHint.File, "*.tscn")] public string MainMenuScenePath = "res://Scenes/MainMenu.tscn";
-    [Export(PropertyHint.File, "*.tscn")] public string MainGameScenePath = "res://Scenes/GameScene.tscn";
+    [Export(PropertyHint.File, "*.tscn")] public string MainMenuScenePath;
+    [Export(PropertyHint.File, "*.tscn")] public string MainGameScenePath;
 
     // -- Hardcoded Texts --
     [Export] public string NoticeConsentText = "NOTICE: In-game voice chat is required. Speaking transfers the monster's attention to you.";
@@ -169,8 +169,8 @@ public partial class CustomLobby : CanvasLayer
             _labelOrientation.Text    = "ORIENTATION MODE ACTIVE: A survivor with fewer than 3 runs is in this lobby. Tutorial phase is locked.";
         }
 
-        // Enable Start Run only when there are >=2 players AND all OTHER players are ready (host only).
-        // Without the count gate, an empty "others" set is vacuously true and lets the host start alone.
+        // Enable Start Run when all connected non-host players are ready.
+        // A solo custom room is valid for testing, practice, and private challenge runs.
         if (_btnStartRun != null && Multiplayer.IsServer())
         {
             long localId = Multiplayer.GetUniqueId();

@@ -62,6 +62,64 @@ expand_mode = 1
 stretch_mode = 5
 mouse_filter = 2
 
+[node name="DebugRangeLegend" type="VBoxContainer" parent="HUDManager"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 20.0
+offset_top = 100.0
+offset_right = 310.0
+offset_bottom = 255.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="HUDManager/DebugRangeLegend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 0.85)
+theme_override_font_sizes/font_size = 13
+text = "LISTENER DEBUG AREAS"
+mouse_filter = 2
+
+[node name="SubWhisperArea" type="Label" parent="HUDManager/DebugRangeLegend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.45, 1)
+theme_override_font_sizes/font_size = 12
+text = "GREEN: SubWhisperArea"
+mouse_filter = 2
+
+[node name="WhisperArea" type="Label" parent="HUDManager/DebugRangeLegend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "YELLOW: WhisperArea"
+mouse_filter = 2
+
+[node name="MovementArea" type="Label" parent="HUDManager/DebugRangeLegend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.7, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "BLUE: MovementArea"
+mouse_filter = 2
+
+[node name="NormalArea" type="Label" parent="HUDManager/DebugRangeLegend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.55, 0.1, 1)
+theme_override_font_sizes/font_size = 12
+text = "ORANGE: NormalArea"
+mouse_filter = 2
+
+[node name="NoticeArea" type="Label" parent="HUDManager/DebugRangeLegend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.4, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "PURPLE: NoticeArea"
+mouse_filter = 2
+
+[node name="AttackArea" type="Label" parent="HUDManager/DebugRangeLegend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.05, 0.05, 1)
+theme_override_font_sizes/font_size = 12
+text = "RED: AttackArea"
+mouse_filter = 2
+
 [node name="RoomCodeLabel" type="Label" parent="HUDManager"]
 layout_mode = 1
 anchors_preset = 1

@@ -199,4 +199,13 @@ public partial class HUDManager : Control
 			_playerStateLabel.Modulate = stateColor;
 		}
 	}
+
+	public void UpdateFrenzyTarget(Node3D target)
+	{
+		if (_playerStateLabel != null && target != null)
+		{
+			_playerStateLabel.Text = $"State: SCREAM LOCK - {target.Name}";
+			_playerStateLabel.Modulate = Colors.Red;
+		}
+	}
 }

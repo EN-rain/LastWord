@@ -15,6 +15,8 @@ CancelBtnPath = NodePath("Root/VBox/HBoxButtons/BtnCancel")
 OrientationLabelPath = NodePath("Root/VBox/LabelOrientation")
 ConsentLabelPath = NodePath("Root/VBox/LabelConsent")
 PrivacyLabelPath = NodePath("Root/VBox/LabelPrivacy")
+MainMenuScenePath = "res://Scenes/MainMenu.tscn"
+MainGameScenePath = "res://Scenes/GameScene.tscn"
 
 [node name="Root" type="PanelContainer" parent="."]
 anchors_preset = 15

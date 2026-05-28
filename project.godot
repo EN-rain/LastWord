@@ -44,6 +44,10 @@ folder_colors={
 
 import/blender/enabled=false
 
+[network]
+
+scenes/main_game_scene="res://Scenes/GameScene.tscn"
+
 [physics]
 
 3d/physics_engine="GodotPhysics3D"

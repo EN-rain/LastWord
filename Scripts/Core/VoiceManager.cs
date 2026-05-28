@@ -55,7 +55,9 @@ public partial class VoiceManager : Node
 
     public override async void _Ready()
     {
+        ValidateTuningValues();
         LoadBaseline();
+        ValidateTuningValues();
 
         // Wait a few frames for the AudioServer and Windows drivers to stabilize
         await ToSignal(GetTree().CreateTimer(0.5f), "timeout");
@@ -64,8 +66,28 @@ public partial class VoiceManager : Node
         SetupMicInput();
     }
 
+    private void ValidateTuningValues()
+    {
+        if (string.IsNullOrWhiteSpace(MicBusName))
+            MicBusName = "Microphone";
+
+        if (string.IsNullOrWhiteSpace(MicSendBusName))
+            MicSendBusName = "Master";
+
+        AnalysisInterval = Mathf.Max(AnalysisInterval, 0.01f);
+        SmoothingFactor = Mathf.Clamp(SmoothingFactor, 0f, 1f);
+        CalibrationDuration = Mathf.Max(CalibrationDuration, 0.1f);
+        BaselineAmplitude = Mathf.Max(BaselineAmplitude, 0.001f);
+    }
+
     private void SetupMicBus()
     {
+        if (AudioServer.GetBusIndex(MicSendBusName) == -1)
+        {
+            GD.PushWarning($"VoiceManager: MicSendBusName '{MicSendBusName}' does not exist. Falling back to Master.");
+            MicSendBusName = "Master";
+        }
+
         _micBusIndex = AudioServer.GetBusIndex(MicBusName);
 
         if (_micBusIndex == -1)
@@ -253,11 +275,11 @@ public partial class VoiceManager : Node
                     if (_currentTier >= VoiceTier.Whisper)
                         UpdateTokenHolder();
 
-                    BroadcastNoiseEvent((int)_currentTier);
+                    BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
                 }
                 else if (_currentTier >= VoiceTier.Normal)
                 {
-                    BroadcastNoiseEvent((int)_currentTier);
+                    BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
                 }
                 return;
             }
@@ -326,11 +348,11 @@ public partial class VoiceManager : Node
             if (_currentTier >= VoiceTier.Whisper)
                 UpdateTokenHolder();
 
-            BroadcastNoiseEvent((int)_currentTier);
+            BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
         }
         else if (_currentTier >= VoiceTier.Normal)
         {
-            BroadcastNoiseEvent((int)_currentTier);
+            BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
         }
     }
 
@@ -445,7 +467,7 @@ public partial class VoiceManager : Node
         Rpc(nameof(SyncTokenHolder), trustedPeerId);
     }
 
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
+    [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
     private void SyncTokenHolder(long peerId)
     {
         Node3D playerNode = FindPlayerNodeByPeerId(peerId);
@@ -476,51 +498,75 @@ public partial class VoiceManager : Node
         return GetTree().GetFirstNodeInGroup("Player") as Node3D;
     }
 
-    public void BroadcastNoiseEvent(int tier)
+    public void BroadcastNoiseEvent(int tier) => BroadcastNoiseEvent(tier, SoundKind.Voice);
+
+    public void BroadcastNoiseEvent(int tier, SoundKind kind, bool isSpecialLongRange = false)
     {
         tier = Mathf.Clamp(tier, 0, 3);
+        int kindValue = (int)kind;
         if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !Multiplayer.IsServer())
         {
             // Client sends only the tier — position is derived server-side from the sender's node.
-            RpcId(NetworkManager.ServerPeerId, nameof(ReportNoiseEventRPC), tier);
+            RpcId(NetworkManager.ServerPeerId, nameof(ReportNoiseEventRPC), tier, kindValue, isSpecialLongRange);
         }
         else
         {
             // Offline / Server / Solo host: resolve locally and immediately without RPC.
             Node3D localPlayer = GetTree().GetFirstNodeInGroup("Player") as Node3D;
-            if (localPlayer != null)
-                ReportNoiseEvent(localPlayer.GlobalPosition, tier);
+            if (localPlayer != null && IsNoiseSourceAlive(localPlayer))
+                ReportNoiseEvent(localPlayer.GlobalPosition, tier, kind, localPlayer, isSpecialLongRange);
         }
     }
 
     // Security: position is NOT accepted from clients — it is derived server-side
     // from the sender's owned player node to prevent position spoofing.
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    private void ReportNoiseEventRPC(int tier)
+    private void ReportNoiseEventRPC(int tier, int kindValue = 0, bool isSpecialLongRange = false)
     {
         if (!Multiplayer.IsServer()) return;
 
         long senderId = Multiplayer.GetRemoteSenderId();
         Node3D senderPlayer = FindPlayerNodeByPeerId(senderId == 0 ? (long)Multiplayer.GetUniqueId() : senderId);
-        if (senderPlayer == null) return;
+        if (senderPlayer == null || !IsNoiseSourceAlive(senderPlayer)) return;
 
-        DispatchNoiseToListeners(senderPlayer.GlobalPosition, Mathf.Clamp(tier, 0, 3));
+        DispatchNoiseToListeners(senderPlayer.GlobalPosition, Mathf.Clamp(tier, 0, 3), ParseSoundKind(kindValue), senderPlayer, isSpecialLongRange);
     }
 
     // Local (offline / host) entry-point — always safe because position is read from the actual node.
-    public void ReportNoiseEvent(Vector3 trustedPosition, int tier)
+    public void ReportNoiseEvent(Vector3 trustedPosition, int tier) => ReportNoiseEvent(trustedPosition, tier, SoundKind.Voice, null);
+
+    public void ReportNoiseEvent(Vector3 trustedPosition, int tier, SoundKind kind, Node3D source = null, bool isSpecialLongRange = false)
     {
-        DispatchNoiseToListeners(trustedPosition, Mathf.Clamp(tier, 0, 3));
+        if (source != null && !IsNoiseSourceAlive(source))
+            return;
+
+        DispatchNoiseToListeners(trustedPosition, Mathf.Clamp(tier, 0, 3), kind, source, isSpecialLongRange);
     }
 
-    private void DispatchNoiseToListeners(Vector3 position, int tier)
+    private void DispatchNoiseToListeners(Vector3 position, int tier, SoundKind kind, Node3D source, bool isSpecialLongRange)
     {
+        if (source is PlayerController player)
+            player.NotifyListenerNoise(tier, kind);
+
+        var listenerEvent = new ListenerSoundEvent(position, tier, kind, source, isSpecialLongRange);
         var listeners = GetTree().GetNodesInGroup("Listener");
         foreach (var node in listeners)
         {
             if (node is ListenerAI ai)
-                ai.HearNoise(position, tier);
+                ai.HearNoise(listenerEvent);
         }
+    }
+
+    private static SoundKind ParseSoundKind(int kindValue)
+    {
+        return Enum.IsDefined(typeof(SoundKind), kindValue)
+            ? (SoundKind)kindValue
+            : SoundKind.Voice;
+    }
+
+    private static bool IsNoiseSourceAlive(Node3D source)
+    {
+        return source is not PlayerController player || !player.IsDead;
     }
 
     private void LoadBaseline()

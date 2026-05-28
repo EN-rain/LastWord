@@ -61,6 +61,7 @@ public partial class NetworkManager : Node
     [Export] public int HostPort { get; set; } = DefaultHostPort;
     [Export] public bool AllowDirectIpRoomCodes { get; set; } = true;
     [Export] public string DirectIpRoomCodeLabel { get; set; } = "DIRECT-IP DEV/LAN CODE";
+    [Export(PropertyHint.File, "*.tscn")] public string MainGameScenePath { get; set; } = "";
 
     public int    RequiredPlayers      { get; set; } = 4;
     public bool   IsLobbyFormed        { get; private set; } = false;
@@ -121,6 +122,8 @@ public partial class NetworkManager : Node
 
     private void LoadMatchmakerConfig()
     {
+        MainGameScenePath = (string)ProjectSettings.GetSetting("network/scenes/main_game_scene", MainGameScenePath);
+
         var cfg = new ConfigFile();
         if (cfg.Load("user://settings.cfg") == Error.Ok)
         {
@@ -367,6 +370,8 @@ public partial class NetworkManager : Node
     public void StartCustomMatch()
     {
         if (!Multiplayer.IsServer() || IsMatchmakingSession) return;
+        if (!LobbyPlayers.Where(p => p.PeerId != ServerPeerId).All(p => p.IsReady)) return;
+
         bool orientationActive = LobbyPlayers.Exists(p => p.Runs < 3);
         IsMatchStarted = true;
         Rpc(nameof(StartMatch), orientationActive);
@@ -382,8 +387,9 @@ public partial class NetworkManager : Node
         long senderId = Multiplayer.GetRemoteSenderId();
         if (senderId == 0) senderId = 1;
 
+        int safeRuns = Mathf.Clamp(runs, 0, 3);
         LobbyPlayers.RemoveAll(p => p.PeerId == senderId);
-        LobbyPlayers.Add(new PlayerInfo { PeerId = senderId, Name = SanitizePlayerText(name), Runs = runs });
+        LobbyPlayers.Add(new PlayerInfo { PeerId = senderId, Name = SanitizePlayerText(name), Runs = safeRuns });
         Rpc(nameof(SyncLobbyPlayers), SerializePlayers());
     }
 
@@ -469,7 +475,13 @@ public partial class NetworkManager : Node
         bool isDedicated = OS.HasFeature("dedicated_server") || DisplayServer.GetName() == "headless";
         if (isDedicated && Multiplayer.IsServer())
         {
-            GetTree().ChangeSceneToFile("res://Scenes/GameScene.tscn");
+            if (string.IsNullOrEmpty(MainGameScenePath))
+            {
+                GD.PushError("NetworkManager: MainGameScenePath is not configured in Project Settings.");
+                return;
+            }
+
+            GetTree().ChangeSceneToFile(MainGameScenePath);
         }
     }
 
