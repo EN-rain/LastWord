@@ -12,8 +12,12 @@ public partial class ListenerAI : CharacterBody3D
 	[Export] public NodePath RightEyePath;
 	[Export] public NodePath HumPlayerPath;
 
+	[ExportGroup("Behavior Tree")]
+	[Export] public NodePath BehaviorTreeListenerPath;
+
 	[ExportGroup("Debug")]
 	[Export] public bool ShowDebugVisuals = true;
+	[Export] public bool UseDebugShapesAsDetectionRanges = true;
 	[Export] public NodePath DebugLabelPath;
 	[Export] public NodePath SubWhisperDebugShapePath;
 	[Export] public NodePath WhisperDebugShapePath;
@@ -35,6 +39,8 @@ public partial class ListenerAI : CharacterBody3D
 	[Export] public float RotationSpeed = 10.0f;
 	[Export] public float RunAnimationSpeedThreshold = 3.8f;
 	[Export] public float InvestigationArriveDistance = 0.75f;
+	[Export] public float InvestigationStuckTimeout = 1.0f;
+	[Export] public float InvestigationProgressEpsilon = 0.05f;
 	[Export] public float LurkMoveSpeedMultiplier = 0.55f;
 	[Export] public float PatrolPauseDuration = 1.25f;
 	[Export] public float Gravity = 9.8f;
@@ -54,6 +60,9 @@ public partial class ListenerAI : CharacterBody3D
 	[Export] public float NormalRadius = 20.0f;
 	[Export] public float MovementInvestigateRadius = 8.0f;
 	[Export] public float NormalSprintThresholdTolerance = 0.5f;
+	[Export] public bool SprintOnNormalSound = true;
+	[Export] public bool SprintOnRunningMovementNoise = true;
+	[Export] public int MovementSprintTier = 1;
 	[Export] public float HearingPriorityInterval = 1.0f;
 	[Export] public float AlertSilenceTimeout = 5.0f;
 	[Export] public float WhisperDecayAdd = 2.0f;
@@ -75,6 +84,8 @@ public partial class ListenerAI : CharacterBody3D
 	protected bool _hasSprintTarget = false;
 	protected Node3D _screamTarget;
 	protected ListenerTargetMode _targetMode = ListenerTargetMode.None;
+	private float _investigationStuckTimer = 0f;
+	private float _lastInvestigationDistance = float.MaxValue;
 
 	[ExportGroup("Proximity Ranges")]
 	[Export] public float NoticeRange = 15.0f;
@@ -88,6 +99,8 @@ public partial class ListenerAI : CharacterBody3D
 
 	private float _attackTimer = 0.0f;
 	private float _remoteSyncTimer = 0.0f;
+	private float _behaviorTreeDelta = 0f;
+	private Node _behaviorTreeListener;
 	private Label3D _stateLabel;
 	private AnimationPlayer _animationPlayer;
 	private string _animIdle = "";
@@ -117,16 +130,17 @@ public partial class ListenerAI : CharacterBody3D
 
 	public override void _Ready()
 	{
-		ValidateTuningValues();
-
 		_navAgent = GetNodeOrNull<NavigationAgent3D>(NavAgentPath);
 		_visuals = GetNodeOrNull<Node3D>(VisualsPath);
 		_animationPlayer = FindAnimationPlayer(this);
 		_leftEye = GetNodeOrNull<MeshInstance3D>(LeftEyePath);
 		_rightEye = GetNodeOrNull<MeshInstance3D>(RightEyePath);
 		_humPlayer = GetNodeOrNull<AudioStreamPlayer3D>(HumPlayerPath);
+		_behaviorTreeListener = GetNodeOrNull<Node>(BehaviorTreeListenerPath);
 		_stateLabel = GetNodeOrNull<Label3D>(DebugLabelPath);
 		CacheAnimationNames();
+		LoadDetectionRangesFromDebugShapes();
+		ValidateTuningValues();
 
 		if (_navAgent == null)
 		{
@@ -156,6 +170,8 @@ public partial class ListenerAI : CharacterBody3D
 		RotationSpeed = Mathf.Max(RotationSpeed, 0.1f);
 		RunAnimationSpeedThreshold = Mathf.Clamp(RunAnimationSpeedThreshold, 0.01f, SprintSpeed);
 		InvestigationArriveDistance = Mathf.Max(InvestigationArriveDistance, 0.1f);
+		InvestigationStuckTimeout = Mathf.Max(InvestigationStuckTimeout, 0.1f);
+		InvestigationProgressEpsilon = Mathf.Max(InvestigationProgressEpsilon, 0.001f);
 		LurkMoveSpeedMultiplier = Mathf.Clamp(LurkMoveSpeedMultiplier, 0.1f, 1.0f);
 		PatrolPauseDuration = Mathf.Max(PatrolPauseDuration, 0f);
 		Gravity = Mathf.Max(Gravity, 0f);
@@ -166,6 +182,7 @@ public partial class ListenerAI : CharacterBody3D
 		MovementInvestigateRadius = Mathf.Max(MovementInvestigateRadius, SubWhisperRadius);
 		NormalRadius = Mathf.Max(NormalRadius, Mathf.Max(WhisperRadius, MovementInvestigateRadius));
 		NormalSprintThresholdTolerance = Mathf.Max(NormalSprintThresholdTolerance, 0f);
+		MovementSprintTier = Mathf.Clamp(MovementSprintTier, 0, 3);
 		HearingPriorityInterval = Mathf.Max(HearingPriorityInterval, 0f);
 		AlertSilenceTimeout = Mathf.Max(AlertSilenceTimeout, 0f);
 		WhisperDecayAdd = Mathf.Max(WhisperDecayAdd, 0f);
@@ -198,6 +215,25 @@ public partial class ListenerAI : CharacterBody3D
 		ConfigureDebugRadius(NormalDebugShapePath, NormalDebugMeshPath, NormalRadius);
 		ConfigureDebugRadius(NoticeDebugShapePath, NoticeDebugMeshPath, NoticeRange);
 		ConfigureDebugRadius(AttackDebugShapePath, AttackDebugMeshPath, AttackRange);
+	}
+
+	private void LoadDetectionRangesFromDebugShapes()
+	{
+		if (!UseDebugShapesAsDetectionRanges)
+			return;
+
+		SubWhisperRadius = ReadDebugSphereRadius(SubWhisperDebugShapePath, SubWhisperRadius);
+		WhisperRadius = ReadDebugSphereRadius(WhisperDebugShapePath, WhisperRadius);
+		MovementInvestigateRadius = ReadDebugSphereRadius(MovementDebugShapePath, MovementInvestigateRadius);
+		NormalRadius = ReadDebugSphereRadius(NormalDebugShapePath, NormalRadius);
+		NoticeRange = ReadDebugSphereRadius(NoticeDebugShapePath, NoticeRange);
+		AttackRange = ReadDebugSphereRadius(AttackDebugShapePath, AttackRange);
+	}
+
+	private float ReadDebugSphereRadius(NodePath shapePath, float fallback)
+	{
+		var shape = GetNodeOrNull<CollisionShape3D>(shapePath);
+		return shape?.Shape is SphereShape3D sphere ? sphere.Radius : fallback;
 	}
 
 	private void ConfigureDebugRadius(NodePath shapePath, NodePath meshPath, float radius)
@@ -264,6 +300,12 @@ public partial class ListenerAI : CharacterBody3D
 			GD.Print($"[ListenerAI] Animations available: {string.Join(", ", _animationPlayer.GetAnimationList())}");
 			GD.Print($"[ListenerAI] Animation map: idle='{_animIdle}', lurk='{ResolveLurkAnimation()}', walk='{_animWalk}', run='{_animRun}'");
 		}
+
+		if (string.IsNullOrEmpty(_animIdle))
+			GD.PushWarning("[ListenerAI] No idle animation was found. The listener will stop animation when idle instead of playing walk.");
+
+		if (string.IsNullOrEmpty(_animRun))
+			GD.PushWarning("[ListenerAI] No run animation was found. Sprint movement will use the fastest available movement animation.");
 	}
 
 	private string ResolveAnimationName(string configuredName, params string[] keywords)
@@ -304,7 +346,7 @@ public partial class ListenerAI : CharacterBody3D
 			if (_remoteSyncTimer >= RemoteSyncInterval)
 			{
 				_remoteSyncTimer = 0f;
-				Rpc(nameof(SyncRemoteState), GlobalPosition, Velocity, Rotation);
+				Rpc(nameof(SyncRemoteState), GlobalPosition, Velocity, Rotation, (int)_animationIntent);
 			}
 		}
 	}
@@ -326,6 +368,7 @@ public partial class ListenerAI : CharacterBody3D
 
 	protected void UpdateStateLogic(float delta)
 	{
+		_behaviorTreeDelta = delta;
 		_targetMode = ResolveTargetPriority();
 		switch (_targetMode)
 		{
@@ -343,7 +386,7 @@ public partial class ListenerAI : CharacterBody3D
 				MoveTowardsTarget(delta, SprintSpeed);
 				if (_frenzyTimer <= 0)
 				{
-					GD.Print("[ListenerAI] Scream Frenzy timer expired. Re-evaluating target priority.");
+					Log("Scream Frenzy timer expired. Re-evaluating target priority.");
 					ClearScreamFrenzy();
 					TransitionState(ResolveTargetPriority() == ListenerTargetMode.None ? AIState.Alerted : AIState.Hunting);
 				}
@@ -359,6 +402,7 @@ public partial class ListenerAI : CharacterBody3D
 					_hasSprintTarget = false;
 					_soundInvestigateLocation = _sprintTargetLocation;
 					_hasSoundInvestigateTarget = true;
+					ResetInvestigationProgress();
 					TransitionState(AIState.Alerted);
 				}
 				break;
@@ -379,11 +423,20 @@ public partial class ListenerAI : CharacterBody3D
 			case ListenerTargetMode.SoundInvestigate:
 				_animationIntent = ListenerAnimationIntent.Lurk;
 				_navAgent.TargetPosition = _soundInvestigateLocation;
+				if (HasReachedTarget(_soundInvestigateLocation, InvestigationArriveDistance))
+				{
+					CompleteSoundInvestigation("ARRIVED");
+					break;
+				}
+
 				MoveTowardsTarget(delta, GetLurkMoveSpeed());
 				if (HasReachedTarget(_soundInvestigateLocation, InvestigationArriveDistance))
 				{
-					_hasSoundInvestigateTarget = false;
-					TransitionState(AIState.Alerted);
+					CompleteSoundInvestigation("ARRIVED");
+				}
+				else if (IsInvestigationStuck(delta))
+				{
+					CompleteSoundInvestigation("STUCK");
 				}
 				break;
 
@@ -442,21 +495,67 @@ public partial class ListenerAI : CharacterBody3D
 
 	protected ListenerTargetMode ResolveTargetPriority()
 	{
-		if (IsPhase3PermanentFrenzyActive())
+		if (_behaviorTreeListener != null)
+		{
+			_targetMode = ListenerTargetMode.None;
+			_behaviorTreeListener.Call("update", _behaviorTreeDelta);
+			return _targetMode;
+		}
+
+		return ResolveFallbackTargetPriority();
+	}
+
+	private ListenerTargetMode ResolveFallbackTargetPriority()
+	{
+		if (EvaluateBehaviorCondition(ListenerBehaviorCondition.Phase3PermanentFrenzy))
 			return ListenerTargetMode.Phase3PermanentFrenzy;
-		if (_currentState == AIState.Frenzy && _frenzyTimer > 0f)
+		if (EvaluateBehaviorCondition(ListenerBehaviorCondition.ActiveScreamFrenzy))
 			return ListenerTargetMode.ScreamFrenzy;
-		if (IsVocalSacrificeLockActive())
+		if (EvaluateBehaviorCondition(ListenerBehaviorCondition.VocalSacrificeLock))
 			return ListenerTargetMode.VocalSacrifice;
-		if (_hasSprintTarget)
+		if (EvaluateBehaviorCondition(ListenerBehaviorCondition.HasSprintTarget))
 			return ListenerTargetMode.NonFrenzySprint;
-		if (GetSecondListenerImprintTarget() != null)
+		if (EvaluateBehaviorCondition(ListenerBehaviorCondition.HasSecondListenerImprintTarget))
 			return ListenerTargetMode.SecondListenerImprint;
-		if (_currentState == AIState.Hunting && VoiceManager.Instance?.TokenHolder != null && !IsPlayerDead(VoiceManager.Instance.TokenHolder))
+		if (EvaluateBehaviorCondition(ListenerBehaviorCondition.HasTokenTarget))
 			return ListenerTargetMode.Token;
-		if (_hasSoundInvestigateTarget)
+		if (EvaluateBehaviorCondition(ListenerBehaviorCondition.HasSoundInvestigation))
 			return ListenerTargetMode.SoundInvestigate;
 		return ListenerTargetMode.None;
+	}
+
+	public bool EvaluateBehaviorCondition(ListenerBehaviorCondition condition)
+	{
+		return condition switch
+		{
+			ListenerBehaviorCondition.Phase3PermanentFrenzy => IsPhase3PermanentFrenzyActive(),
+			ListenerBehaviorCondition.ActiveScreamFrenzy => _currentState == AIState.Frenzy && _frenzyTimer > 0f,
+			ListenerBehaviorCondition.VocalSacrificeLock => IsVocalSacrificeLockActive(),
+			ListenerBehaviorCondition.HasSprintTarget => _hasSprintTarget,
+			ListenerBehaviorCondition.HasSecondListenerImprintTarget => GetSecondListenerImprintTarget() != null,
+			ListenerBehaviorCondition.HasTokenTarget => _currentState == AIState.Hunting
+				&& VoiceManager.Instance?.TokenHolder != null
+				&& !IsPlayerDead(VoiceManager.Instance.TokenHolder),
+			ListenerBehaviorCondition.HasSoundInvestigation => _hasSoundInvestigateTarget,
+			ListenerBehaviorCondition.Always => true,
+			_ => false
+		};
+	}
+
+	public bool EvaluateBehaviorConditionValue(int conditionValue)
+	{
+		if (!Enum.IsDefined(typeof(ListenerBehaviorCondition), conditionValue))
+			return false;
+
+		return EvaluateBehaviorCondition((ListenerBehaviorCondition)conditionValue);
+	}
+
+	public void SetBehaviorTargetModeValue(int targetModeValue)
+	{
+		if (!Enum.IsDefined(typeof(ListenerTargetMode), targetModeValue))
+			return;
+
+		_targetMode = (ListenerTargetMode)targetModeValue;
 	}
 
 	protected virtual bool IsPhase3PermanentFrenzyActive() => false;
@@ -504,7 +603,7 @@ public partial class ListenerAI : CharacterBody3D
 
 		if (_currentState == AIState.Frenzy && _frenzyTimer > 0f)
 		{
-			GD.Print($"[ListenerAI] Ignored {soundEvent.Kind} tier {soundEvent.Tier}; Scream Frenzy is locked.");
+			Log($"Ignored {FormatSoundKind(soundEvent.Kind)} T{soundEvent.Tier}; Scream Frenzy is locked.");
 			return;
 		}
 
@@ -517,7 +616,7 @@ public partial class ListenerAI : CharacterBody3D
 				}
 				else if (distance <= SubWhisperRadius)
 				{
-					GD.Print($"[ListenerAI] Wary of sub-whisper voice near {soundEvent.Origin} (Distance: {distance:F2}m)");
+					Log($"Wary of sub-whisper voice near {soundEvent.Origin} (Distance: {distance:F2}m)");
 					MarkWary(soundEvent.Origin, distance);
 				}
 				break;
@@ -527,7 +626,7 @@ public partial class ListenerAI : CharacterBody3D
 				{
 					if (distance <= WhisperRadius)
 					{
-						GD.Print($"[ListenerAI] Oriented toward whisper at {soundEvent.Origin} (Distance: {distance:F2}m)");
+						Log($"Oriented toward whisper at {soundEvent.Origin} (Distance: {distance:F2}m)");
 						_whisperPauseDecay = Mathf.Min(_whisperPauseDecay + WhisperDecayAdd, WhisperDecayCap);
 						LookAtOrigin(soundEvent.Origin);
 						MarkWary(soundEvent.Origin, distance);
@@ -542,7 +641,7 @@ public partial class ListenerAI : CharacterBody3D
 			case 2: // Normal Talking
 				if (distance <= NormalRadius)
 				{
-					GD.Print($"[ListenerAI] Heard normal/loud noise at {soundEvent.Origin} (Distance: {distance:F2}m). Initiating chase!");
+					Log($"Heard {FormatSoundKind(soundEvent.Kind)} T{soundEvent.Tier} at {soundEvent.Origin} (Distance: {distance:F2}m). Initiating chase.");
 					LookAtOrigin(soundEvent.Origin);
 					if (ShouldSprintToNormalSound(distance, soundEvent))
 					{
@@ -550,15 +649,14 @@ public partial class ListenerAI : CharacterBody3D
 					}
 					else
 					{
-						_soundInvestigateLocation = soundEvent.Origin;
-						_hasSoundInvestigateTarget = true;
+						StartSoundInvestigation(soundEvent.Origin);
 						TransitionState(soundEvent.IsVoice ? AIState.Hunting : AIState.Alerted);
 					}
 				}
 				break;
 
 			case 3: // Scream
-				GD.Print($"[ListenerAI] Heard scream noise at {soundEvent.Origin}! Entering Scream Frenzy!");
+				Log($"Heard scream at {soundEvent.Origin}. Entering Scream Frenzy.");
 				LookAtOrigin(soundEvent.Origin);
 				_screamTarget = soundEvent.Source;
 				_screamTargetLocation = soundEvent.Origin;
@@ -573,20 +671,24 @@ public partial class ListenerAI : CharacterBody3D
 
 	private void HandleMovementNoise(ListenerSoundEvent soundEvent, float distance)
 	{
-		// Tier 0 (walking/silent) is only audible within SubWhisperRadius.
-		// Tier 1+ (running) uses the wider MovementInvestigateRadius.
-		float effectiveRadius = soundEvent.Tier == 0 ? SubWhisperRadius : MovementInvestigateRadius;
+		float effectiveRadius = MovementInvestigateRadius;
 
 		if (distance > effectiveRadius)
 		{
-			GD.Print($"[ListenerAI] Ignored movement/noise outside MovementArea at {soundEvent.Origin} (Distance: {distance:F2}m)");
+			Log($"Ignored {FormatSoundKind(soundEvent.Kind)} T{soundEvent.Tier} outside MovementArea at {soundEvent.Origin} (Distance: {distance:F2}m)");
 			SetDebugLabel("OUTSIDE MOVEMENT AREA", Colors.Gray, distance);
 			return;
 		}
 
-		GD.Print($"[ListenerAI] Investigating movement/noise at {soundEvent.Origin} (Distance: {distance:F2}m)");
-		_soundInvestigateLocation = soundEvent.Origin;
-		_hasSoundInvestigateTarget = true;
+		if (ShouldSprintToMovementNoise(soundEvent))
+		{
+			Log($"Sprinting to {FormatSoundKind(soundEvent.Kind)} T{soundEvent.Tier} at {soundEvent.Origin} (Distance: {distance:F2}m)");
+			StartNonFrenzySprint(soundEvent.Origin, "SPRINTING TO MOVEMENT");
+			return;
+		}
+
+		Log($"Investigating {FormatSoundKind(soundEvent.Kind)} T{soundEvent.Tier} at {soundEvent.Origin} (Distance: {distance:F2}m)");
+		StartSoundInvestigation(soundEvent.Origin);
 		// Reset the silence timer so a fresh detection never triggers an immediate Idle transition.
 		_alertedSilenceTimer = 0f;
 		SetDebugLabel("INVESTIGATING", Colors.LightBlue, distance);
@@ -606,6 +708,7 @@ public partial class ListenerAI : CharacterBody3D
 	private void MarkWary(Vector3 origin, float distance)
 	{
 		LookAtOrigin(origin);
+		StartSoundInvestigation(origin);
 		// Reset silence timer on any fresh wary detection to prevent premature Idle transition.
 		_alertedSilenceTimer = 0f;
 		if (_currentState == AIState.Idle)
@@ -616,8 +719,23 @@ public partial class ListenerAI : CharacterBody3D
 	private bool ShouldSprintToNormalSound(float distance, ListenerSoundEvent soundEvent)
 	{
 		return soundEvent.Tier >= 3
+			|| (SprintOnNormalSound && soundEvent.Tier >= 2)
 			|| soundEvent.IsSpecialLongRange
 			|| distance >= NormalRadius - NormalSprintThresholdTolerance;
+	}
+
+	private bool ShouldSprintToMovementNoise(ListenerSoundEvent soundEvent)
+	{
+		return SprintOnRunningMovementNoise
+			&& soundEvent.IsMovementOrNoise
+			&& soundEvent.Tier >= MovementSprintTier;
+	}
+
+	private void StartSoundInvestigation(Vector3 origin)
+	{
+		_soundInvestigateLocation = origin;
+		_hasSoundInvestigateTarget = true;
+		ResetInvestigationProgress();
 	}
 
 	private bool HasReachedTarget(Vector3 target, float arriveDistance)
@@ -625,6 +743,55 @@ public partial class ListenerAI : CharacterBody3D
 		Vector3 delta = target - GlobalPosition;
 		delta.Y = 0f;
 		return delta.LengthSquared() <= arriveDistance * arriveDistance;
+	}
+
+	private bool IsInvestigationStuck(float delta)
+	{
+		float currentDistance = HorizontalDistanceTo(_soundInvestigateLocation);
+		bool madeProgress = currentDistance < _lastInvestigationDistance - InvestigationProgressEpsilon;
+
+		if (madeProgress)
+		{
+			_investigationStuckTimer = 0f;
+			_lastInvestigationDistance = currentDistance;
+			return false;
+		}
+
+		_investigationStuckTimer += delta;
+		_lastInvestigationDistance = currentDistance;
+		return _investigationStuckTimer >= InvestigationStuckTimeout;
+	}
+
+	private float HorizontalDistanceTo(Vector3 target)
+	{
+		Vector3 delta = target - GlobalPosition;
+		delta.Y = 0f;
+		return delta.Length();
+	}
+
+	private void ResetInvestigationProgress()
+	{
+		_investigationStuckTimer = 0f;
+		_lastInvestigationDistance = HorizontalDistanceTo(_soundInvestigateLocation);
+	}
+
+	private void CompleteSoundInvestigation(string reason)
+	{
+		_hasSoundInvestigateTarget = false;
+		ResetInvestigationProgress();
+		StopMovementAtCurrentPosition();
+		SetDebugLabel($"INVESTIGATION {reason}", Colors.LightBlue, 0f);
+		TransitionState(AIState.Alerted);
+	}
+
+	private void StopMovementAtCurrentPosition()
+	{
+		if (_navAgent != null)
+			_navAgent.TargetPosition = GlobalPosition;
+
+		_animationIntent = ListenerAnimationIntent.Idle;
+		Velocity = Vector3.Zero;
+		UpdateAnimation(0f, false, ListenerAnimationIntent.Idle);
 	}
 
 	private float GetLurkMoveSpeed()
@@ -650,6 +817,21 @@ public partial class ListenerAI : CharacterBody3D
 		_stateLabel.Modulate = color;
 	}
 
+	private void Log(string message)
+	{
+		GD.Print($"{LogPrefix()} {message}");
+	}
+
+	private string LogPrefix()
+	{
+		return $"[ListenerAI:{Name}]";
+	}
+
+	private static string FormatSoundKind(SoundKind kind)
+	{
+		return kind.ToString().ToUpperInvariant();
+	}
+
 	private static Color GetDebugColorForTier(int tier, SoundKind kind)
 	{
 		if (kind != SoundKind.Voice)
@@ -666,39 +848,86 @@ public partial class ListenerAI : CharacterBody3D
 
 	protected void TransitionState(AIState newState)
 	{
-		if (_currentState == newState) return;
-		GD.Print($"[ListenerAI] State transitioning from {_currentState} to {newState}");
+		if (_currentState == newState)
+			return;
+
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+		{
+			Rpc(nameof(SyncState), (int)newState);
+			return;
+		}
+
+		ApplyState(newState);
+	}
+
+	private void ApplyState(AIState newState)
+	{
+		if (_currentState == newState)
+			return;
+
+		Log($"State transitioning from {_currentState} to {newState}");
 		_currentState = newState;
 
 		_alertedSilenceTimer = 0f;
 		_whisperPauseDecay = 0f;
 
-		Color eyeColor = Colors.Black;
-
-		switch (newState)
-		{
-			case AIState.Idle: eyeColor = new Color(0.2f, 0.2f, 0.2f); break; // Dim White
-			case AIState.Alerted: eyeColor = new Color(1.0f, 0.5f, 0.0f); break; // Amber
-			case AIState.Hunting: eyeColor = new Color(1.0f, 0.0f, 0.0f); break; // Red
-			case AIState.Frenzy: eyeColor = Colors.White; break;
-		}
-
-		Rpc(nameof(SyncEyeColor), eyeColor);
+		ApplyEyeColor(GetEyeColorForState(newState));
 		UpdateStateLabel(newState);
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void SyncState(int stateValue)
+	{
+		if (!Enum.IsDefined(typeof(AIState), stateValue))
+			return;
+
+		ApplyState((AIState)stateValue);
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
 	protected void SyncEyeColor(Color color)
 	{
-		// Simple implementation for eyes materials
-		if (_leftEye?.Mesh is PrimitiveMesh lMesh)
+		ApplyEyeColor(color);
+	}
+
+	private Color GetEyeColorForState(AIState state)
+	{
+		return state switch
 		{
-			if (lMesh.Material is StandardMaterial3D lMat) lMat.AlbedoColor = color;
-		}
-		if (_rightEye?.Mesh is PrimitiveMesh rMesh)
+			AIState.Idle => new Color(0.2f, 0.2f, 0.2f),
+			AIState.Alerted => new Color(1.0f, 0.5f, 0.0f),
+			AIState.Hunting => new Color(1.0f, 0.0f, 0.0f),
+			AIState.Frenzy => Colors.White,
+			_ => Colors.Black
+		};
+	}
+
+	private void ApplyEyeColor(Color color)
+	{
+		ApplyEyeMaterial(_leftEye, color);
+		ApplyEyeMaterial(_rightEye, color);
+	}
+
+	private static void ApplyEyeMaterial(MeshInstance3D eye, Color color)
+	{
+		if (eye == null)
+			return;
+
+		StandardMaterial3D material = eye.MaterialOverride as StandardMaterial3D;
+		if (material == null)
 		{
-			if (rMesh.Material is StandardMaterial3D rMat) rMat.AlbedoColor = color;
+			Material source = eye.MaterialOverride;
+			if (source == null && eye.Mesh is PrimitiveMesh primitiveMesh)
+				source = primitiveMesh.Material;
+
+			material = source is StandardMaterial3D standardMaterial
+				? standardMaterial.Duplicate() as StandardMaterial3D
+				: new StandardMaterial3D();
+
+			eye.MaterialOverride = material;
 		}
+
+		material.AlbedoColor = color;
 	}
 
 	protected void LookAtOrigin(Vector3 origin)
@@ -796,10 +1025,10 @@ public partial class ListenerAI : CharacterBody3D
 	private string ResolveTargetAnimation(ListenerAnimationIntent intent, float intendedSpeed, bool isMoving)
 	{
 		if (!isMoving || intendedSpeed <= 0f || intent == ListenerAnimationIntent.Idle)
-			return FirstAvailable(_animIdle, _animLurk, _animWalk);
+			return FirstAvailable(_animIdle);
 
 		if (intent == ListenerAnimationIntent.Run || intendedSpeed >= RunAnimationSpeedThreshold)
-			return FirstAvailable(_animRun, _animLurk, _animWalk, _animIdle);
+			return FirstAvailable(_animRun, _animWalk, _animLurk, _animIdle);
 
 		if (intent == ListenerAnimationIntent.Lurk)
 			return FirstAvailable(ResolveLurkAnimation(), _animRun, _animIdle);
@@ -847,14 +1076,14 @@ public partial class ListenerAI : CharacterBody3D
 
 		if (_waypoints.Count == 0)
 		{
-			GD.PushWarning("[ListenerAI] No patrol waypoints found. Listener will only react to proximity/noise.");
+			GD.PushWarning($"{LogPrefix()} No patrol waypoints found. Listener will only react to proximity/noise.");
 			return;
 		}
 
 		_currentWaypointIndex = FindClosestWaypointIndex();
 		_navAgent.TargetPosition = _waypoints[_currentWaypointIndex].GlobalPosition;
 		_patrolInitialized = true;
-		GD.Print($"[ListenerAI] Patrol initialized at waypoint {_currentWaypointIndex}.");
+		Log($"Patrol initialized at waypoint {_currentWaypointIndex}.");
 	}
 
 	private int FindClosestWaypointIndex()
@@ -907,7 +1136,7 @@ public partial class ListenerAI : CharacterBody3D
 		if (_navAgent == null || _waypoints.Count == 0) return;
 		_currentWaypointIndex = (_currentWaypointIndex + 1) % _waypoints.Count;
 		_navAgent.TargetPosition = _waypoints[_currentWaypointIndex].GlobalPosition;
-		GD.Print($"[ListenerAI] Moving to waypoint {_currentWaypointIndex}");
+		Log($"Moving to waypoint {_currentWaypointIndex}");
 	}
 
 	// Proximity check sensor sweep (Notice, Alert & Attack Ranges)
@@ -963,10 +1192,11 @@ public partial class ListenerAI : CharacterBody3D
 		if (visibleMovingPlayer != null)
 		{
 			LookAtOrigin(visibleMovingPlayer.GlobalPosition);
+			StartSoundInvestigation(visibleMovingPlayer.GlobalPosition);
 			if (_currentState == AIState.Idle)
 				TransitionState(AIState.Alerted);
 
-			SetDebugLabel("WARY", Colors.Yellow, visibleMovingDistance);
+			SetDebugLabel("WARY INVESTIGATE", Colors.Yellow, visibleMovingDistance);
 		}
 		else if (ignoredStationaryInRange && _currentState != AIState.Frenzy)
 		{
@@ -1025,7 +1255,7 @@ public partial class ListenerAI : CharacterBody3D
 			return "LISTENER ATTACK";
 
 		if (controller.HasRecentListenerNoise)
-			return controller.LastListenerNoiseKind.ToString().ToUpper();
+			return $"{FormatSoundKind(controller.LastListenerNoiseKind)} T{controller.LastListenerNoiseTier}";
 
 		return "MOVEMENT";
 	}
@@ -1053,7 +1283,7 @@ public partial class ListenerAI : CharacterBody3D
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = false, TransferMode = MultiplayerPeer.TransferModeEnum.Unreliable)]
-	private void SyncRemoteState(Vector3 position, Vector3 velocity, Vector3 rotation)
+	private void SyncRemoteState(Vector3 position, Vector3 velocity, Vector3 rotation, int animationIntentValue)
 	{
 		if (Multiplayer.MultiplayerPeer == null || !Multiplayer.HasMultiplayerPeer() || Multiplayer.IsServer())
 			return;
@@ -1061,5 +1291,12 @@ public partial class ListenerAI : CharacterBody3D
 		GlobalPosition = position;
 		Velocity = velocity;
 		Rotation = rotation;
+
+		if (Enum.IsDefined(typeof(ListenerAnimationIntent), animationIntentValue))
+			_animationIntent = (ListenerAnimationIntent)animationIntentValue;
+
+		Vector3 horizontalVelocity = new Vector3(velocity.X, 0f, velocity.Z);
+		float speed = horizontalVelocity.Length();
+		UpdateAnimation(speed, speed > 0.1f, _animationIntent);
 	}
 }

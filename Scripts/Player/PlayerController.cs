@@ -47,6 +47,7 @@ public partial class PlayerController : CharacterBody3D
 	private float _remoteSyncTimer = 0.0f;
 	private float _landingNoiseCooldown = 0f;
 	private const float LandingNoiseCooldownDuration = 0.5f;
+	private bool _remoteIsOnFloor = true;
 	private double _lastListenerNoiseTime = -999.0;
 	private int _lastListenerNoiseTier = 0;
 	private SoundKind _lastListenerNoiseKind = SoundKind.Movement;
@@ -181,7 +182,7 @@ public partial class PlayerController : CharacterBody3D
 				_visuals.Rotation = rot;
 			}
 			
-			UpdateAnimation(remoteMoving, remoteRunning);
+			UpdateAnimation(remoteMoving, remoteRunning, _remoteIsOnFloor);
 			return;
 		}
 
@@ -271,18 +272,18 @@ public partial class PlayerController : CharacterBody3D
 			if (_remoteSyncTimer >= RemoteSyncInterval)
 			{
 				_remoteSyncTimer = 0f;
-				Rpc(nameof(SyncRemoteState), GlobalPosition, Velocity, _visuals?.Rotation ?? Vector3.Zero);
+				Rpc(nameof(SyncRemoteState), GlobalPosition, Velocity, _visuals?.Rotation ?? Vector3.Zero, IsOnFloor());
 			}
 		}
 	}
 	
-	private void UpdateAnimation(bool isMoving, bool isRunning)
+	private void UpdateAnimation(bool isMoving, bool isRunning, bool? isOnFloorOverride = null)
 	{
 		// Update visual debug label with movement state
 		string stateText = "IDLE";
 		Color stateColor = Colors.Yellow;
 
-		bool isOnFloor = IsOnFloor();
+		bool isOnFloor = isOnFloorOverride ?? IsOnFloor();
 		bool isAirborne = !isOnFloor;
 
 		if (isAirborne)
@@ -558,7 +559,7 @@ public partial class PlayerController : CharacterBody3D
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = false, TransferMode = MultiplayerPeer.TransferModeEnum.Unreliable)]
-	private void SyncRemoteState(Vector3 position, Vector3 velocity, Vector3 visualsRotation)
+	private void SyncRemoteState(Vector3 position, Vector3 velocity, Vector3 visualsRotation, bool isOnFloor)
 	{
 		if (Multiplayer.MultiplayerPeer == null || !Multiplayer.HasMultiplayerPeer() || IsMultiplayerAuthority())
 			return;
@@ -569,6 +570,7 @@ public partial class PlayerController : CharacterBody3D
 
 		GlobalPosition = position;
 		Velocity = velocity;
+		_remoteIsOnFloor = isOnFloor;
 		if (_visuals != null)
 			_visuals.Rotation = visualsRotation;
 	}

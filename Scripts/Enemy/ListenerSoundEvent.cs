@@ -12,6 +12,18 @@ public enum ListenerTargetMode
 	SecondListenerImprint
 }
 
+public enum ListenerBehaviorCondition
+{
+	Phase3PermanentFrenzy,
+	ActiveScreamFrenzy,
+	VocalSacrificeLock,
+	HasSprintTarget,
+	HasSecondListenerImprintTarget,
+	HasTokenTarget,
+	HasSoundInvestigation,
+	Always
+}
+
 public enum SoundKind
 {
 	Voice,

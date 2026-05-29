@@ -1,0 +1,106 @@
+[gd_resource type="BehaviorTree" format=3 uid="uid://sqciodo2po5c"]
+
+[ext_resource type="Script" uid="uid://cghh1l4coi40t" path="res://Scripts/Enemy/BT/ListenerBTCondition.gd" id="1_oyxrx"]
+[ext_resource type="Script" uid="uid://xtks6ono2r65" path="res://Scripts/Enemy/BT/ListenerBTSetTargetMode.gd" id="2_un28k"]
+
+[sub_resource type="BTCondition" id="BTCondition_hqik0"]
+script = ExtResource("1_oyxrx")
+condition = 0
+
+[sub_resource type="BTAction" id="BTAction_6wmrq"]
+script = ExtResource("2_un28k")
+target_mode = 6
+
+[sub_resource type="BTSequence" id="BTSequence_qdp6q"]
+custom_name = "Phase 3 Permanent Frenzy"
+children = [SubResource("BTCondition_hqik0"), SubResource("BTAction_6wmrq")]
+
+[sub_resource type="BTCondition" id="BTCondition_bheve"]
+script = ExtResource("1_oyxrx")
+condition = 1
+
+[sub_resource type="BTAction" id="BTAction_fo8gl"]
+script = ExtResource("2_un28k")
+target_mode = 4
+
+[sub_resource type="BTSequence" id="BTSequence_dof1n"]
+custom_name = "Scream Frenzy"
+children = [SubResource("BTCondition_bheve"), SubResource("BTAction_fo8gl")]
+
+[sub_resource type="BTCondition" id="BTCondition_ia2cy"]
+script = ExtResource("1_oyxrx")
+condition = 2
+
+[sub_resource type="BTAction" id="BTAction_rkj6j"]
+script = ExtResource("2_un28k")
+target_mode = 5
+
+[sub_resource type="BTSequence" id="BTSequence_l35tk"]
+custom_name = "Vocal Sacrifice"
+children = [SubResource("BTCondition_ia2cy"), SubResource("BTAction_rkj6j")]
+
+[sub_resource type="BTCondition" id="BTCondition_jq7cr"]
+script = ExtResource("1_oyxrx")
+condition = 3
+
+[sub_resource type="BTAction" id="BTAction_0axpk"]
+script = ExtResource("2_un28k")
+target_mode = 3
+
+[sub_resource type="BTSequence" id="BTSequence_t72jx"]
+custom_name = "Non-Frenzy Sprint"
+children = [SubResource("BTCondition_jq7cr"), SubResource("BTAction_0axpk")]
+
+[sub_resource type="BTCondition" id="BTCondition_r8xnm"]
+script = ExtResource("1_oyxrx")
+condition = 4
+
+[sub_resource type="BTAction" id="BTAction_4pw6n"]
+script = ExtResource("2_un28k")
+target_mode = 7
+
+[sub_resource type="BTSequence" id="BTSequence_vfr5p"]
+custom_name = "Second Listener Imprint"
+children = [SubResource("BTCondition_r8xnm"), SubResource("BTAction_4pw6n")]
+
+[sub_resource type="BTCondition" id="BTCondition_2q7i5"]
+script = ExtResource("1_oyxrx")
+condition = 5
+
+[sub_resource type="BTAction" id="BTAction_dkww5"]
+script = ExtResource("2_un28k")
+target_mode = 1
+
+[sub_resource type="BTSequence" id="BTSequence_t1q0t"]
+custom_name = "Token Target"
+children = [SubResource("BTCondition_2q7i5"), SubResource("BTAction_dkww5")]
+
+[sub_resource type="BTCondition" id="BTCondition_5n3wg"]
+script = ExtResource("1_oyxrx")
+condition = 6
+
+[sub_resource type="BTAction" id="BTAction_2432x"]
+script = ExtResource("2_un28k")
+target_mode = 2
+
+[sub_resource type="BTSequence" id="BTSequence_u72r6"]
+custom_name = "Sound Investigation"
+children = [SubResource("BTCondition_5n3wg"), SubResource("BTAction_2432x")]
+
+[sub_resource type="BTCondition" id="BTCondition_1bpum"]
+script = ExtResource("1_oyxrx")
+
+[sub_resource type="BTAction" id="BTAction_xcy0v"]
+script = ExtResource("2_un28k")
+
+[sub_resource type="BTSequence" id="BTSequence_68viv"]
+custom_name = "No Target"
+children = [SubResource("BTCondition_1bpum"), SubResource("BTAction_xcy0v")]
+
+[sub_resource type="BTSelector" id="BTSelector_nh5dj"]
+custom_name = "Listener Target Priority"
+children = [SubResource("BTSequence_qdp6q"), SubResource("BTSequence_dof1n"), SubResource("BTSequence_l35tk"), SubResource("BTSequence_t72jx"), SubResource("BTSequence_vfr5p"), SubResource("BTSequence_t1q0t"), SubResource("BTSequence_u72r6"), SubResource("BTSequence_68viv")]
+
+[resource]
+description = "Priority selector for ListenerAI target mode. Edited with LimboAI."
+root_task = SubResource("BTSelector_nh5dj")

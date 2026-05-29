@@ -334,8 +334,8 @@ public partial class NetworkManager : Node
     private void FormLobby()
     {
         IsLobbyFormed = true;
-        string code = GenerateRandomRoomCode();
-        Rpc(nameof(LobbyFormedRPC), code);
+        CurrentRoomCode = GenerateRandomRoomCode();
+        Rpc(nameof(LobbyFormedRPC), CurrentRoomCode);
     }
 
     [Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
@@ -493,7 +493,7 @@ public partial class NetworkManager : Node
         EmitSignal(SignalName.PlayerConnected, id);
         if (!Multiplayer.IsServer() || !IsMatchmakingSession) return;
 
-        if (IsLobbyFormed || IsMatchStarted)
+        if (IsMatchStarted || (IsLobbyFormed && LobbyPlayers.Count >= RequiredPlayers))
         {
             _peer.DisconnectPeer((int)id);
             return;
@@ -507,6 +507,9 @@ public partial class NetworkManager : Node
                 LobbyPlayers.Add(new PlayerInfo { PeerId = id, Name = $"Peer {id}" });
                 Rpc(nameof(SyncLobbyPlayers), SerializePlayers());
             }
+
+            if (IsLobbyFormed)
+                RpcId(id, nameof(LobbyFormedRPC), CurrentRoomCode);
 
             Rpc(nameof(SyncMatchmakingStatus), _matchmakingQueue.Count, RequiredPlayers, _isCountdownActive);
 

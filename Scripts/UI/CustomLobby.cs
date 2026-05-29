@@ -170,6 +170,7 @@ public partial class CustomLobby : CanvasLayer
         }
 
         // Enable Start Run when all connected non-host players are ready.
+        // The host starts the room directly rather than toggling Ready.
         // A solo custom room is valid for testing, practice, and private challenge runs.
         if (_btnStartRun != null && Multiplayer.IsServer())
         {

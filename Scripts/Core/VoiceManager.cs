@@ -24,6 +24,7 @@ public partial class VoiceManager : Node
     [Export] public string MicBusName = "Microphone";
     [Export] public string MicSendBusName = "Master";
     [Export] public float AnalysisInterval = 0.05f;
+    [Export] public float VoiceNoiseRepeatInterval = 0.25f;
 
     private int _micBusIndex = -1;
     private AudioStreamPlayer _micInput;
@@ -31,6 +32,7 @@ public partial class VoiceManager : Node
 
     private VoiceTier _currentTier = VoiceTier.Silent;
     private float _timer = 0f;
+    private float _voiceNoiseRepeatTimer = 0f;
     private float _smoothedRms = 0f;
     [Export] public float SmoothingFactor = 0.2f; // 0.0 to 1.0 (lower = smoother/slower)
 
@@ -75,6 +77,7 @@ public partial class VoiceManager : Node
             MicSendBusName = "Master";
 
         AnalysisInterval = Mathf.Max(AnalysisInterval, 0.01f);
+        VoiceNoiseRepeatInterval = Mathf.Max(VoiceNoiseRepeatInterval, AnalysisInterval);
         SmoothingFactor = Mathf.Clamp(SmoothingFactor, 0f, 1f);
         CalibrationDuration = Mathf.Max(CalibrationDuration, 0.1f);
         BaselineAmplitude = Mathf.Max(BaselineAmplitude, 0.001f);
@@ -230,6 +233,8 @@ public partial class VoiceManager : Node
 
     private void AnalyzeVoice(float delta)
     {
+        _voiceNoiseRepeatTimer += delta;
+
         // --- Keyboard simulated voice input overrides (dev testing, GDPR-gated) ---
         // Only active when GDPR consent has been given so it cannot be abused on startup.
         if (IsGdprAccepted)
@@ -275,11 +280,11 @@ public partial class VoiceManager : Node
                     if (_currentTier >= VoiceTier.Whisper)
                         UpdateTokenHolder();
 
-                    BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
+                    BroadcastCurrentVoiceNoise(true);
                 }
                 else if (_currentTier >= VoiceTier.Normal)
                 {
-                    BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
+                    BroadcastCurrentVoiceNoise(false);
                 }
                 return;
             }
@@ -292,6 +297,7 @@ public partial class VoiceManager : Node
                 _currentTier = VoiceTier.Silent;
                 EmitSignal(SignalName.TierChanged, (int)_currentTier);
             }
+            _voiceNoiseRepeatTimer = 0f;
             EmitSignal(SignalName.VolumeUpdated, -80f);
             return;
         }
@@ -348,12 +354,27 @@ public partial class VoiceManager : Node
             if (_currentTier >= VoiceTier.Whisper)
                 UpdateTokenHolder();
 
-            BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
+            BroadcastCurrentVoiceNoise(true);
         }
         else if (_currentTier >= VoiceTier.Normal)
         {
-            BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
+            BroadcastCurrentVoiceNoise(false);
         }
+    }
+
+    private void BroadcastCurrentVoiceNoise(bool force)
+    {
+        if (_currentTier < VoiceTier.Whisper)
+            return;
+
+        if (!force && _currentTier < VoiceTier.Normal)
+            return;
+
+        if (!force && _voiceNoiseRepeatTimer < VoiceNoiseRepeatInterval)
+            return;
+
+        _voiceNoiseRepeatTimer = 0f;
+        BroadcastNoiseEvent((int)_currentTier, SoundKind.Voice);
     }
 
     private void ProcessCalibration(float rms, float delta)
@@ -392,28 +413,23 @@ public partial class VoiceManager : Node
         float enterShouting = 2.00f;
         float exitShouting = 1.90f;
 
-        if (_currentTier == VoiceTier.Silent)
-        {
-            if (ratio >= enterWhisper) return VoiceTier.Whisper;
-            return VoiceTier.Silent;
-        }
-        else if (_currentTier == VoiceTier.Whisper)
-        {
-            if (ratio < exitWhisper) return VoiceTier.Silent;
-            if (ratio >= enterNormal) return VoiceTier.Normal;
-            return VoiceTier.Whisper;
-        }
-        else if (_currentTier == VoiceTier.Normal)
-        {
-            if (ratio < exitNormal) return VoiceTier.Whisper;
-            if (ratio >= enterShouting) return VoiceTier.Shouting;
-            return VoiceTier.Normal;
-        }
-        else if (_currentTier == VoiceTier.Shouting)
-        {
-            if (ratio < exitShouting) return VoiceTier.Normal;
+        if (_currentTier == VoiceTier.Shouting && ratio >= exitShouting)
             return VoiceTier.Shouting;
-        }
+
+        if (ratio >= enterShouting)
+            return VoiceTier.Shouting;
+
+        if (_currentTier == VoiceTier.Normal && ratio >= exitNormal)
+            return VoiceTier.Normal;
+
+        if (ratio >= enterNormal)
+            return VoiceTier.Normal;
+
+        if (_currentTier == VoiceTier.Whisper && ratio >= exitWhisper)
+            return VoiceTier.Whisper;
+
+        if (ratio >= enterWhisper)
+            return VoiceTier.Whisper;
 
         return VoiceTier.Silent;
     }
@@ -507,6 +523,9 @@ public partial class VoiceManager : Node
         if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !Multiplayer.IsServer())
         {
             // Client sends only the tier — position is derived server-side from the sender's node.
+            if (kind == SoundKind.Voice)
+                NotifyLocalPlayerNoiseDebug(tier, kind);
+
             RpcId(NetworkManager.ServerPeerId, nameof(ReportNoiseEventRPC), tier, kindValue, isSpecialLongRange);
         }
         else
@@ -543,21 +562,28 @@ public partial class VoiceManager : Node
         DispatchNoiseToListeners(trustedPosition, Mathf.Clamp(tier, 0, 3), kind, source, isSpecialLongRange);
     }
 
-    private void DispatchNoiseToListeners(Vector3 position, int tier, SoundKind kind, Node3D source, bool isSpecialLongRange)
-    {
-        if (source is PlayerController player)
-            player.NotifyListenerNoise(tier, kind);
+	private void DispatchNoiseToListeners(Vector3 position, int tier, SoundKind kind, Node3D source, bool isSpecialLongRange)
+	{
+		if (source is PlayerController player)
+			player.NotifyListenerNoise(tier, kind);
 
         var listenerEvent = new ListenerSoundEvent(position, tier, kind, source, isSpecialLongRange);
         var listeners = GetTree().GetNodesInGroup("Listener");
         foreach (var node in listeners)
         {
-            if (node is ListenerAI ai)
-                ai.HearNoise(listenerEvent);
-        }
-    }
+			if (node is ListenerAI ai)
+				ai.HearNoise(listenerEvent);
+		}
+	}
 
-    private static SoundKind ParseSoundKind(int kindValue)
+	private void NotifyLocalPlayerNoiseDebug(int tier, SoundKind kind)
+	{
+		Node3D localPlayer = FindPlayerNodeByPeerId(Multiplayer.GetUniqueId());
+		if (localPlayer is PlayerController player)
+			player.NotifyListenerNoise(tier, kind);
+	}
+
+	private static SoundKind ParseSoundKind(int kindValue)
     {
         return Enum.IsDefined(typeof(SoundKind), kindValue)
             ? (SoundKind)kindValue
