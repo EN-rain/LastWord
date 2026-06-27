@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using LastWord.World;
 
 public partial class PlayerController : CharacterBody3D
 {
@@ -11,6 +12,8 @@ public partial class PlayerController : CharacterBody3D
 	[Export] public float ListenerMovementThreshold = 0.12f;
 	[Export] public float RecentListenerNoiseWindow = 0.75f;
 	[Export] public bool SuppressInitialLandingNoise = true;
+	[Export] public float InitialLandingNoiseGraceSeconds = 0.35f;
+	[Export] public float LandingNoiseMinFallSpeed = 2.0f;
 
 	[ExportGroup("Node References")]
 	[Export] public NodePath VisualsPath;
@@ -20,12 +23,41 @@ public partial class PlayerController : CharacterBody3D
 	[Export] public bool ShowSoundDebugLabel = true;
 	[Export] public NodePath SoundDebugLabelPath;
 	[Export] public float SoundDebugHoldSeconds = 1.25f;
+
+	[ExportGroup("Death Sequence")]
+	[Export] public float DeathFadeDuration = 2.0f;
+	[Export] public float DeathCardDelay = 0.5f;
+	[Export] public float SpectatorTransitionDuration = 0.5f;
+	[Export] public float SpectatorMoveSpeed = 5.0f;
+	[Export] public NodePath DeathOverlayPath;
+	[Export] public NodePath DeathCardPath;
+	[Export] public NodePath DeathTitleLabelPath;
+	[Export] public NodePath DeathReasonLabelPath;
+	[Export] public NodePath DeathAudioPlayerPath;
+	[Export] public NodePath VoiceRecorderPath;
+	[Export] public NodePath CollisionShapePath;
+
+	[Export] public float DeathPlaybackPitch = 0.6f;
 	
 	// Node references
 	private AnimationPlayer _animationPlayer;
 	private Node3D _visuals;
 	private Node3D _cameraManager;
 	private Label3D _soundDebugLabel;
+	private ColorRect _deathOverlay;
+	private Control _deathCard;
+	private Label _deathTitleLabel;
+	private Label _deathReasonLabel;
+	private AudioStreamPlayer _deathAudioPlayer;
+	private VoiceRecorder _voiceRecorder;
+	private CollisionShape3D _collisionShape;
+
+	// Run-time stats tracked for the death card (§4.5)
+	private float _tokenHoldTime = 0f;
+	private float _speakTime = 0f;
+	private bool _hadToken = false;
+	private bool _wasSpeaking = false;
+	private int _currentVoiceTier = 0;
 	
 	// Cached animation names to avoid searching every frame
 	private string _animIdle = "";
@@ -39,6 +71,8 @@ public partial class PlayerController : CharacterBody3D
 	private bool _jumpAnimFinished = false;
 	private bool _deathAnimFinished = false;
 	private bool _landingNoiseArmed = false;
+	private bool _spawnGroundingSettled = false;
+	private bool _initialLandingNoiseSuppressed = false;
 
 	// Footstep Noise Emission variables
 	private float _footstepTimer = 0.0f;
@@ -46,6 +80,8 @@ public partial class PlayerController : CharacterBody3D
 	private const float RunStepInterval = 0.3f;
 	private float _remoteSyncTimer = 0.0f;
 	private float _landingNoiseCooldown = 0f;
+	private float _initialLandingNoiseGraceTimer = 0f;
+	private float _maxAirborneFallSpeed = 0f;
 	private const float LandingNoiseCooldownDuration = 0.5f;
 	private bool _remoteIsOnFloor = true;
 	private double _lastListenerNoiseTime = -999.0;
@@ -53,11 +89,53 @@ public partial class PlayerController : CharacterBody3D
 	private SoundKind _lastListenerNoiseKind = SoundKind.Movement;
 	private float _soundDebugTimer = 0f;
 
+	private string _pendingDeathReason = "";
+	private string _pendingListenerName = "";
+
+	private GestureSystem _gestureSystem;
+	private ClapAbility _clapAbility;
+	private VocalSacrifice _vocalSacrifice;
+	private RoleData _roleData;
+	private LoudStun _loudStun;
+	private StaticBubble _staticBubble;
+	private MuteSilentDrop _muteSilentDrop;
+	private ArchivistRegistration _archivistRegistration;
+	private WitnessBurst _witnessBurst;
+	private EchoReplay _echoReplay;
+	private RoleNotification _roleNotification;
+
 	public bool IsDead { get; private set; } = false;
+	public bool IsInWhisperMode { get; private set; } = false;
+	public bool IsInteracting => Input.IsActionPressed("interact");
+	public bool IsAudioIsolated { get; private set; }
+	public bool IsSilenced { get; private set; }
 	public bool IsMovingForListener => !IsDead && new Vector3(Velocity.X, 0, Velocity.Z).Length() > ListenerMovementThreshold;
 	public bool HasRecentListenerNoise => !IsDead && Time.GetTicksMsec() / 1000.0 - _lastListenerNoiseTime <= RecentListenerNoiseWindow;
 	public int LastListenerNoiseTier => _lastListenerNoiseTier;
 	public SoundKind LastListenerNoiseKind => _lastListenerNoiseKind;
+
+	/// <summary>
+	/// Raised when this player begins the listener death sequence.
+	/// Other systems (HUD, game mode) can subscribe without direct coupling.
+	/// </summary>
+	public static event Action<PlayerController, string, string> Died;
+
+	/// <summary>
+	/// Muting ability/environment flag (Wardrobe, Silence Room, etc.).
+	/// </summary>
+	public void SetSilenced(bool silenced)
+	{
+		IsSilenced = silenced;
+	}
+
+	/// <summary>
+	/// Audio isolation flag (Silence Room). When true the player neither emits
+	/// nor receives external sounds.
+	/// </summary>
+	public void SetAudioIsolated(bool isolated)
+	{
+		IsAudioIsolated = isolated;
+	}
 
 	public override void _Ready()
 	{
@@ -77,6 +155,34 @@ public partial class PlayerController : CharacterBody3D
 		_soundDebugLabel = GetNodeOrNull<Label3D>(SoundDebugLabelPath);
 		if (ShowSoundDebugLabel && _soundDebugLabel == null)
 			GD.PushWarning("PlayerController: SoundDebugLabelPath is not assigned, so player sound debug text will not be visible.");
+
+		_deathOverlay = GetNodeOrNull<ColorRect>(DeathOverlayPath);
+		_deathCard = GetNodeOrNull<Control>(DeathCardPath);
+		_deathTitleLabel = GetNodeOrNull<Label>(DeathTitleLabelPath);
+		_deathReasonLabel = GetNodeOrNull<Label>(DeathReasonLabelPath);
+		_deathAudioPlayer = GetNodeOrNull<AudioStreamPlayer>(DeathAudioPlayerPath);
+		_voiceRecorder = GetNodeOrNull<VoiceRecorder>(VoiceRecorderPath);
+		_collisionShape = GetNodeOrNull<CollisionShape3D>(CollisionShapePath);
+		SubscribeVoiceManagerSignals();
+		_gestureSystem = GetNodeOrNull<GestureSystem>("GestureSystem");
+		_clapAbility = GetNodeOrNull<ClapAbility>("ClapAbility");
+		_vocalSacrifice = GetNodeOrNull<VocalSacrifice>("VocalSacrifice");
+		_roleData = GetNodeOrNull<RoleData>("RoleData");
+		_loudStun = GetNodeOrNull<LoudStun>("LoudStun");
+		_staticBubble = GetNodeOrNull<StaticBubble>("StaticBubble");
+		_muteSilentDrop = GetNodeOrNull<MuteSilentDrop>("MuteSilentDrop");
+		_archivistRegistration = GetNodeOrNull<ArchivistRegistration>("ArchivistRegistration");
+		_witnessBurst = GetNodeOrNull<WitnessBurst>("WitnessBurst");
+		_echoReplay = GetNodeOrNull<EchoReplay>("EchoReplay");
+		_roleNotification = GetNodeOrNull<RoleNotification>("RoleNotification");
+
+		if (_deathOverlay != null)
+		{
+			_deathOverlay.Color = Colors.Black;
+			_deathOverlay.Modulate = new Color(1f, 1f, 1f, 0f);
+			_deathOverlay.Visible = false;
+		}
+		if (_deathCard != null) _deathCard.Visible = false;
 
 		UpdateSoundDebugLabel("NO SOUND", Colors.Gray, true);
 
@@ -130,7 +236,34 @@ public partial class PlayerController : CharacterBody3D
 		RemoteSyncInterval = Mathf.Max(RemoteSyncInterval, 0.01f);
 		ListenerMovementThreshold = Mathf.Max(ListenerMovementThreshold, 0f);
 		RecentListenerNoiseWindow = Mathf.Max(RecentListenerNoiseWindow, 0f);
+		InitialLandingNoiseGraceSeconds = Mathf.Max(InitialLandingNoiseGraceSeconds, 0f);
+		LandingNoiseMinFallSpeed = Mathf.Max(LandingNoiseMinFallSpeed, 0f);
 		SoundDebugHoldSeconds = Mathf.Max(SoundDebugHoldSeconds, 0f);
+		DeathFadeDuration = Mathf.Max(DeathFadeDuration, 0.01f);
+		DeathCardDelay = Mathf.Max(DeathCardDelay, 0f);
+		SpectatorTransitionDuration = Mathf.Max(SpectatorTransitionDuration, 0f);
+		SpectatorMoveSpeed = Mathf.Max(SpectatorMoveSpeed, 0f);
+		DeathPlaybackPitch = Mathf.Clamp(DeathPlaybackPitch, 0.01f, 4f);
+	}
+
+	private void SubscribeVoiceManagerSignals()
+	{
+		if (VoiceManager.Instance == null)
+			return;
+
+		VoiceManager.Instance.TokenTransferred += OnTokenTransferred;
+		VoiceManager.Instance.TierChanged += OnVoiceTierChanged;
+	}
+
+	private void OnTokenTransferred(Node3D newHolder)
+	{
+		_hadToken = newHolder == this;
+	}
+
+	private void OnVoiceTierChanged(int newTier)
+	{
+		_wasSpeaking = newTier >= (int)VoiceTier.Whisper;
+		_currentVoiceTier = newTier;
 	}
 	
 	private AnimationPlayer FindAnimationPlayer(Node node)
@@ -146,12 +279,50 @@ public partial class PlayerController : CharacterBody3D
 
 	public override void _Process(double delta)
 	{
-		if (_soundDebugTimer <= 0f)
+		// Always feed voice to objective systems (game-critical, cheap).
+		FeedVoiceToObjectives(delta);
+
+		// Sound debug label only when actively emitting noise.
+		if (_soundDebugTimer > 0f)
+		{
+			_soundDebugTimer -= (float)delta;
+			if (_soundDebugTimer <= 0f)
+				UpdateSoundDebugLabel("NO SOUND", Colors.Gray, true);
+			_initialLandingNoiseGraceTimer = SuppressInitialLandingNoise ? InitialLandingNoiseGraceSeconds : 0f;
+		}
+	}
+
+	private void FeedVoiceToObjectives(double delta)
+	{
+		if (IsDead) return;
+
+		// Strategy A.3: skip per-frame work when idle (no radio, no voice activity).
+		bool hasRadio = GetNodeOrNull<Radio>("Radio") is { IsHeld: true };
+		bool speaking = _currentVoiceTier >= (int)VoiceTier.Normal;
+		if (!hasRadio && !speaking)
 			return;
 
-		_soundDebugTimer -= (float)delta;
-		if (_soundDebugTimer <= 0f)
-			UpdateSoundDebugLabel("NO SOUND", Colors.Gray, true);
+		// Phase 3 final broadcast.
+		var radio = GetNodeOrNull<Radio>("Radio");
+		if (radio != null && radio.IsHeld)
+		{
+			var broadcast = GetTree().CurrentScene?.GetNodeOrNull<RadioBroadcast>("/root/GameManager/RadioBroadcast");
+			broadcast?.OnVoiceUpdate(_currentVoiceTier, delta);
+		}
+
+		// Phase 2 sequence — no STT yet, so we validate the next expected word
+		// automatically when the player speaks at Normal tier or higher.
+		if (_currentVoiceTier >= (int)VoiceTier.Normal)
+		{
+			var sequenceManager = GetTree().CurrentScene?.GetNodeOrNull<SequenceManager>("/root/GameManager/SequenceManager");
+			if (sequenceManager != null && !sequenceManager.IsLocked && !sequenceManager.IsComplete)
+			{
+				string nextWord = sequenceManager.CurrentSequence.Count > sequenceManager.CurrentIndex
+					? sequenceManager.CurrentSequence[sequenceManager.CurrentIndex]
+					: string.Empty;
+				sequenceManager.OnVoiceUpdate(nextWord, _currentVoiceTier, delta);
+			}
+		}
 	}
 
 	public override void _PhysicsProcess(double delta)
@@ -161,12 +332,36 @@ public partial class PlayerController : CharacterBody3D
 			Velocity = Vector3.Zero;
 			_footstepTimer = 0f;
 			_landingNoiseCooldown = 0f;
+
+			if (IsInWhisperMode && IsMultiplayerAuthority())
+			{
+				HandleWhisperSpectatorMovement((float)delta);
+				return;
+			}
+
 			PlayDeathAnimation();
 			return;
 		}
 
+		// Accumulate death-card stats while alive.
+		float dt = (float)delta;
+		if (_hadToken)
+			_tokenHoldTime += dt;
+		if (_wasSpeaking)
+			_speakTime += dt;
+
+		// Feed vocal imprint tracker (§3.4).
+		if (GameManager.Instance?.ImprintTracker != null)
+			GameManager.Instance.ImprintTracker.RecordSpeaking(this, _wasSpeaking ? dt : 0f);
+
+		// Reset playback-trap silence clock whenever this player speaks (§3.5).
+		if (_wasSpeaking)
+			GameManager.Instance?.Playback?.ReportSpeech();
+
 		if (_landingNoiseCooldown > 0f)
 			_landingNoiseCooldown -= (float)delta;
+		if (_initialLandingNoiseGraceTimer > 0f)
+			_initialLandingNoiseGraceTimer -= (float)delta;
 
 		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !IsMultiplayerAuthority())
 		{
@@ -190,7 +385,10 @@ public partial class PlayerController : CharacterBody3D
 
 		// --- Gravity always applies regardless of menu state ---
 		if (!IsOnFloor())
+		{
 			velocity.Y -= Gravity * (float)delta;
+			_maxAirborneFallSpeed = Mathf.Max(_maxAirborneFallSpeed, -velocity.Y);
+		}
 
 		bool isRunning  = false;
 		float currentSpeed = WalkSpeed;
@@ -201,10 +399,46 @@ public partial class PlayerController : CharacterBody3D
 		{
 			// Jump
 			if (Input.IsActionPressed("move_jump") && IsOnFloor())
+			{
 				velocity.Y = JumpVelocity;
+				_landingNoiseArmed = true;
+			}
 
 			// WASD direction
 			Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_backward");
+
+			// Gesture keys (silent, no Token or Listener sound)
+			if (IsMultiplayerAuthority() && _gestureSystem != null)
+			{
+				if (Input.IsActionJustPressed("gesture_z")) _gestureSystem.PlayGesture(GestureId.PointForward);
+				else if (Input.IsActionJustPressed("gesture_x")) _gestureSystem.PlayGesture(GestureId.Wave);
+				else if (Input.IsActionJustPressed("gesture_c")) _gestureSystem.PlayGesture(GestureId.ThumbsUp);
+				else if (Input.IsActionJustPressed("gesture_v")) _gestureSystem.PlayGesture(GestureId.No);
+				else if (Input.IsActionJustPressed("gesture_b")) _gestureSystem.PlayGesture(GestureId.Listen);
+				else if (Input.IsActionJustPressed("gesture_n")) _gestureSystem.PlayGesture(GestureId.NoteFound);
+				else if (Input.IsActionJustPressed("gesture_m")) _gestureSystem.PlayGesture(GestureId.Self);
+				else if (Input.IsActionJustPressed("gesture_l")) _gestureSystem.PlayGesture(GestureId.Stop);
+			}
+
+			// Clap ability (Q) — post-Lights Out only
+			if (Input.IsActionJustPressed("clap_q") && _clapAbility != null)
+			{
+				_clapAbility.TryClap();
+			}
+
+			// Vocal Sacrifice (G hold)
+			if (_vocalSacrifice != null)
+			{
+				_vocalSacrifice.SetHolding(Input.IsActionPressed("sacrifice_g"));
+			}
+
+			// Role abilities (F = Loud stun, R = Static bubble)
+			if (Input.IsActionJustPressed("ability_f") && _loudStun != null)
+				_loudStun.TryStun();
+			if (Input.IsActionJustPressed("ability_r") && _staticBubble != null)
+				_staticBubble.TryDeploy();
+			if (Input.IsActionJustPressed("ability_t") && _echoReplay != null)
+				_echoReplay.TryDeploy();
 
 			if (_cameraManager != null)
 			{
@@ -247,6 +481,13 @@ public partial class PlayerController : CharacterBody3D
 
 		Velocity = velocity;
 		MoveAndSlide();
+
+		if (!_spawnGroundingSettled && IsOnFloor())
+		{
+			_spawnGroundingSettled = true;
+			_wasAirborne = false;
+			_landingNoiseArmed = false;
+		}
 
 		// Footstep Noise Emission
 		if (IsOnFloor() && direction != Vector3.Zero && !PauseMenu.IsOpen)
@@ -319,10 +560,15 @@ public partial class PlayerController : CharacterBody3D
 		if (_wasAirborne && isOnFloor)
 		{
 			_jumpAnimFinished = false;
-			if (!SuppressInitialLandingNoise || _landingNoiseArmed)
+			if ((!SuppressInitialLandingNoise || _landingNoiseArmed)
+				&& _initialLandingNoiseGraceTimer <= 0f
+				&& _maxAirborneFallSpeed >= LandingNoiseMinFallSpeed)
+			{
 				EmitLandingNoise();
+			}
 
 			_landingNoiseArmed = true;
+			_maxAirborneFallSpeed = 0f;
 			// Resume playback in case we had paused on the last frame (guard against empty animation name)
 			if (!string.IsNullOrEmpty(_animationPlayer.CurrentAnimation))
 				_animationPlayer.Play(_animationPlayer.CurrentAnimation, 0f);
@@ -347,6 +593,8 @@ public partial class PlayerController : CharacterBody3D
 		if (isAirborne)
 		{
 			_wasAirborne = true;
+			if (_initialLandingNoiseGraceTimer <= 0f)
+				_landingNoiseArmed = true;
 
 			if (!string.IsNullOrEmpty(_animJump) && _animationPlayer.HasAnimation(_animJump))
 			{
@@ -373,7 +621,7 @@ public partial class PlayerController : CharacterBody3D
 
 		// --- GROUNDED normal logic ---
 		_wasAirborne = false;
-		_landingNoiseArmed = true;
+		_maxAirborneFallSpeed = 0f;
 		
 		string targetAnim = _animIdle;
 		if (isMoving)
@@ -420,6 +668,12 @@ public partial class PlayerController : CharacterBody3D
 	{
 		if (IsDead)
 			return;
+
+		if (SuppressInitialLandingNoise && !_initialLandingNoiseSuppressed)
+		{
+			_initialLandingNoiseSuppressed = true;
+			return;
+		}
 
 		// Guard: physics ground flicker can fire landing twice in consecutive frames at the same spot.
 		if (_landingNoiseCooldown > 0f)
@@ -523,15 +777,192 @@ public partial class PlayerController : CharacterBody3D
 			return;
 
 		IsDead = true;
+		IsInWhisperMode = false;
+		_pendingDeathReason = reason;
+		_pendingListenerName = listenerName;
 		Velocity = Vector3.Zero;
 		_footstepTimer = 0f;
 		_deathAnimFinished = false;
 		PlayDeathAnimation();
+		PlayDeathVoicePlayback();
 		GD.Print($"[PlayerController] {Name} killed by {listenerName}: {reason}");
+
+		// Notify other systems via event (keeps gameplay code decoupled from UI).
+		Died?.Invoke(this, reason, listenerName);
+
+		// Mark imprint profile as dead so it decays instead of persisting.
+		GameManager.Instance?.ImprintTracker?.MarkDead(this);
+
+		// Role death notification (§5).
+		if (_roleData != null && _roleData.HasRole)
+		{
+			string roleName = _roleData.Role.ToString().ToUpper();
+			_roleNotification?.Show($"{roleName} LOST");
+			RoleNotification.ShowFor(this, $"{roleName} ability lost on death.");
+			if (_roleData.IsWitness && _witnessBurst != null)
+				_witnessBurst.OnWitnessDied(this);
+		}
+
+		if (IsMultiplayerAuthority())
+		{
+			FadeToBlack();
+		}
+	}
+
+	private void FadeToBlack()
+	{
+		if (_deathOverlay == null)
+		{
+			CallDeferred(nameof(ShowDeathCard));
+			CallDeferred(nameof(EnterWhisperMode));
+			return;
+		}
+
+		_deathOverlay.Visible = true;
+		_deathOverlay.Modulate = new Color(1f, 1f, 1f, 0f);
+
+		var tween = CreateTween();
+		tween.SetTrans(Tween.TransitionType.Linear);
+		tween.SetEase(Tween.EaseType.InOut);
+		tween.TweenProperty(_deathOverlay, "modulate", new Color(1f, 1f, 1f, 1f), DeathFadeDuration);
+		tween.TweenCallback(Callable.From(OnFadeComplete));
+	}
+
+	private void OnFadeComplete()
+	{
+		if (DeathCardDelay > 0f)
+		{
+			var timer = GetTree().CreateTimer(DeathCardDelay);
+			timer.Timeout += () =>
+			{
+				ShowDeathCard();
+				var transitionTimer = GetTree().CreateTimer(SpectatorTransitionDuration);
+				transitionTimer.Timeout += EnterWhisperMode;
+			};
+		}
+		else
+		{
+			ShowDeathCard();
+			CallDeferred(nameof(EnterWhisperMode));
+		}
+	}
+
+	private void PlayDeathVoicePlayback()
+	{
+		if (_deathAudioPlayer == null || _voiceRecorder == null)
+			return;
+
+		AudioStreamWav clip = _voiceRecorder.GetRecentRecording(10f);
+		if (clip == null)
+			return;
+
+		_deathAudioPlayer.Stream = clip;
+		_deathAudioPlayer.PitchScale = DeathPlaybackPitch;
+		_deathAudioPlayer.Play();
+		GD.Print($"[PlayerController] Playing death voice playback at pitch {DeathPlaybackPitch:P0}.");
+	}
+
+	private void ShowDeathCard()
+	{
+		if (_deathCard != null)
+		{
+			_deathCard.Visible = true;
+			if (_deathTitleLabel != null)
+				_deathTitleLabel.Text = "CAUGHT BY THE LISTENER";
+			if (_deathReasonLabel != null)
+			{
+				(string severity, string tip) = ComputeDeathSeverityAndTip();
+				_deathReasonLabel.Text =
+					$"Cause: {_pendingDeathReason}\n" +
+					$"Severity: {severity}\n" +
+					$"Token held: {FormatTime(_tokenHoldTime)}\n" +
+					$"Time speaking: {FormatTime(_speakTime)}\n" +
+					$"Tip: {tip}";
+			}
+		}
+	}
+
+	private (string severity, string tip) ComputeDeathSeverityAndTip()
+	{
+		bool wasLoud = _speakTime > 5f && _pendingDeathReason.Contains("noise", StringComparison.OrdinalIgnoreCase);
+		bool wasHoldingToken = _tokenHoldTime > 10f;
+
+		if (wasLoud && wasHoldingToken)
+			return ("CRITICAL", "You were loud AND held the Token. Pass it faster next time.");
+		if (wasHoldingToken)
+			return ("HIGH", "The Token makes you a priority target. Keep moving or pass it.");
+		if (wasLoud)
+			return ("MODERATE", "Noise draws the Listener. Crouch-walk and whisper.");
+		return ("LOW", "Even small sounds add up. Stay still when the Listener is near.");
+	}
+
+	private static string FormatTime(float seconds)
+	{
+		int totalSeconds = Mathf.RoundToInt(seconds);
+		int minutes = totalSeconds / 60;
+		int secs = totalSeconds % 60;
+		return $"{minutes}:{secs:D2}";
+	}
+
+	private void EnterWhisperMode()
+	{
+		if (IsInWhisperMode)
+			return;
+
+		IsInWhisperMode = true;
+
+		if (_visuals != null)
+			_visuals.Visible = false;
+
+		if (_collisionShape != null)
+			_collisionShape.Disabled = true;
 
 		if (IsMultiplayerAuthority() && HUDManager.Instance != null)
 		{
-			HUDManager.Instance.UpdatePlayerState($"DEAD - {reason}", Colors.DeepPink);
+			HUDManager.Instance.UpdatePlayerState("WHISPER SPECTATOR", Colors.Gray);
+		}
+
+		GD.Print($"[PlayerController] {Name} entered Whisper spectator mode.");
+	}
+
+	private void HandleWhisperSpectatorMovement(float delta)
+	{
+		if (_cameraManager == null)
+			return;
+
+		Vector3 input = Vector3.Zero;
+
+		if (!PauseMenu.IsOpen)
+		{
+			Vector2 inputDir = Input.GetVector("move_left", "move_right", "move_forward", "move_backward");
+			Vector3 camForward = -_cameraManager.GlobalTransform.Basis.Z;
+			Vector3 camRight = _cameraManager.GlobalTransform.Basis.X;
+			camForward.Y = 0f;
+			camRight.Y = 0f;
+			camForward = camForward.Normalized();
+			camRight = camRight.Normalized();
+
+			input += camForward * -inputDir.Y;
+			input += camRight * inputDir.X;
+
+			if (Input.IsActionPressed("move_jump"))
+				input += Vector3.Up;
+			if (Input.IsKeyPressed(Key.Ctrl))
+				input += Vector3.Down;
+		}
+
+		input = input.Normalized();
+		GlobalPosition += input * SpectatorMoveSpeed * delta;
+		Velocity = Vector3.Zero;
+
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+		{
+			_remoteSyncTimer += delta;
+			if (_remoteSyncTimer >= RemoteSyncInterval)
+			{
+				_remoteSyncTimer = 0f;
+				Rpc(nameof(SyncRemoteState), GlobalPosition, Velocity, _visuals?.Rotation ?? Vector3.Zero, IsOnFloor());
+			}
 		}
 	}
 
