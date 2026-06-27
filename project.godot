@@ -29,6 +29,7 @@ default_bus_layout="res://default_bus_layout.tres"
 
 VoiceManager="*res://Scripts/Core/VoiceManager.cs"
 NetworkManager="*res://Scripts/Networking/NetworkManager.cs"
+ListenerGroupCache="*res://Scripts/Enemy/ListenerGroupCache.cs"
 
 [dotnet]
 
