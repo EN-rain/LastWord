@@ -1,4 +1,5 @@
 using Godot;
+using LastWord.UI;
 using System;
 using System.Collections.Generic;
 
@@ -158,6 +159,7 @@ public partial class SettingsMenu : PanelContainer
 
 	public override void _Ready()
 	{
+		UiSounds.WireButtonsInNode(this);
 		EnsureDefaultActions();
 		BindNodes();
 		SetupTabs();

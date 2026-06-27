@@ -1,4 +1,5 @@
 using Godot;
+using LastWord.UI;
 using System;
 
 public partial class MainMenu : CanvasLayer
@@ -69,6 +70,13 @@ public partial class MainMenu : CanvasLayer
 
 	public override void _Ready()
 	{
+		if (!IsSetupComplete())
+		{
+			GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, "res://Scenes/FirstTimeSetup.tscn");
+			return;
+		}
+
+		UiSounds.WireButtonsInNode(this);
 
 		_playRandomBtn   = GetNodeOrNull<Button>(PlayRandomBtnPath);
 		_createCustomBtn = GetNodeOrNull<Button>(CreateCustomBtnPath);
@@ -209,6 +217,15 @@ public partial class MainMenu : CanvasLayer
 		{
 			_gdprPanel.Visible = true;
 		}
+	}
+
+	private bool IsSetupComplete()
+	{
+		var cfg = new ConfigFile();
+		if (cfg.Load("user://settings.cfg") != Error.Ok)
+			return false;
+
+		return (bool)cfg.GetValue("settings", "setup_complete", false);
 	}
 
 	private void OnGDPRAccepted()

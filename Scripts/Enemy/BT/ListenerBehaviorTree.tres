@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://cghh1l4coi40t" path="res://Scripts/Enemy/BT/ListenerBTCondition.gd" id="1_oyxrx"]
 [ext_resource type="Script" uid="uid://xtks6ono2r65" path="res://Scripts/Enemy/BT/ListenerBTSetTargetMode.gd" id="2_un28k"]
 
+[sub_resource type="BlackboardPlan" id="BlackboardPlan_oyxrx"]
+
 [sub_resource type="BTCondition" id="BTCondition_hqik0"]
 script = ExtResource("1_oyxrx")
 condition = 0
@@ -103,4 +105,5 @@ children = [SubResource("BTSequence_qdp6q"), SubResource("BTSequence_dof1n"), Su
 
 [resource]
 description = "Priority selector for ListenerAI target mode. Edited with LimboAI."
+blackboard_plan = SubResource("BlackboardPlan_oyxrx")
 root_task = SubResource("BTSelector_nh5dj")

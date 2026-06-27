@@ -1,0 +1,278 @@
+[gd_scene format=3 load_steps=60]
+
+[ext_resource type="PackedScene" path="res://Assets/KayKitDungeon/gltf/wall.gltf.glb" id="p1"]
+[ext_resource type="PackedScene" path="res://Assets/KayKitDungeon/gltf/wall_corner.gltf.glb" id="p2"]
+[ext_resource type="PackedScene" path="res://Assets/KayKitDungeon/gltf/table_long.gltf.glb" id="p3"]
+[ext_resource type="PackedScene" path="res://Assets/KayKitDungeon/gltf/barrel_large.gltf.glb" id="p4"]
+[ext_resource type="PackedScene" path="res://Assets/KayKitDungeon/gltf/crates_stacked.gltf.glb" id="p5"]
+[ext_resource type="PackedScene" path="res://Assets/KayKitDungeon/gltf/chest.glb" id="p6"]
+[ext_resource type="PackedScene" path="res://Assets/KayKitDungeon/gltf/candle_lit.gltf.glb" id="p7"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(8, 0.2, 24)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_side_wall"]
+size = Vector3(0.5, 3.5, 5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_front_wall"]
+size = Vector3(5, 3.5, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ceiling"]
+size = Vector3(8, 0.5, 24)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_zone"]
+radius = 2.5
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMat"]
+sky_top_color = Color(0.02, 0.02, 0.05, 1)
+sky_horizon_color = Color(0.04, 0.04, 0.05, 1)
+ground_bottom_color = Color(0.01, 0.01, 0.01, 1)
+ground_horizon_color = Color(0.02, 0.02, 0.02, 1)
+
+[sub_resource type="Sky" id="Sky_dark"]
+sky_material = SubResource("SkyMat")
+
+[sub_resource type="Environment" id="Env_dark"]
+background_mode = 2
+sky = SubResource("Sky_dark")
+ambient_light_source = 3
+ambient_light_color = Color(0.08, 0.07, 0.10, 1)
+ambient_light_energy = 0.35
+fog_enabled = true
+fog_density = 0.022
+fog_aerial_perspective = 0.65
+fog_light_color = Color(0.05, 0.05, 0.08, 1)
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.5
+glow_strength = 1.0
+glow_bloom = 0.15
+
+[node name="F2_Bedrooms" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_dark")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.25, 0.433, 0, 0.866, 0.5, -0.5, -0.433, 0.75, 0, 8, 0)
+light_color = Color(0.5, 0.5, 0.65, 1)
+light_energy = 0.15
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+
+[node name="FloorMesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("PlaneMesh_floor")
+transform = Transform3D(4.0, 0, 0, 0, 1, 0, 0, 0, 12.0, 0, 0, 0)
+
+[node name="FloorCollision" type="CollisionShape3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("BoxShape3D_floor")
+
+[node name="L_-10" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="L_-10" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, 1.0000, 0.0000, 3.5000, 0.0000, -4.0000, 0.0000, 0.0000, -4.00, 1.75, -10.00)
+[node name="R_-10" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="R_-10" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, -1.0000, 0.0000, 3.5000, 0.0000, 4.0000, 0.0000, 0.0000, 4.00, 1.75, -10.00)
+[node name="L_-6" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="L_-6" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, 1.0000, 0.0000, 3.5000, 0.0000, -4.0000, 0.0000, 0.0000, -4.00, 1.75, -6.00)
+[node name="R_-6" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="R_-6" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, -1.0000, 0.0000, 3.5000, 0.0000, 4.0000, 0.0000, 0.0000, 4.00, 1.75, -6.00)
+[node name="L_-2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="L_-2" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, 1.0000, 0.0000, 3.5000, 0.0000, -4.0000, 0.0000, 0.0000, -4.00, 1.75, -2.00)
+[node name="R_-2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="R_-2" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, -1.0000, 0.0000, 3.5000, 0.0000, 4.0000, 0.0000, 0.0000, 4.00, 1.75, -2.00)
+[node name="L_2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="L_2" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, 1.0000, 0.0000, 3.5000, 0.0000, -4.0000, 0.0000, 0.0000, -4.00, 1.75, 2.00)
+[node name="R_2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="R_2" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, -1.0000, 0.0000, 3.5000, 0.0000, 4.0000, 0.0000, 0.0000, 4.00, 1.75, 2.00)
+[node name="L_6" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="L_6" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, 1.0000, 0.0000, 3.5000, 0.0000, -4.0000, 0.0000, 0.0000, -4.00, 1.75, 6.00)
+[node name="R_6" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="R_6" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, -1.0000, 0.0000, 3.5000, 0.0000, 4.0000, 0.0000, 0.0000, 4.00, 1.75, 6.00)
+[node name="L_10" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="L_10" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, 1.0000, 0.0000, 3.5000, 0.0000, -4.0000, 0.0000, 0.0000, -4.00, 1.75, 10.00)
+[node name="R_10" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="R_10" instance=ExtResource("p1")]
+transform = Transform3D(0.0000, 0.0000, -1.0000, 0.0000, 3.5000, 0.0000, 4.0000, 0.0000, 0.0000, 4.00, 1.75, 10.00)
+[node name="AlcoveB_-6_-6" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="AlcoveB_-6_-6" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, -6.00, 1.75, -6.00)
+[node name="AlcoveB_6_-6" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="AlcoveB_6_-6" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, 6.00, 1.75, -6.00)
+[node name="AlcoveB_-6_2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="AlcoveB_-6_2" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, -6.00, 1.75, 2.00)
+[node name="AlcoveB_6_2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="AlcoveB_6_2" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, 6.00, 1.75, 2.00)
+[node name="AlcoveB_-6_10" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="AlcoveB_-6_10" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, -6.00, 1.75, 10.00)
+[node name="AlcoveB_6_10" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="AlcoveB_6_10" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, 6.00, 1.75, 10.00)
+[node name="BW_-2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="BW_-2" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, -2.00, 1.75, -12.00)
+[node name="FW_-2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="FW_-2" instance=ExtResource("p1")]
+transform = Transform3D(-4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, -1.0000, -2.00, 1.75, 12.00)
+[node name="BW_2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="BW_2" instance=ExtResource("p1")]
+transform = Transform3D(4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, 2.00, 1.75, -12.00)
+[node name="FW_2" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="FW_2" instance=ExtResource("p1")]
+transform = Transform3D(-4.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, -1.0000, 2.00, 1.75, 12.00)
+[node name="Corner_CNW" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Corner_CNW" instance=ExtResource("p2")]
+transform = Transform3D(1.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, 1.0000, -4.00, 1.75, -12.00)
+[node name="Corner_CNE" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Corner_CNE" instance=ExtResource("p2")]
+transform = Transform3D(0.0000, 0.0000, 1.0000, 0.0000, 3.5000, 0.0000, -1.0000, 0.0000, 0.0000, 4.00, 1.75, -12.00)
+[node name="Corner_CSE" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Corner_CSE" instance=ExtResource("p2")]
+transform = Transform3D(-1.0000, 0.0000, 0.0000, 0.0000, 3.5000, 0.0000, -0.0000, 0.0000, -1.0000, 4.00, 1.75, 12.00)
+[node name="Corner_CSW" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Corner_CSW" instance=ExtResource("p2")]
+transform = Transform3D(-0.0000, 0.0000, -1.0000, 0.0000, 3.5000, 0.0000, 1.0000, 0.0000, -0.0000, -4.00, 1.75, 12.00)
+[node name="Bed_2A" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Bed_2A" instance=ExtResource("p3")]
+transform = Transform3D(0.0000, 0.0000, 2.0000, 0.0000, 1.0000, 0.0000, -1.5000, 0.0000, 0.0000, -6.00, 0.00, -6.00)
+[node name="Bed_2B" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Bed_2B" instance=ExtResource("p3")]
+transform = Transform3D(0.0000, 0.0000, -2.0000, 0.0000, 1.0000, 0.0000, 1.5000, 0.0000, 0.0000, 6.00, 0.00, -6.00)
+[node name="Bed_2C" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Bed_2C" instance=ExtResource("p3")]
+transform = Transform3D(0.0000, 0.0000, 2.0000, 0.0000, 1.0000, 0.0000, -1.5000, 0.0000, 0.0000, -6.00, 0.00, 2.00)
+[node name="Bed_2D" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Bed_2D" instance=ExtResource("p3")]
+transform = Transform3D(0.0000, 0.0000, -2.0000, 0.0000, 1.0000, 0.0000, 1.5000, 0.0000, 0.0000, 6.00, 0.00, 2.00)
+[node name="Bed_2E" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Bed_2E" instance=ExtResource("p3")]
+transform = Transform3D(0.0000, 0.0000, 2.0000, 0.0000, 1.0000, 0.0000, -1.5000, 0.0000, 0.0000, -6.00, 0.00, 10.00)
+[node name="Bed_2F" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Bed_2F" instance=ExtResource("p3")]
+transform = Transform3D(0.0000, 0.0000, -2.0000, 0.0000, 1.0000, 0.0000, 1.5000, 0.0000, 0.0000, 6.00, 0.00, 10.00)
+[node name="Barrel" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Barrel" instance=ExtResource("p4")]
+transform = Transform3D(1.2000, 0.0000, 0.0000, 0.0000, 1.2000, 0.0000, -0.0000, 0.0000, 1.2000, -2.00, 0.00, -8.00)
+[node name="Crates" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Crates" instance=ExtResource("p5")]
+transform = Transform3D(0.9526, 0.0000, 0.5500, 0.0000, 1.1000, 0.0000, -0.5500, 0.0000, 0.9526, 2.00, 0.00, 8.00)
+[node name="Chest" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="Chest" instance=ExtResource("p6")]
+transform = Transform3D(1.2000, 0.0000, 0.0000, 0.0000, 1.2000, 0.0000, -0.0000, 0.0000, 1.2000, 0.00, 0.00, -4.00)
+[node name="CandleN" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="CandleN" instance=ExtResource("p7")]
+transform = Transform3D(1.5000, 0.0000, 0.0000, 0.0000, 1.5000, 0.0000, -0.0000, 0.0000, 1.5000, 0.00, 0.00, -10.00)
+[node name="CandleS" type="Node3D" parent="."]
+[node name="Mesh" type="Node3D" parent="CandleS" instance=ExtResource("p7")]
+transform = Transform3D(1.5000, 0.0000, 0.0000, 0.0000, 1.5000, 0.0000, -0.0000, 0.0000, 1.5000, 0.00, 0.00, 10.00)
+[node name="PointLight_0" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.80, 2.50, 7.20)
+light_color = Color(1.0, 0.55, 0.25, 1)
+omni_range = 6.5
+light_energy = 1.4
+shadow_enabled = false
+[node name="PointLight_1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.80, 2.50, 7.20)
+light_color = Color(1.0, 0.55, 0.25, 1)
+omni_range = 6.5
+light_energy = 1.4
+shadow_enabled = false
+[node name="PointLight_2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.80, 2.50, -7.20)
+light_color = Color(1.0, 0.55, 0.25, 1)
+omni_range = 6.5
+light_energy = 1.4
+shadow_enabled = false
+[node name="PointLight_3" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.80, 2.50, -7.20)
+light_color = Color(1.0, 0.55, 0.25, 1)
+omni_range = 6.5
+light_energy = 1.4
+shadow_enabled = false
+[node name="PointLight_4" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00, 3.50, 0.00)
+light_color = Color(1.0, 0.55, 0.25, 1)
+omni_range = 6.5
+light_energy = 1.4
+shadow_enabled = false
+[node name="WallColl_0" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.00, 1.75, -10.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_0"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.00, 1.75, -10.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_1"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.00, 1.75, -6.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_2"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_3" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.00, 1.75, -6.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_3"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_4" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.00, 1.75, -2.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_4"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_5" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.00, 1.75, -2.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_5"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_6" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.00, 1.75, 2.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_6"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_7" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.00, 1.75, 2.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_7"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_8" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.00, 1.75, 6.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_8"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_9" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.00, 1.75, 6.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_9"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_10" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.00, 1.75, 10.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_10"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_11" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.00, 1.75, 10.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_11"]
+shape = SubResource("BoxShape3D_side_wall")
+[node name="WallColl_12" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.00, 1.75, -12.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_12"]
+shape = SubResource("BoxShape3D_front_wall")
+[node name="WallColl_13" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.00, 1.75, 12.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_13"]
+shape = SubResource("BoxShape3D_front_wall")
+[node name="WallColl_14" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.00, 1.75, -12.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_14"]
+shape = SubResource("BoxShape3D_front_wall")
+[node name="WallColl_15" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.00, 1.75, 12.00)
+[node name="C" type="CollisionShape3D" parent="WallColl_15"]
+shape = SubResource("BoxShape3D_front_wall")

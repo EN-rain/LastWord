@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "godot": {
+      "command": "node",
+      "args": [
+        "/mnt/c/Users/LENOVO/Documents/Last-word-godot/Scripts/MCP/godot-mcp-wrapper.cjs"
+      ]
+    }
+  }
+}

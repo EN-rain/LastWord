@@ -18,6 +18,7 @@ ConsentLabelPath = NodePath("Root/VBox/LabelConsent")
 PrivacyLabelPath = NodePath("Root/VBox/LabelPrivacy")
 MainMenuScenePath = "res://Scenes/MainMenu.tscn"
 MainGameScenePath = "res://Scenes/GameScene.tscn"
+RoleOptionPath = NodePath("Root/VBox/HBoxRole/OptionRole")
 
 [node name="Root" type="PanelContainer" parent="." unique_id=1324683094]
 anchors_preset = 15
@@ -44,6 +45,19 @@ text = "PLAYERS: 0 / 4"
 [node name="PlayerList" type="ItemList" parent="Root/VBox" unique_id=1885095797]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+
+[node name="HBoxRole" type="HBoxContainer" parent="Root/VBox" unique_id=1885095796]
+layout_mode = 2
+
+[node name="LabelRole" type="Label" parent="Root/VBox/HBoxRole" unique_id=1885095795]
+layout_mode = 2
+text = "ROLE:"
+
+[node name="OptionRole" type="OptionButton" parent="Root/VBox/HBoxRole" unique_id=1885095794]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[connection signal="item_selected" from="Root/VBox/HBoxRole/OptionRole" to="." method="OnRoleSelected"]
 
 [node name="LabelOrientation" type="Label" parent="Root/VBox" unique_id=862037511]
 visible = false

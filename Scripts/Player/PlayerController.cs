@@ -1,4 +1,6 @@
 using Godot;
+using LastWord;
+using LastWord.Core;
 using System;
 using LastWord.World;
 
@@ -106,6 +108,9 @@ public partial class PlayerController : CharacterBody3D
 
 	public bool IsDead { get; private set; } = false;
 	public bool IsInWhisperMode { get; private set; } = false;
+	
+	private float _stationaryNearListenerTimer = 0f;
+	private MeshInstance3D _spectatorMarker;
 	public bool IsInteracting => Input.IsActionPressed("interact");
 	public bool IsAudioIsolated { get; private set; }
 	public bool IsSilenced { get; private set; }
@@ -306,7 +311,7 @@ public partial class PlayerController : CharacterBody3D
 		var radio = GetNodeOrNull<Radio>("Radio");
 		if (radio != null && radio.IsHeld)
 		{
-			var broadcast = GetTree().CurrentScene?.GetNodeOrNull<RadioBroadcast>("/root/GameManager/RadioBroadcast");
+			var broadcast = GameManager.Instance?.GetNodeOrNull<RadioBroadcast>(GameManager.Instance.RadioBroadcastPath);
 			broadcast?.OnVoiceUpdate(_currentVoiceTier, delta);
 		}
 
@@ -314,7 +319,7 @@ public partial class PlayerController : CharacterBody3D
 		// automatically when the player speaks at Normal tier or higher.
 		if (_currentVoiceTier >= (int)VoiceTier.Normal)
 		{
-			var sequenceManager = GetTree().CurrentScene?.GetNodeOrNull<SequenceManager>("/root/GameManager/SequenceManager");
+			var sequenceManager = GameManager.Instance?.GetNodeOrNull<SequenceManager>(GameManager.Instance.SequenceManagerPath);
 			if (sequenceManager != null && !sequenceManager.IsLocked && !sequenceManager.IsComplete)
 			{
 				string nextWord = sequenceManager.CurrentSequence.Count > sequenceManager.CurrentIndex
@@ -648,6 +653,9 @@ public partial class PlayerController : CharacterBody3D
 		string tierName = isRunning ? "Tier 1 (Whisper)" : "Tier 0 (Silent)";
 		GD.Print($"{Name}: Emitted Footstep Noise — {tierName} at {GlobalPosition}");
 
+		var footstepStream = isRunning ? AudioAssets.RandomFootstepRun() : AudioAssets.RandomFootstepWalk();
+		AudioAssets.PlayOneShot3D(footstepStream, this, GlobalPosition, "SFX", pitchScale: (float)GD.RandRange(0.92, 1.08));
+
 		ShowSoundEventDebug(SoundKind.Movement, tier);
 
 		if (VoiceManager.Instance != null)
@@ -686,6 +694,8 @@ public partial class PlayerController : CharacterBody3D
 		_landingNoiseCooldown = LandingNoiseCooldownDuration;
 		int tier = 2; // Landing = Tier 2 (Normal)
 		GD.Print($"{Name}: Emitted Landing Noise — Tier 2 (Normal) at {GlobalPosition}");
+
+		AudioAssets.PlayOneShot3D(AudioAssets.Landing, this, GlobalPosition, "SFX", pitchScale: (float)GD.RandRange(0.9, 1.1));
 
 		ShowSoundEventDebug(SoundKind.Landing, tier);
 
@@ -786,6 +796,10 @@ public partial class PlayerController : CharacterBody3D
 		PlayDeathAnimation();
 		PlayDeathVoicePlayback();
 		GD.Print($"[PlayerController] {Name} killed by {listenerName}: {reason}");
+
+		// Achievement hook: Last Breath — you killed the Listener via Vocal Sacrifice.
+		if (string.Equals(reason, "sacrifice", StringComparison.OrdinalIgnoreCase))
+			AchievementManager.Instance?.Unlock(AchievementManager.Id.LastBreath);
 
 		// Notify other systems via event (keeps gameplay code decoupled from UI).
 		Died?.Invoke(this, reason, listenerName);
@@ -952,8 +966,95 @@ public partial class PlayerController : CharacterBody3D
 		}
 
 		input = input.Normalized();
-		GlobalPosition += input * SpectatorMoveSpeed * delta;
+		
+		bool isStationary = input.LengthSquared() < 0.01f;
+		var listenerNodes = GetTree().GetNodesInGroup("Listener");
+		float closestListenerDist = float.MaxValue;
+		Node3D closestListener = null;
+
+		foreach (var node in listenerNodes)
+		{
+			if (node is Node3D listener)
+			{
+				float dist = GlobalPosition.DistanceTo(listener.GlobalPosition);
+				if (dist < closestListenerDist)
+				{
+					closestListenerDist = dist;
+					closestListener = listener;
+				}
+			}
+		}
+
+		if (closestListener != null && closestListenerDist < 2.1f)
+		{
+			Vector3 pushDir = (GlobalPosition - closestListener.GlobalPosition).Normalized();
+			if (pushDir.LengthSquared() < 0.01f) pushDir = Vector3.Up;
+
+			if (isStationary)
+			{
+				_stationaryNearListenerTimer += (float)delta;
+				if (_stationaryNearListenerTimer >= 5.0f)
+				{
+					GlobalPosition = closestListener.GlobalPosition + pushDir * 3.0f;
+					_stationaryNearListenerTimer = 0f;
+				}
+				else if (closestListenerDist < 2.0f)
+				{
+					GlobalPosition = closestListener.GlobalPosition + pushDir * 2.0f;
+				}
+			}
+			else
+			{
+				_stationaryNearListenerTimer = 0f;
+				if (closestListenerDist < 2.0f)
+				{
+					GlobalPosition = closestListener.GlobalPosition + pushDir * 2.0f;
+				}
+			}
+		}
+		else
+		{
+			_stationaryNearListenerTimer = 0f;
+		}
+
+		GlobalPosition += input * SpectatorMoveSpeed * (float)delta;
 		Velocity = Vector3.Zero;
+
+		if (!PauseMenu.IsOpen && Input.IsPhysicalKeyPressed(Key.J))
+		{
+			if (_spectatorMarker == null)
+			{
+				_spectatorMarker = new MeshInstance3D();
+				var mesh = new SphereMesh() { Radius = 0.2f, Height = 0.4f };
+				_spectatorMarker.Mesh = mesh;
+				var mat = new StandardMaterial3D() { AlbedoColor = Colors.Red, ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded };
+				_spectatorMarker.MaterialOverride = mat;
+				GetTree().Root.AddChild(_spectatorMarker);
+			}
+			_spectatorMarker.GlobalPosition = GlobalPosition;
+			
+			// Timer to remove marker after 15s
+			var timer = _spectatorMarker.GetNodeOrNull<Timer>("DespawnTimer");
+			if (timer == null)
+			{
+				timer = new Timer();
+				timer.Name = "DespawnTimer";
+				timer.OneShot = true;
+				timer.WaitTime = 15.0f;
+				timer.Timeout += () => { if (_spectatorMarker != null) _spectatorMarker.QueueFree(); _spectatorMarker = null; };
+				_spectatorMarker.AddChild(timer);
+			}
+			timer.Start();
+
+			if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && Multiplayer.IsServer())
+			{
+				Rpc(nameof(SyncSpectatorMarker), GlobalPosition);
+			}
+			else if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+			{
+				RpcId(NetworkManager.ServerPeerId, nameof(RequestSpectatorMarker), GlobalPosition);
+			}
+		}
 
 		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
 		{
@@ -1005,4 +1106,40 @@ public partial class PlayerController : CharacterBody3D
 		if (_visuals != null)
 			_visuals.Rotation = visualsRotation;
 	}
+
+	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+	private void RequestSpectatorMarker(Vector3 pos)
+	{
+		if (!Multiplayer.IsServer()) return;
+		Rpc(nameof(SyncSpectatorMarker), pos);
+		SyncSpectatorMarker(pos);
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = false)]
+	private void SyncSpectatorMarker(Vector3 pos)
+	{
+		if (_spectatorMarker == null)
+		{
+			_spectatorMarker = new MeshInstance3D();
+			var mesh = new SphereMesh() { Radius = 0.2f, Height = 0.4f };
+			_spectatorMarker.Mesh = mesh;
+			var mat = new StandardMaterial3D() { AlbedoColor = Colors.Red, ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded };
+			_spectatorMarker.MaterialOverride = mat;
+			GetTree().Root.AddChild(_spectatorMarker);
+		}
+		_spectatorMarker.GlobalPosition = pos;
+		
+		var timer = _spectatorMarker.GetNodeOrNull<Timer>("DespawnTimer");
+		if (timer == null)
+		{
+			timer = new Timer();
+			timer.Name = "DespawnTimer";
+			timer.OneShot = true;
+			timer.WaitTime = 15.0f;
+			timer.Timeout += () => { if (_spectatorMarker != null) _spectatorMarker.QueueFree(); _spectatorMarker = null; };
+			_spectatorMarker.AddChild(timer);
+		}
+		timer.Start();
+	}
 }
+

@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://bwstb13dq7iyy"]
+
+[ext_resource type="Script" path="res://Scripts/World/RegistrationBoard.cs" id="1_regboard"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_board"]
+size = Vector3(1.2, 1.8, 0.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_board"]
+size = Vector3(1.2, 1.8, 0.2)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_interact"]
+radius = 3.0
+
+[node name="RegistrationBoard" type="Area3D" groups=["RegistrationBoard"]]
+script = ExtResource("1_regboard")
+
+[node name="Visual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("BoxMesh_board")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("BoxShape3D_board")
+
+[node name="InteractionZone" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionZone"]
+shape = SubResource("SphereShape3D_interact")

@@ -1,4 +1,5 @@
 using Godot;
+using LastWord.UI;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ public partial class CustomLobby : CanvasLayer
     [Export] public NodePath ReadyBtnPath;
     [Export] public NodePath StartRunBtnPath;
     [Export] public NodePath CancelBtnPath;
+    [Export] public NodePath RoleOptionPath;
     [Export] public NodePath OrientationLabelPath;
     [Export] public NodePath ConsentLabelPath;
     [Export] public NodePath PrivacyLabelPath;
@@ -46,12 +48,16 @@ public partial class CustomLobby : CanvasLayer
     private Label         _labelOrientation;
     private Label         _labelConsent;
     private Label         _labelPrivacy;
+    private Button        _btnCalibrate;
+    private ProgressBar   _calibrationProgress;
+    private Label         _calibrationLabel;
 
     private bool _localIsReady = false;
     private bool _sendingMicLevel = false;
 
     public override void _Ready()
     {
+        UiSounds.WireButtonsInNode(this);
 
         // Resolve nodes via exported paths
         _labelRoomCode    = GetNodeOrNull<Label>(RoomCodeLabelPath);
@@ -99,8 +105,13 @@ public partial class CustomLobby : CanvasLayer
         if (VoiceManager.Instance != null)
         {
             VoiceManager.Instance.VolumeUpdated += OnLocalMicVolumeUpdated;
+            VoiceManager.Instance.CalibrationProgress += OnCalibrationProgress;
+            VoiceManager.Instance.CalibrationFinished += OnCalibrationFinished;
             _sendingMicLevel = true;
         }
+
+        BuildCalibrationUi();
+        SetupRoleSelector();
 
         // Populate initial state
         RefreshPlayerList();
@@ -121,7 +132,93 @@ public partial class CustomLobby : CanvasLayer
         }
 
         if (_sendingMicLevel && VoiceManager.Instance != null)
+        {
             VoiceManager.Instance.VolumeUpdated -= OnLocalMicVolumeUpdated;
+            VoiceManager.Instance.CalibrationProgress -= OnCalibrationProgress;
+            VoiceManager.Instance.CalibrationFinished -= OnCalibrationFinished;
+        }
+    }
+
+    // ---------------------------------------------------------------------------
+    // Calibration UI
+    // ---------------------------------------------------------------------------
+    private void BuildCalibrationUi()
+    {
+        var container = new VBoxContainer
+        {
+            Name = "CalibrationContainer",
+            AnchorsPreset = (int)Control.LayoutPreset.BottomWide,
+            OffsetLeft = 20f,
+            OffsetTop = -160f,
+            OffsetRight = -20f,
+            OffsetBottom = -20f,
+            GrowHorizontal = Control.GrowDirection.Both,
+            GrowVertical = Control.GrowDirection.Begin
+        };
+        AddChild(container);
+
+        _btnCalibrate = new Button
+        {
+            Name = "CalibrateButton",
+            Text = "Calibrate Mic",
+            CustomMinimumSize = new Vector2(0, 36)
+        };
+        _btnCalibrate.Pressed += OnCalibratePressed;
+        container.AddChild(_btnCalibrate);
+
+        _calibrationProgress = new ProgressBar
+        {
+            Name = "CalibrationProgress",
+            Visible = false,
+            MaxValue = 1.0,
+            Value = 0.0,
+            CustomMinimumSize = new Vector2(0, 12)
+        };
+        container.AddChild(_calibrationProgress);
+
+        _calibrationLabel = new Label
+        {
+            Name = "CalibrationLabel",
+            Text = "",
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        container.AddChild(_calibrationLabel);
+    }
+
+    private void OnCalibratePressed()
+    {
+        if (VoiceManager.Instance == null)
+            return;
+
+        VoiceManager.Instance.StartCalibration();
+        _btnCalibrate.Disabled = true;
+        _calibrationProgress.Visible = true;
+        _calibrationProgress.Value = 0.0;
+        _calibrationLabel.Text = "Calibrating... speak normally";
+        SetLobbyControlsEnabled(false);
+    }
+
+    private void OnCalibrationProgress(float progress)
+    {
+        if (_calibrationProgress != null)
+            _calibrationProgress.Value = progress;
+    }
+
+    private void OnCalibrationFinished(float newBaseline)
+    {
+        if (_btnCalibrate != null) _btnCalibrate.Disabled = false;
+        if (_calibrationProgress != null) _calibrationProgress.Visible = false;
+        if (_calibrationLabel != null)
+            _calibrationLabel.Text = $"Baseline: {newBaseline:F4}";
+        SetLobbyControlsEnabled(true);
+    }
+
+    private void SetLobbyControlsEnabled(bool enabled)
+    {
+        if (_btnReady != null) _btnReady.Disabled = !enabled;
+        if (_btnStartRun != null) _btnStartRun.Disabled = !enabled;
+        if (_btnCancel != null) _btnCancel.Disabled = !enabled;
+        if (_chatInput != null) _chatInput.Editable = enabled;
     }
 
     private void OnRoomCodeUpdated(string newCode)
@@ -262,5 +359,29 @@ public partial class CustomLobby : CanvasLayer
     private void OnMatchStarted()
     {
         GetTree().ChangeSceneToFile(MainGameScenePath);
+    }
+
+    // ---------------------------------------------------------------------------
+    // Role selection (§5)
+    // ---------------------------------------------------------------------------
+    private void SetupRoleSelector()
+    {
+        var option = GetNodeOrNull<OptionButton>(RoleOptionPath);
+        if (option == null) return;
+
+        option.Clear();
+        option.AddItem("No Role", 0);
+        option.AddItem("Loud", 1);
+        option.AddItem("Static", 2);
+        option.AddItem("Mute", 3);
+        option.AddItem("Archivist", 4);
+        option.AddItem("Witness", 5);
+        option.ItemSelected += OnRoleSelected;
+    }
+
+    private void OnRoleSelected(long index)
+    {
+        if (NetworkManager.Instance == null) return;
+        NetworkManager.Instance.SelectRole((PlayerRole)index);
     }
 }

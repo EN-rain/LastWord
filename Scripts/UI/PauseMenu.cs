@@ -1,4 +1,5 @@
 using Godot;
+using LastWord.UI;
 
 public partial class PauseMenu : CanvasLayer
 {
@@ -25,6 +26,8 @@ public partial class PauseMenu : CanvasLayer
 
     public override void _Ready()
     {
+        UiSounds.WireButtonsInNode(this);
+
         // GD.Print("PauseMenu: Initializing dynamic overlay...");
 
         _overlay = GetNodeOrNull<ColorRect>(OverlayPath);

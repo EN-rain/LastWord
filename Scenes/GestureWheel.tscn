@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c1g5x7w9m3n4p"]
+
+[ext_resource type="Script" uid="uid://k2j8h4q7r5t6y" path="res://Scripts/UI/GestureWheel.cs" id="1_gwheel"]
+
+[node name="GestureWheel" type="CanvasLayer"]
+script = ExtResource("1_gwheel")

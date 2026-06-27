@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "stepStartCounts": {
+    "phase-2:step-2": 1,
+    "phase-4:step-2": 1
+  },
+  "blockRetries": {},
+  "lastBlockHashes": {},
+  "stepCompleteAttempts": {
+    "phase-1:step-1": 1,
+    "phase-1:step-2": 1,
+    "phase-2:step-1": 1,
+    "phase-3:step-1": 1,
+    "phase-3:step-2": 1,
+    "phase-4:step-1": 1
+  },
+  "phaseStartRefs": {
+    "phase-1": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-2": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-3": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-4": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5"
+  },
+  "stepStartRefs": {
+    "phase-1:step-1": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-1:step-2": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-2:step-1": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-2:step-2": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-3:step-1": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-3:step-2": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-4:step-1": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5",
+    "phase-4:step-2": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5"
+  }
+}

@@ -3,22 +3,131 @@
 [ext_resource type="Script" uid="uid://wu7i5gd1i7s1" path="res://Scripts/Player/PlayerController.cs" id="1_a2b3c"]
 [ext_resource type="PackedScene" uid="uid://b1fxadayeg258" path="res://Scenes/base_character.tscn" id="2_d4e5f"]
 [ext_resource type="Script" uid="uid://0q072o58og5b" path="res://Scripts/Player/CameraManager.cs" id="3_cam"]
+[ext_resource type="Script" uid="uid://g5s7x9m3n4p2" path="res://Scripts/Player/GestureSystem.cs" id="4_gest"]
+[ext_resource type="Script" uid="uid://c3a4p5q6r7s8t" path="res://Scripts/Player/Abilities/ClapAbility.cs" id="5_clap"]
+[ext_resource type="Script" uid="uid://v5s6a7b8c9d0e" path="res://Scripts/Player/VocalSacrifice.cs" id="6_sac"]
+[ext_resource type="Script" uid="uid://r1o2l3e4d5a6t" path="res://Scripts/Player/RoleData.cs" id="7_role"]
+[ext_resource type="Script" uid="uid://l5s6t7u8v9w0x" path="res://Scripts/Player/Abilities/LoudStun.cs" id="8_loud"]
+[ext_resource type="Script" uid="uid://s6t7u8v9w0x1y" path="res://Scripts/Player/Abilities/StaticBubble.cs" id="9_static"]
+[ext_resource type="Script" uid="uid://qtevrg50i24db" path="res://Scripts/Core/VoiceRecorder.cs" id="10_rec"]
+[ext_resource type="Script" uid="uid://dyfbfeqqbfi0w" path="res://Scripts/Player/Abilities/MuteSilentDrop.cs" id="11_mute"]
+[ext_resource type="Script" uid="uid://c2pr7cikwxd64" path="res://Scripts/Player/Abilities/ArchivistRegistration.cs" id="12_arch"]
+[ext_resource type="Script" uid="uid://mcumlcof1sjel" path="res://Scripts/Player/Abilities/WitnessBurst.cs" id="13_wit"]
+[ext_resource type="Script" uid="uid://7ro7hi08ea8ki" path="res://Scripts/Player/Abilities/EchoReplay.cs" id="14_echo"]
+[ext_resource type="Script" uid="uid://68aotmh4rf32a" path="res://Scripts/UI/RoleNotification.cs" id="15_notify"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.3
 height = 1.8
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 4.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_1"]
+radius = 4.0
+height = 8.0
+radial_segments = 16
+rings = 8
 
 [node name="Player" type="CharacterBody3D" unique_id=2056917474 groups=["Player"]]
 script = ExtResource("1_a2b3c")
 VisualsPath = NodePath("BaseCharacter")
 CameraManagerPath = NodePath("CameraManager")
 SoundDebugLabelPath = NodePath("SoundDebugLabel")
+DeathOverlayPath = NodePath("DeathCanvas/DeathOverlay")
+DeathCardPath = NodePath("DeathCanvas/DeathCard")
+DeathTitleLabelPath = NodePath("DeathCanvas/DeathCard/TitleLabel")
+DeathReasonLabelPath = NodePath("DeathCanvas/DeathCard/ReasonLabel")
+DeathAudioPlayerPath = NodePath("DeathAudioPlayer")
+VoiceRecorderPath = NodePath("VoiceRecorder")
+CollisionShapePath = NodePath("CollisionShape3D")
+SuppressInitialLandingNoise = true
+InitialLandingNoiseGraceSeconds = 1.0
+LandingNoiseMinFallSpeed = 2.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=12414825]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_1")
 
 [node name="BaseCharacter" parent="." unique_id=78718086 instance=ExtResource("2_d4e5f")]
+
+[node name="GestureSystem" type="Node3D" parent="." unique_id=335640005]
+script = ExtResource("4_gest")
+
+[node name="ClapAbility" type="Node3D" parent="." unique_id=335640004]
+script = ExtResource("5_clap")
+
+[node name="ClapLight" type="OmniLight3D" parent="ClapAbility" unique_id=335640003]
+visible = false
+light_energy = 0.0
+omni_range = 8.0
+omni_attenuation = 1.5
+
+[node name="VocalSacrifice" type="Node3D" parent="." unique_id=335640002]
+script = ExtResource("6_sac")
+
+[node name="RoleData" type="Node" parent="." unique_id=335640001]
+script = ExtResource("7_role")
+
+[node name="LoudStun" type="Node3D" parent="." unique_id=335640000]
+script = ExtResource("8_loud")
+
+[node name="StaticBubble" type="Node3D" parent="." unique_id=335639999]
+script = ExtResource("9_static")
+
+[node name="VoiceRecorder" type="Node" parent="." unique_id=335640010]
+script = ExtResource("10_rec")
+
+[node name="DeathAudioPlayer" type="AudioStreamPlayer" parent="." unique_id=335640011]
+bus = &"Master"
+
+[node name="MuteSilentDrop" type="Node3D" parent="." unique_id=335639995]
+script = ExtResource("11_mute")
+
+[node name="ArchivistRegistration" type="Node3D" parent="." unique_id=335639994]
+script = ExtResource("12_arch")
+
+[node name="WitnessBurst" type="Node3D" parent="." unique_id=335639993]
+script = ExtResource("13_wit")
+
+[node name="EchoReplay" type="Node3D" parent="." unique_id=335639992]
+script = ExtResource("14_echo")
+VoiceRecorderPath = NodePath("VoiceRecorder")
+
+[node name="RoleNotification" type="Control" parent="." unique_id=335639991]
+visible = false
+layout_mode = 3
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 80.0
+offset_right = 200.0
+offset_bottom = 120.0
+grow_horizontal = 2
+script = ExtResource("15_notify")
+LabelPath = NodePath("Label")
+
+[node name="Label" type="Label" parent="RoleNotification" unique_id=335639990]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Area3D" type="Area3D" parent="StaticBubble" unique_id=335639998]
+visible = false
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBubble/Area3D" unique_id=335639997]
+shape = SubResource("SphereShape3D_1")
+
+[node name="Visual" type="MeshInstance3D" parent="StaticBubble" unique_id=335639996]
+visible = false
+mesh = SubResource("SphereMesh_1")
 
 [node name="SoundDebugLabel" type="Label3D" parent="." unique_id=335640006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2545161, 0)
@@ -42,3 +151,52 @@ CameraPivotSpeed = 0.2
 
 [node name="MainCamera" type="Camera3D" parent="CameraManager/Pivot" unique_id=1507857411]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.5)
+
+[node name="DeathCanvas" type="CanvasLayer" parent="." unique_id=2056917475]
+
+[node name="DeathOverlay" type="ColorRect" parent="DeathCanvas" unique_id=2056917476]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="DeathCard" type="Panel" parent="DeathCanvas" unique_id=2056917477]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -100.0
+offset_right = 250.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="DeathCanvas/DeathCard" unique_id=2056917478]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 20.0
+offset_bottom = 53.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReasonLabel" type="Label" parent="DeathCanvas/DeathCard" unique_id=2056917479]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -13.0
+offset_bottom = 13.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1

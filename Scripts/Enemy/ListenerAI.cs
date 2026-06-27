@@ -1,4 +1,5 @@
 using Godot;
+using LastWord;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,13 +70,21 @@ public partial class ListenerAI : CharacterBody3D
 	[Export] public float WhisperDecayCap = 6.0f;
 	[Export] public float FrenzyDuration = 12.0f;
 
+	[ExportGroup("Escalation (§4.2)")]
+	[Export] public float PreEscalationAlertTimeout = 8.0f;
+	[Export] public float PostEscalationAlertTimeout = 15.0f;
+	[Export] public bool PostEscalationAlertToHunting = true;
+
 	public enum AIState { Idle, Alerted, Hunting, Frenzy }
 	protected AIState _currentState = AIState.Idle;
 
 	protected float _alertedSilenceTimer = 0f;
 	protected float _whisperPauseDecay = 0f;
 	protected float _frenzyTimer = 0f;
+	private bool _isPostEscalation = false;
 	protected float _hearingPriorityTimer = 0f;
+	protected bool _phase3PermanentFrenzy = false;
+	protected bool _isSecondListener = false;
 	protected Vector3 _lastHeardLocation;
 	protected Vector3 _soundInvestigateLocation;
 	protected Vector3 _sprintTargetLocation;
@@ -83,6 +92,9 @@ public partial class ListenerAI : CharacterBody3D
 	protected bool _hasSoundInvestigateTarget = false;
 	protected bool _hasSprintTarget = false;
 	protected Node3D _screamTarget;
+	protected Node3D _vocalSacrificeTarget;
+	protected float _vocalSacrificeTimer;
+	protected float _stunTimer;
 	protected ListenerTargetMode _targetMode = ListenerTargetMode.None;
 	private float _investigationStuckTimer = 0f;
 	private float _lastInvestigationDistance = float.MaxValue;
@@ -119,6 +131,9 @@ public partial class ListenerAI : CharacterBody3D
 	protected int _currentWaypointIndex = 0;
 	private bool _patrolInitialized = false;
 	private float _patrolPauseTimer = 0f;
+	private bool _hasPendingEvent = false;
+	private float _processTickInterval = 0.1f;
+	private float _processTickAccumulator = 0f;
 
 	private enum ListenerAnimationIntent
 	{
@@ -136,11 +151,22 @@ public partial class ListenerAI : CharacterBody3D
 		_leftEye = GetNodeOrNull<MeshInstance3D>(LeftEyePath);
 		_rightEye = GetNodeOrNull<MeshInstance3D>(RightEyePath);
 		_humPlayer = GetNodeOrNull<AudioStreamPlayer3D>(HumPlayerPath);
+		InitializeHumPlayer();
 		_behaviorTreeListener = GetNodeOrNull<Node>(BehaviorTreeListenerPath);
 		_stateLabel = GetNodeOrNull<Label3D>(DebugLabelPath);
+		SubscribePhase3Signals();
 		CacheAnimationNames();
 		LoadDetectionRangesFromDebugShapes();
 		ValidateTuningValues();
+		SubscribeEscalationSignal();
+
+		if (Name.ToString().Contains("Listener2", StringComparison.OrdinalIgnoreCase))
+		{
+			SetSecondListenerMode(true);
+			Visible = false;
+			SetPhysicsProcess(false);
+			SetProcess(false);
+		}
 
 		if (_navAgent == null)
 		{
@@ -185,6 +211,8 @@ public partial class ListenerAI : CharacterBody3D
 		MovementSprintTier = Mathf.Clamp(MovementSprintTier, 0, 3);
 		HearingPriorityInterval = Mathf.Max(HearingPriorityInterval, 0f);
 		AlertSilenceTimeout = Mathf.Max(AlertSilenceTimeout, 0f);
+		PreEscalationAlertTimeout = Mathf.Max(PreEscalationAlertTimeout, 0f);
+		PostEscalationAlertTimeout = Mathf.Max(PostEscalationAlertTimeout, 0f);
 		WhisperDecayAdd = Mathf.Max(WhisperDecayAdd, 0f);
 		WhisperDecayCap = Mathf.Max(WhisperDecayCap, WhisperDecayAdd);
 		FrenzyDuration = Mathf.Max(FrenzyDuration, 0f);
@@ -353,6 +381,13 @@ public partial class ListenerAI : CharacterBody3D
 
 	public override void _Process(double delta)
 	{
+		// Strategy A.4: skip-tick when no pending event and accumulator hasn't elapsed
+		_processTickAccumulator += (float)delta;
+		if (!_hasPendingEvent && _processTickAccumulator < _processTickInterval)
+			return;
+		_processTickAccumulator = 0f;
+		_hasPendingEvent = false;
+
 		if (_currentState == AIState.Frenzy)
 		{
 			float scale = 1.0f + 0.3f * Mathf.Sin(Time.GetTicksMsec() / 50.0f);
@@ -368,10 +403,68 @@ public partial class ListenerAI : CharacterBody3D
 
 	protected void UpdateStateLogic(float delta)
 	{
+		if (_stunTimer > 0f)
+		{
+			_stunTimer -= delta;
+			_animationIntent = ListenerAnimationIntent.Idle;
+			MoveTowardsTarget(delta, 0f);
+			if (_stunTimer <= 0f)
+				SetDebugLabel("", Colors.White, 0f);
+			return;
+		}
+
 		_behaviorTreeDelta = delta;
 		_targetMode = ResolveTargetPriority();
 		switch (_targetMode)
 		{
+			case ListenerTargetMode.Phase3PermanentFrenzy:
+				_animationIntent = ListenerAnimationIntent.Run;
+				{
+					Node3D tokenHolder = VoiceManager.Instance?.TokenHolder;
+					if (tokenHolder != null && !IsPlayerDead(tokenHolder))
+					{
+						SetNavigationTarget(tokenHolder.GlobalPosition);
+						MoveTowardsTarget(delta, SprintSpeed);
+					}
+					else
+					{
+						Node3D radio = GetTree().GetFirstNodeInGroup("RadioItem") as Node3D;
+						if (radio != null)
+						{
+							SetNavigationTarget(radio.GlobalPosition);
+							MoveTowardsTarget(delta, SprintSpeed);
+						}
+						else
+						{
+							Log("Phase 3 Permanent Frenzy active but no token holder or radio target found.");
+							MoveTowardsTarget(delta, 0f);
+						}
+					}
+				}
+				break;
+
+			case ListenerTargetMode.VocalSacrifice:
+				_animationIntent = ListenerAnimationIntent.Run;
+				_vocalSacrificeTimer -= delta;
+				if (_vocalSacrificeTarget == null || IsPlayerDead(_vocalSacrificeTarget))
+				{
+					_vocalSacrificeTimer = 0f;
+					_vocalSacrificeTarget = null;
+					TransitionState(AIState.Alerted);
+					break;
+				}
+
+				SetNavigationTarget(_vocalSacrificeTarget.GlobalPosition);
+				MoveTowardsTarget(delta, SprintSpeed);
+				SetDebugLabel("SACRIFICE LOCK", Colors.Orange, GlobalPosition.DistanceTo(_vocalSacrificeTarget.GlobalPosition));
+				if (_vocalSacrificeTimer <= 0f)
+				{
+					Log("Vocal Sacrifice lock expired. Re-evaluating target priority.");
+					_vocalSacrificeTarget = null;
+					TransitionState(ResolveTargetPriority() == ListenerTargetMode.None ? AIState.Alerted : AIState.Hunting);
+				}
+				break;
+
 			case ListenerTargetMode.ScreamFrenzy:
 				_animationIntent = ListenerAnimationIntent.Run;
 				_frenzyTimer -= delta;
@@ -382,7 +475,7 @@ public partial class ListenerAI : CharacterBody3D
 					break;
 				}
 
-				_navAgent.TargetPosition = ResolveNodePosition(_screamTarget, _screamTargetLocation);
+				SetNavigationTarget(ResolveNodePosition(_screamTarget, _screamTargetLocation));
 				MoveTowardsTarget(delta, SprintSpeed);
 				if (_frenzyTimer <= 0)
 				{
@@ -395,12 +488,12 @@ public partial class ListenerAI : CharacterBody3D
 			case ListenerTargetMode.NonFrenzySprint:
 				_animationIntent = ListenerAnimationIntent.Run;
 				_hearingPriorityTimer += delta;
-				_navAgent.TargetPosition = _sprintTargetLocation;
+				SetNavigationTarget(_sprintTargetLocation);
 				MoveTowardsTarget(delta, SprintSpeed);
 				if (_navAgent.IsNavigationFinished())
 				{
 					_hasSprintTarget = false;
-					_soundInvestigateLocation = _sprintTargetLocation;
+					_soundInvestigateLocation = ResolveNavigableTarget(_sprintTargetLocation);
 					_hasSoundInvestigateTarget = true;
 					ResetInvestigationProgress();
 					TransitionState(AIState.Alerted);
@@ -409,20 +502,20 @@ public partial class ListenerAI : CharacterBody3D
 
 			case ListenerTargetMode.Token:
 				_animationIntent = ListenerAnimationIntent.Run;
-				Node3D tokenHolder = VoiceManager.Instance?.TokenHolder;
-				if (tokenHolder == null || IsPlayerDead(tokenHolder))
+				Node3D tokenTarget = VoiceManager.Instance?.TokenHolder;
+				if (tokenTarget == null || IsPlayerDead(tokenTarget))
 				{
 					TransitionState(AIState.Alerted);
 					break;
 				}
 
-				_navAgent.TargetPosition = tokenHolder.GlobalPosition;
+				SetNavigationTarget(tokenTarget.GlobalPosition);
 				MoveTowardsTarget(delta, JogSpeed);
 				break;
 
 			case ListenerTargetMode.SoundInvestigate:
 				_animationIntent = ListenerAnimationIntent.Lurk;
-				_navAgent.TargetPosition = _soundInvestigateLocation;
+				SetNavigationTarget(_soundInvestigateLocation);
 				if (HasReachedTarget(_soundInvestigateLocation, InvestigationArriveDistance))
 				{
 					CompleteSoundInvestigation("ARRIVED");
@@ -438,6 +531,20 @@ public partial class ListenerAI : CharacterBody3D
 				{
 					CompleteSoundInvestigation("STUCK");
 				}
+				break;
+
+			case ListenerTargetMode.SecondListenerImprint:
+				_animationIntent = ListenerAnimationIntent.Run;
+				Node3D imprintTarget = GetSecondListenerImprintTarget();
+				if (imprintTarget == null || IsPlayerDead(imprintTarget))
+				{
+					TransitionState(AIState.Alerted);
+					break;
+				}
+
+				SetNavigationTarget(imprintTarget.GlobalPosition);
+				MoveTowardsTarget(delta, JogSpeed);
+				SetDebugLabel("IMPRINT TARGET", Colors.Purple, GlobalPosition.DistanceTo(imprintTarget.GlobalPosition));
 				break;
 
 			case ListenerTargetMode.None:
@@ -484,9 +591,18 @@ public partial class ListenerAI : CharacterBody3D
 		else
 		{
 			_alertedSilenceTimer += delta;
-			if (_alertedSilenceTimer >= AlertSilenceTimeout)
+			float timeout = _isPostEscalation ? PostEscalationAlertTimeout : PreEscalationAlertTimeout;
+			if (_alertedSilenceTimer >= timeout)
 			{
-				TransitionState(AIState.Idle);
+				if (_isPostEscalation && PostEscalationAlertToHunting)
+				{
+					// Post-10min: Alerted transitions to Hunting instead of resetting to Idle.
+					TransitionState(AIState.Hunting);
+				}
+				else
+				{
+					TransitionState(AIState.Idle);
+				}
 			}
 		}
 
@@ -558,10 +674,95 @@ public partial class ListenerAI : CharacterBody3D
 		_targetMode = (ListenerTargetMode)targetModeValue;
 	}
 
-	protected virtual bool IsPhase3PermanentFrenzyActive() => false;
-	protected virtual bool IsVocalSacrificeLockActive() => false;
-	protected virtual Node3D GetSecondListenerImprintTarget() => null;
-	protected virtual bool IsAudioSuppressedByFutureSystems(ListenerSoundEvent soundEvent) => false;
+	protected virtual bool IsPhase3PermanentFrenzyActive() => _phase3PermanentFrenzy;
+
+	private void SubscribePhase3Signals()
+	{
+		if (GameManager.Instance != null)
+			GameManager.Instance.Phase3Started += OnPhase3Started;
+	}
+
+	private void SubscribeEscalationSignal()
+	{
+		if (GameManager.Instance == null)
+			return;
+
+		GameManager.Instance.EscalationReached += OnEscalationReached;
+		_isPostEscalation = GameManager.Instance.IsPostEscalation;
+	}
+
+	private void OnEscalationReached()
+	{
+		_isPostEscalation = true;
+		Log("10-minute escalation reached — Alerted state will now transition to Hunting on silence.");
+	}
+
+	private void OnPhase3Started()
+	{
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer() && !Multiplayer.IsServer())
+			return;
+
+		Log("GameManager entered Phase 3 — entering Permanent Frenzy.");
+		_phase3PermanentFrenzy = true;
+		TransitionState(AIState.Frenzy);
+	}
+	protected virtual bool IsVocalSacrificeLockActive() => _vocalSacrificeTimer > 0f && _vocalSacrificeTarget != null && !IsPlayerDead(_vocalSacrificeTarget);
+
+	/// <summary>
+	/// Server-authoritative call from VocalSacrifice to lock the Listener onto
+	/// a target for the configured duration.
+	/// </summary>
+	public void SetVocalSacrificeTarget(Node3D target, float duration)
+	{
+		if (!Multiplayer.IsServer())
+			return;
+
+		_vocalSacrificeTarget = target;
+		_vocalSacrificeTimer = duration;
+		Rpc(nameof(SyncVocalSacrificeTarget), target?.GetPath() ?? new NodePath(""), duration);
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void SyncVocalSacrificeTarget(NodePath targetPath, float duration)
+	{
+		_vocalSacrificeTarget = GetNodeOrNull<Node3D>(targetPath);
+		_vocalSacrificeTimer = duration;
+	}
+
+	/// <summary>
+	/// Server-authoritative call from LoudStun to freeze this Listener.
+	/// </summary>
+	public void ApplyStun(float duration)
+	{
+		if (!Multiplayer.IsServer())
+			return;
+
+		_stunTimer = duration;
+		Rpc(nameof(SyncStun), duration);
+	}
+
+	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
+	private void SyncStun(float duration)
+	{
+		_stunTimer = duration;
+		SetDebugLabel("STUNNED", Colors.Yellow, 0f);
+	}
+
+	public void SetSecondListenerMode(bool enabled)
+	{
+		_isSecondListener = enabled;
+	}
+
+	protected virtual Node3D GetSecondListenerImprintTarget()
+	{
+		return _isSecondListener
+			? GameManager.Instance?.ImprintTracker?.GetMostImprintedLivingTarget()
+			: null;
+	}
+	protected virtual bool IsAudioSuppressedByFutureSystems(ListenerSoundEvent soundEvent)
+	{
+		return StaticBubble.IsPositionSuppressed(soundEvent.Origin);
+	}
 
 	protected static bool IsPlayerDead(Node3D node)
 	{
@@ -587,9 +788,16 @@ public partial class ListenerAI : CharacterBody3D
 
 	public void HearNoise(ListenerSoundEvent soundEvent)
 	{
+		_hasPendingEvent = true;
 		if (!Multiplayer.IsServer()) return;
 		if (IsAudioSuppressedByFutureSystems(soundEvent)) return;
 		if (soundEvent.Source != null && IsPlayerDead(soundEvent.Source)) return;
+
+		if (_phase3PermanentFrenzy)
+		{
+			Log($"Phase 3 Permanent Frenzy locks targeting — ignoring {FormatSoundKind(soundEvent.Kind)} T{soundEvent.Tier} at {soundEvent.Origin}");
+			return;
+		}
 
 		float distance = GlobalPosition.DistanceTo(soundEvent.Origin);
 		_lastHeardLocation = soundEvent.Origin;
@@ -614,7 +822,7 @@ public partial class ListenerAI : CharacterBody3D
 				{
 					HandleMovementNoise(soundEvent, distance);
 				}
-				else if (distance <= SubWhisperRadius)
+				else if (distance <= SubWhisperRadius * GetPlayerDetectionMultiplier(soundEvent.Source))
 				{
 					Log($"Wary of sub-whisper voice near {soundEvent.Origin} (Distance: {distance:F2}m)");
 					MarkWary(soundEvent.Origin, distance);
@@ -624,7 +832,7 @@ public partial class ListenerAI : CharacterBody3D
 			case 1: // Whisper / Running Footstep
 				if (soundEvent.IsVoice)
 				{
-					if (distance <= WhisperRadius)
+					if (distance <= WhisperRadius * GetPlayerDetectionMultiplier(soundEvent.Source))
 					{
 						Log($"Oriented toward whisper at {soundEvent.Origin} (Distance: {distance:F2}m)");
 						_whisperPauseDecay = Mathf.Min(_whisperPauseDecay + WhisperDecayAdd, WhisperDecayCap);
@@ -639,7 +847,7 @@ public partial class ListenerAI : CharacterBody3D
 				break;
 
 			case 2: // Normal Talking
-				if (distance <= NormalRadius)
+				if (distance <= NormalRadius * GetPlayerDetectionMultiplier(soundEvent.Source))
 				{
 					Log($"Heard {FormatSoundKind(soundEvent.Kind)} T{soundEvent.Tier} at {soundEvent.Origin} (Distance: {distance:F2}m). Initiating chase.");
 					LookAtOrigin(soundEvent.Origin);
@@ -659,8 +867,8 @@ public partial class ListenerAI : CharacterBody3D
 				Log($"Heard scream at {soundEvent.Origin}. Entering Scream Frenzy.");
 				LookAtOrigin(soundEvent.Origin);
 				_screamTarget = soundEvent.Source;
-				_screamTargetLocation = soundEvent.Origin;
-				_navAgent.TargetPosition = soundEvent.Origin;
+				_screamTargetLocation = ResolveNavigableTarget(soundEvent.Origin);
+				SetNavigationTarget(_screamTargetLocation);
 				TransitionState(AIState.Frenzy);
 				_frenzyTimer = FrenzyDuration;
 				_targetMode = ListenerTargetMode.ScreamFrenzy;
@@ -671,7 +879,7 @@ public partial class ListenerAI : CharacterBody3D
 
 	private void HandleMovementNoise(ListenerSoundEvent soundEvent, float distance)
 	{
-		float effectiveRadius = MovementInvestigateRadius;
+		float effectiveRadius = MovementInvestigateRadius * GetPlayerDetectionMultiplier(soundEvent.Source);
 
 		if (distance > effectiveRadius)
 		{
@@ -699,7 +907,7 @@ public partial class ListenerAI : CharacterBody3D
 
 		if (_hasSprintTarget && _hearingPriorityTimer >= HearingPriorityInterval)
 		{
-			_sprintTargetLocation = soundEvent.Origin;
+			_sprintTargetLocation = ResolveNavigableTarget(soundEvent.Origin);
 			_hearingPriorityTimer = 0f;
 			SetDebugLabel("SPRINT RETARGET", Colors.Orange, distance);
 		}
@@ -718,10 +926,23 @@ public partial class ListenerAI : CharacterBody3D
 
 	private bool ShouldSprintToNormalSound(float distance, ListenerSoundEvent soundEvent)
 	{
+		float multiplier = GetPlayerDetectionMultiplier(soundEvent.Source);
 		return soundEvent.Tier >= 3
 			|| (SprintOnNormalSound && soundEvent.Tier >= 2)
 			|| soundEvent.IsSpecialLongRange
-			|| distance >= NormalRadius - NormalSprintThresholdTolerance;
+			|| distance >= NormalRadius * multiplier - NormalSprintThresholdTolerance;
+	}
+
+	private float GetPlayerDetectionMultiplier(Node3D source)
+	{
+		if (source == null)
+			return 1f;
+
+		RoleData role = source.GetNodeOrNull<RoleData>("RoleData");
+		if (role != null && role.IsMute)
+			return role.MuteDetectionRadiusMultiplier;
+
+		return 1f;
 	}
 
 	private bool ShouldSprintToMovementNoise(ListenerSoundEvent soundEvent)
@@ -733,8 +954,9 @@ public partial class ListenerAI : CharacterBody3D
 
 	private void StartSoundInvestigation(Vector3 origin)
 	{
-		_soundInvestigateLocation = origin;
+		_soundInvestigateLocation = ResolveNavigableTarget(origin);
 		_hasSoundInvestigateTarget = true;
+		SetNavigationTarget(_soundInvestigateLocation);
 		ResetInvestigationProgress();
 	}
 
@@ -799,15 +1021,41 @@ public partial class ListenerAI : CharacterBody3D
 		return WalkSpeed * LurkMoveSpeedMultiplier;
 	}
 
+	private void SetNavigationTarget(Vector3 target)
+	{
+		if (_navAgent == null)
+			return;
+
+		_navAgent.TargetPosition = ResolveNavigableTarget(target);
+	}
+
+	private Vector3 ResolveNavigableTarget(Vector3 target)
+	{
+		if (!HasUsableNavigationMap())
+			return target;
+
+		Rid navigationMap = _navAgent.GetNavigationMap();
+		Vector3 closestPoint = NavigationServer3D.MapGetClosestPoint(navigationMap, target);
+		if (!IsFinite(closestPoint))
+			return target;
+
+		return closestPoint;
+	}
+
+	private static bool IsFinite(Vector3 value)
+	{
+		return float.IsFinite(value.X) && float.IsFinite(value.Y) && float.IsFinite(value.Z);
+	}
+
 	private void StartNonFrenzySprint(Vector3 target, string label)
 	{
-		_sprintTargetLocation = target;
+		_sprintTargetLocation = ResolveNavigableTarget(target);
 		_hasSprintTarget = true;
 		_hasSoundInvestigateTarget = false;
 		_hearingPriorityTimer = 0f;
-		_navAgent.TargetPosition = target;
+		SetNavigationTarget(_sprintTargetLocation);
 		TransitionState(AIState.Hunting);
-		SetDebugLabel(label, Colors.Orange, GlobalPosition.DistanceTo(target));
+		SetDebugLabel(label, Colors.Orange, GlobalPosition.DistanceTo(_sprintTargetLocation));
 	}
 
 	private void SetDebugLabel(string label, Color color, float distance)
@@ -860,6 +1108,19 @@ public partial class ListenerAI : CharacterBody3D
 		ApplyState(newState);
 	}
 
+	private void InitializeHumPlayer()
+	{
+		if (_humPlayer == null)
+			return;
+
+		_humPlayer.Bus = "ListenerAudio";
+		_humPlayer.Stream = AudioAssets.Load(AudioAssets.ListenerHum);
+		_humPlayer.Autoplay = true;
+		_humPlayer.MaxDb = -6.0f;
+		if (_humPlayer.Stream != null && !_humPlayer.Playing)
+			_humPlayer.Play();
+	}
+
 	private void ApplyState(AIState newState)
 	{
 		if (_currentState == newState)
@@ -873,6 +1134,42 @@ public partial class ListenerAI : CharacterBody3D
 
 		ApplyEyeColor(GetEyeColorForState(newState));
 		UpdateStateLabel(newState);
+
+		if (newState == AIState.Alerted)
+		{
+			AudioAssets.PlayOneShot3D(AudioAssets.ListenerAlertClick, this, GlobalPosition, bus: "ListenerAudio");
+		}
+		else if (newState == AIState.Hunting)
+		{
+			// §12.2 Listener Hunting breath (8 m audible) — one-shot trigger on
+			// entering Hunting so it layers on top of the continuous hum and
+			// signals escalation to anyone nearby.
+			AudioAssets.PlayOneShot3D(AudioAssets.ListenerHuntingBreath, this, GlobalPosition, bus: "ListenerAudio", pitchScale: (float)GD.RandRange(0.95, 1.05));
+		}
+		else if (newState == AIState.Frenzy)
+		{
+			// §12.2 Listener Frenzy tone — harsh dissonant cluster marks
+			// scream-lock / Phase-3 permanent frenzy. Variant pitch by trigger
+			// so successive frenzies don't sound identical.
+			AudioAssets.PlayOneShot3D(AudioAssets.ListenerFrenzyTone, this, GlobalPosition, bus: "ListenerAudio", pitchScale: (float)GD.RandRange(0.92, 1.08));
+		}
+
+		UpdateHumPitch();
+	}
+
+	private void UpdateHumPitch()
+	{
+		if (_humPlayer == null || _humPlayer.Stream == null)
+			return;
+
+		_humPlayer.PitchScale = _currentState switch
+		{
+			AIState.Idle => 1.0f,
+			AIState.Alerted => 1.05f,
+			AIState.Hunting => 1.15f,
+			AIState.Frenzy => 1.35f,
+			_ => 1.0f
+		};
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
@@ -1118,7 +1415,12 @@ public partial class ListenerAI : CharacterBody3D
 			}
 		}
 
-		// Fallback keeps the listener moving even when the baked nav mesh is empty or not ready yet.
+		if (hasNavMap)
+		{
+			return GlobalPosition;
+		}
+
+		// Fallback only before the runtime navigation bake is ready.
 		return _navAgent?.TargetPosition ?? GlobalPosition;
 	}
 
@@ -1166,6 +1468,10 @@ public partial class ListenerAI : CharacterBody3D
 			{
 				if (attackEligible && hasLineOfSight && _attackTimer <= 0f && player is PlayerController controller)
 				{
+					// §12.2 Catch silence — the air being pulled out before the
+					// Listener closes the distance. Plays on this node so the
+					// listenerAudio bus ducks the hum momentarily via attenuation.
+					AudioAssets.PlayOneShot3D(AudioAssets.ListenerCatchSilence, this, GlobalPosition, bus: "ListenerAudio");
 					controller.KillByListener(this, GetAttackReason(player));
 					SetDebugLabel("ATTACK KILL", Colors.DeepPink, dist);
 					_attackTimer = AttackCooldown;

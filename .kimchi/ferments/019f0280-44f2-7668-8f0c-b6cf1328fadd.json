@@ -1,0 +1,337 @@
+{
+  "id": "019f0280-44f2-7668-8f0c-b6cf1328fadd",
+  "name": "Floor 1 Phase 2-3 Slice",
+  "description": "IF DONE documenting, code the game no more creating gdocumentations",
+  "status": "paused",
+  "worktree": {
+    "path": "/mnt/c/Users/LENOVO/Documents/Last-word-godot",
+    "branch": "main",
+    "commit": "aad28d72cd9f2db0655478cff18ec0760bb0e2f5"
+  },
+  "scoping": {
+    "goal": {
+      "answer": "Implement and test the Floor 1 end-to-end vertical slice from Phase 1 completion through Phase 2 sequence, Phase 3 final broadcast, and player death — turning the existing note-registration demo into a complete [find words → speak sequence → broadcast monologue → escape or die] loop.",
+      "confirmedAt": "2026-06-26T06:46:45.277Z"
+    },
+    "criteria": {
+      "answer": "`Scripts/World/SequenceManager.cs` exists with `GenerateSequence()`, `ValidateWord()`, `ResetSequence()`, `LockSequence()`, and player-count scaling. Unit tests in `Tests/SequenceManagerTests.cs` pass.\n`Scripts/World/RadioItem.cs` exists with 1s pickup delay + 2s grace. `Scripts/World/RadioBroadcast.cs` exists with 10s sustained Tier 2 monologue timer and handoff on broadcaster death.\n`GameManager.cs` drives phase state machine Phase 1 → Phase 2 → Phase 3 → Victory, using `SequenceManager.AllWordsRegistered` and `SequenceManager.SequenceComplete` as gates.\n`ListenerAI.cs` enters permanent Frenzy when GameManager enters Phase 3 and targets broadcaster/radio location.\nPlayer death sequence in `PlayerController.cs` implements 2s screen fade, last recorded voice playback at reduced pitch, death card UI, and transition to Whisper spectator mode.\n`HUDManager.cs` shows sequence display (current/next words) and broadcast progress bar during monologue.\nGodot `--headless --quit` smoke test passes with no script/parse errors after all changes.\nManual playtest checklist documented in `.kimchi/ferments/019f0280-44f2-7668-8f0c-b6cf1328fadd/docs/playtest-checklist.md` and completed for the Floor 1 end-to-end loop.",
+      "confirmedAt": "2026-06-26T06:46:45.277Z"
+    },
+    "constraints": {
+      "answer": "No new .md documentation files., No new Godot plugins or GDExtensions., No external 3D model/audio downloads., No Steam integration., All new gameplay values must be exported or config-driven (no hardcoded magic numbers in logic)., All cross-system communication via signals/events (no direct UI references from gameplay code)., NUnit tests for pure logic (SequenceManager, WordRegistry).",
+      "confirmedAt": "2026-06-26T06:46:45.277Z"
+    },
+    "phases": {
+      "answer": "Sequence Manager + Tests, Radio Item + Broadcast, Phase State Machine + Listener Frenzy, Death Sequence, HUD + Smoke + Playtest",
+      "confirmedAt": "2026-06-26T06:46:45.277Z"
+    },
+    "assumptions": {
+      "answer": "Floor 1 Phase 1 (notes, registration, Listener reaction) is already implemented and functional.; `GAME_DESIGN.md` and `design/gdd/game-design-document.md` are the source-of-truth for Phase 2/3/Death mechanics.; Voice tier classification is already implemented in `VoiceManager.cs` and emits a usable TierChanged signal.; Multiplayer synchronization is deferred — this ferment focuses on local/offline behavior first.; Player death voice playback will use a placeholder mechanism since the full Playback Trap recording system is post-launch.; No external art/audio assets will be added; UI is greybox/text-only.; No new Godot plugins or GDExtensions.",
+      "confirmedAt": "2026-06-26T06:46:45.277Z"
+    }
+  },
+  "phases": [
+    {
+      "id": "phase-1",
+      "index": 1,
+      "name": "Sequence Manager + Tests",
+      "goal": "Implement SequenceManager logic and unit tests for randomized word order, sustained-tier validation, wrong-order reset, and player-count scaling.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Create `Scripts/World/SequenceManager.cs`: generate randomized word order from registered words, track current index, validate sustained Tier 2 for 0.5s per word, handle wrong-order reset + 30s lock, implement player-count scaling (sequence length = min(survivors, registeredWords)), emit SequenceRevealed/WordAccepted/WordRejected/SequenceReset/SequenceLocked/SequenceComplete signals.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -q 'class SequenceManager' Scripts/World/SequenceManager.cs && grep -q 'GenerateSequence\\|ValidateWord\\|ResetSequence\\|LockSequence' Scripts/World/SequenceManager.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-26T08:27:45.203Z",
+          "completedAt": "2026-06-26T08:27:56.462Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-26T08:27:56.462Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Create `Tests/SequenceManagerTests.cs` with NUnit tests: sequence generation determinism, wrong-word reset, lock timer, scaling with player count. Tests must pass.",
+          "status": "verified",
+          "verification": {
+            "command": "test -f Tests/SequenceManagerTests.cs && dotnet test --filter SequenceManager 2>&1 | grep -q 'Passed'",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-26T08:28:29.243Z",
+          "completedAt": "2026-06-26T08:33:07.883Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-26T08:33:07.883Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-26T06:47:01.971Z",
+      "completedAt": "2026-06-26T08:35:00.449Z",
+      "summary": "Phase 1 complete. Created `Scripts/World/SequenceManager.cs` with GenerateSequence, OnVoiceUpdate, ResetSequence, LockSequence, all six signals, player-count scaling, sustained Tier-2 validation, wrong-word reset+lock, and lock timer decay. Created `Tests/SequenceManagerTests.cs` with 8 NUnit tests and a testable subclass suppressing Godot signals. Updated csproj with NUnit test packages.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-26T08:35:00.432Z"
+      }
+    },
+    {
+      "id": "phase-2",
+      "index": 2,
+      "name": "Radio Item + Broadcast",
+      "goal": "Implement radio item pickup and broadcast system for the Phase 3 monologue.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Create `Scripts/World/RadioItem.cs`: Node3D with [Export] pickup delay 1s and grace 2s, Area3D interaction trigger, RadioPickedUp signal, radio mesh placeholder.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -q 'class RadioItem' Scripts/World/RadioItem.cs && grep -q 'RadioPickedUp' Scripts/World/RadioItem.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-26T08:39:20.661Z",
+          "completedAt": "2026-06-26T08:39:39.300Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-26T08:39:39.300Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Create `Scripts/World/RadioBroadcast.cs`: track broadcaster, 10s monologue timer, sustained Tier 2 requirement, handoff on broadcaster death (reset timer, no progress memory), emit BroadcastStarted/BroadcastProgress/BroadcastComplete/BroadcastFailed.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -q 'class RadioBroadcast' Scripts/World/RadioBroadcast.cs && grep -q 'BroadcastStarted\\|BroadcastComplete' Scripts/World/RadioBroadcast.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-26T08:41:31.489Z",
+          "completedAt": "2026-06-26T08:43:39.397Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "grep -q 'class RadioBroadcast' Scripts/World/RadioBroadcast.cs && grep -q 'BroadcastStarted' Scripts/World/RadioBroadcast.cs && grep -q 'BroadcastComplete' Scripts/World/RadioBroadcast.cs && grep -q 'StartBroadcast' Scripts/World/RadioBroadcast.cs && grep -q 'OnVoiceUpdate' Scripts/World/RadioBroadcast.cs && grep -q 'OnBroadcasterDied' Scripts/World/RadioBroadcast.cs",
+            "stderr": "",
+            "completedAt": "2026-06-26T08:43:39.397Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-26T08:36:44.877Z",
+      "completedAt": "2026-06-26T08:44:21.376Z",
+      "summary": "Phase 2 complete. Created `Scripts/World/RadioItem.cs` with hold-to-charge pickup (1s delay, 2s grace), Area3D trigger, RadioPickedUp signal, and default mesh placeholder. Created `Scripts/World/RadioBroadcast.cs` with 10s monologue timer, sustained Tier 2 requirement with 2s grace, broadcaster death handoff (reset timer, no progress memory), and four signals: BroadcastStarted, BroadcastProgress, BroadcastComplete, BroadcastFailed.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-26T08:44:21.359Z"
+      }
+    },
+    {
+      "id": "phase-3",
+      "index": 3,
+      "name": "Phase State Machine + Listener Frenzy",
+      "goal": "Wire GameManager phase state machine and Listener permanent Frenzy for Phase 3.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Extend `GameManager.cs` with a phase state machine: Phase1 → Phase2 (on AllWordsRegistered), Phase2 → Phase3 (on SequenceComplete), Phase3 → Victory (on BroadcastComplete), plus fail states. Spawn RadioItem at appropriate marker when Phase 3 begins.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -q 'CurrentPhase\\|Phase2\\|Phase3\\|AllWordsRegistered\\|SequenceComplete\\|BroadcastComplete' Scripts/Core/GameManager.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-26T10:46:02.921Z",
+          "completedAt": "2026-06-26T10:46:19.653Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-26T10:46:19.653Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Extend `ListenerAI.cs` to enter permanent Frenzy when GameManager enters Phase 3. Target broadcaster/Token holder; if no Token, target radio location. Hook into existing Frenzy state without destroying standard 12s Frenzy logic.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -q 'Phase3\\|PermanentFrenzy\\|IsPhase3PermanentFrenzyActive' Scripts/Enemy/ListenerAI.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-26T23:33:23.416Z",
+          "completedAt": "2026-06-26T23:35:47.046Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-26T23:35:47.046Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-26T08:45:30.901Z",
+      "completedAt": "2026-06-26T23:36:36.404Z",
+      "summary": "Phase 3 complete. GameManager phase state machine is wired with Phase1 → Phase2 → Phase3 → Victory flow and emits Phase3Started when entering Phase 3. ListenerAI subscribes to Phase3Started, sets its permanent-frenzy flag, and handles the new Phase3PermanentFrenzy target mode at top priority: alive Token holder → spawned RadioItem → idle log. Standard 12-second Scream Frenzy logic remains untouched.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-26T23:36:36.393Z"
+      }
+    },
+    {
+      "id": "phase-4",
+      "index": 4,
+      "name": "Death Sequence",
+      "goal": "Implement the player catch and death sequence with fade, death card, and spectator transition.",
+      "description": "",
+      "parallel": false,
+      "status": "active",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Extend `PlayerController.cs::KillByListener()`: add 2s screen fade (CanvasModulate or ColorRect), then show death card UI, transition to Whisper spectator mode (disable movement/collision, enable freecam or fixed spectator view).",
+          "status": "verified",
+          "verification": {
+            "command": "grep -q 'KillByListener\\|FadeToBlack\\|DeathCard\\|WhisperMode' Scripts/Player/PlayerController.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-27T00:07:53.316Z",
+          "completedAt": "2026-06-27T00:24:23.843Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-27T00:24:23.843Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Add placeholder last-voice playback: on death, play a stored AudioStream or generated tone representing the player's last recorded voice (since full Playback Trap is post-launch).",
+          "status": "pending",
+          "verification": {
+            "command": "grep -q 'LastVoice\\|PlaybackLastVoice\\|DeathVoice' Scripts/Player/PlayerController.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-27T00:26:32.527Z"
+        }
+      ],
+      "startedAt": "2026-06-27T00:07:42.849Z"
+    },
+    {
+      "id": "phase-5",
+      "index": 5,
+      "name": "HUD + Smoke + Playtest",
+      "goal": "Wire HUD updates, run Godot smoke test, and complete manual playtest checklist.",
+      "description": "",
+      "parallel": false,
+      "status": "planned",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Extend `HUDManager.cs`: add sequence display (current word + remaining words) and broadcast progress bar. Subscribe to SequenceManager and RadioBroadcast signals. Update PhaseTracker to show Phase 2/3 active.",
+          "status": "pending",
+          "verification": {
+            "command": "grep -q 'SequenceDisplay\\|BroadcastProgress\\|SequenceRevealed' Scripts/UI/HUDManager.cs",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Run Godot --headless smoke test: project parses and compiles without fatal errors.",
+          "status": "pending",
+          "verification": {
+            "command": "/mnt/c/Users/LENOVO/Desktop/Godot_v4.6.2-stable_mono_win64/Godot_v4.6.2-stable_mono_win64.exe --headless --path /mnt/c/Users/LENOVO/Documents/Last-word-godot --quit 2>&1 | tail -20",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Create `.kimchi/ferments/019f0280-44f2-7668-8f0c-b6cf1328fadd/docs/playtest-checklist.md` and complete a manual playtest of the Floor 1 loop: pick up note → register word ×4 → sequence reveal → speak sequence → radio pickup → broadcast → win OR die.",
+          "status": "pending",
+          "verification": {
+            "command": "test -f .kimchi/ferments/019f0280-44f2-7668-8f0c-b6cf1328fadd/docs/playtest-checklist.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false
+        }
+      ]
+    }
+  ],
+  "decisions": [],
+  "memories": [],
+  "createdAt": "2026-06-26T05:56:28.530Z",
+  "updatedAt": "2026-06-27T00:41:42.756Z",
+  "goal": "Implement and test the Floor 1 end-to-end vertical slice from Phase 1 completion through Phase 2 sequence, Phase 3 final broadcast, and player death — turning the existing note-registration demo into a complete [find words → speak sequence → broadcast monologue → escape or die] loop.",
+  "successCriteria": [
+    "`Scripts/World/SequenceManager.cs` exists with `GenerateSequence()`, `ValidateWord()`, `ResetSequence()`, `LockSequence()`, and player-count scaling. Unit tests in `Tests/SequenceManagerTests.cs` pass.",
+    "`Scripts/World/RadioItem.cs` exists with 1s pickup delay + 2s grace. `Scripts/World/RadioBroadcast.cs` exists with 10s sustained Tier 2 monologue timer and handoff on broadcaster death.",
+    "`GameManager.cs` drives phase state machine Phase 1 → Phase 2 → Phase 3 → Victory, using `SequenceManager.AllWordsRegistered` and `SequenceManager.SequenceComplete` as gates.",
+    "`ListenerAI.cs` enters permanent Frenzy when GameManager enters Phase 3 and targets broadcaster/radio location.",
+    "Player death sequence in `PlayerController.cs` implements 2s screen fade, last recorded voice playback at reduced pitch, death card UI, and transition to Whisper spectator mode.",
+    "`HUDManager.cs` shows sequence display (current/next words) and broadcast progress bar during monologue.",
+    "Godot `--headless --quit` smoke test passes with no script/parse errors after all changes.",
+    "Manual playtest checklist documented in `.kimchi/ferments/019f0280-44f2-7668-8f0c-b6cf1328fadd/docs/playtest-checklist.md` and completed for the Floor 1 end-to-end loop."
+  ],
+  "constraints": [
+    "No new .md documentation files.",
+    "No new Godot plugins or GDExtensions.",
+    "No external 3D model/audio downloads.",
+    "No Steam integration.",
+    "All new gameplay values must be exported or config-driven (no hardcoded magic numbers in logic).",
+    "All cross-system communication via signals/events (no direct UI references from gameplay code).",
+    "NUnit tests for pure logic (SequenceManager, WordRegistry)."
+  ],
+  "lastActiveAt": "2026-06-27T00:07:42.849Z",
+  "activePhaseId": "phase-4"
+}
