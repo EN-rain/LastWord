@@ -1,4 +1,4 @@
-﻿using Godot;
+using Godot;
 using LastWord;
 using LastWord.Core;
 using System;
@@ -22,6 +22,8 @@ public partial class GameManager : Node3D
 	[Signal] public delegate void VictoryEventHandler();
 	[Signal] public delegate void RunFailedEventHandler(string reason);
 	[Signal] public delegate void EscalationReachedEventHandler();
+	[Signal] public delegate void FinalCountdownStartedEventHandler(float durationSeconds);
+	[Signal] public delegate void FinalCountdownTickEventHandler(float remainingSeconds);
 
 	public GamePhase CurrentPhase { get; private set; } = GamePhase.Phase1;
 
@@ -40,6 +42,7 @@ public partial class GameManager : Node3D
 	[Export] public NodePath ExtraNavigationGeometryRootPath;
 	[Export] public NodePath LevelVisualRootPath;
 	[Export] public NodePath LevelCollisionRootPath;
+	[Export] public NodePath PlayerSpawnMarkerPath;
 	[Export] public Vector3 PlayerSpawnPosition = new Vector3(0, 1, 0);
 	[Export] public float RunLogThreshold = 300.0f; // 5 minutes
 	[Export] public float OrientationDuration = 210.0f; // 3 min 30 sec
@@ -62,6 +65,20 @@ public partial class GameManager : Node3D
 	private bool  _orientationActive = false;
 	private float _runElapsed        = 0.0f;
 
+	// Local progression stats (§14.5)
+	public int TotalRuns { get; private set; }
+	public int TotalDeaths { get; private set; }
+	public int TipCounter { get; private set; }
+	public int TokenHoldRuns { get; private set; }
+	public float PerRunSpeakTime { get; private set; }
+	public bool SetupComplete { get; private set; }
+	public bool GdprAccepted { get; private set; }
+	public long GdprTimestamp { get; private set; }
+
+	private const string PlayerStatsSection = "player";
+	private const string SettingsSection = "settings";
+	private const string ConfigPath = "user://settings.cfg";
+
 	public override void _EnterTree()
 	{
 		Instance = this;
@@ -70,6 +87,7 @@ public partial class GameManager : Node3D
 	public override void _Ready()
 	{
 		Instance = this;
+		LoadPlayerStats();
 		CallDeferred(nameof(SetupNavigationRuntime));
 
 		// ------------------------------------------------------------------
@@ -93,6 +111,7 @@ public partial class GameManager : Node3D
 		AddChild(escalationTimer);
 
 		// AchievementManager: a fresh run starts when GameManager is ready. Reset per-run trackers.
+		AchievementManager.Instance?.BindGameManager(this);
 		AchievementManager.Instance?.OnRunStart();
 
 		// S9 Party-wipe tracking
@@ -112,6 +131,8 @@ public partial class GameManager : Node3D
 			SequenceManagerPath = sequenceManager.GetPath();
 		}
 		sequenceManager.SequenceComplete += OnSequenceComplete;
+		if (VoiceManager.Instance != null)
+			VoiceManager.Instance.RecognizedSpeechSubmitted += OnRecognizedSpeechSubmitted;
 
 		var radioBroadcast = GetNodeOrNull<RadioBroadcast>(RadioBroadcastPath);
 		if (radioBroadcast == null)
@@ -122,6 +143,7 @@ public partial class GameManager : Node3D
 		}
 		radioBroadcast.BroadcastComplete += OnBroadcastComplete;
 		radioBroadcast.BroadcastFailed   += OnBroadcastFailed;
+		EnsureRegistrationBoard();
 
 		if (PlayerScene == null)
 		{
@@ -135,6 +157,44 @@ public partial class GameManager : Node3D
 			_playersContainer = new Node3D();
 			_playersContainer.Name = "SpawnedPlayers";
 			AddChild(_playersContainer);
+		}
+
+		// ------------------------------------------------------------------
+		// Resolve player spawn position from marker (F1_Basement default)
+		// ------------------------------------------------------------------
+		Node3D spawnMarker = null;
+		if (PlayerSpawnMarkerPath != null && !PlayerSpawnMarkerPath.IsEmpty)
+		{
+			spawnMarker = GetNodeOrNull<Node3D>(PlayerSpawnMarkerPath);
+		}
+
+		if (spawnMarker == null)
+		{
+			foreach (Node node in GetTree().GetNodesInGroup("SpawnPoint"))
+			{
+				if (node.Name == "SpawnZone_Players" && node is Node3D marker)
+				{
+					spawnMarker = marker;
+					break;
+				}
+			}
+		}
+
+		if (spawnMarker != null)
+		{
+			PlayerSpawnPosition = spawnMarker.GlobalPosition;
+		}
+
+		// ------------------------------------------------------------------
+		// Offline / single-player: position the static player at the spawn
+		// ------------------------------------------------------------------
+		if (Multiplayer.MultiplayerPeer == null || !Multiplayer.HasMultiplayerPeer())
+		{
+			var offlinePlayer = GetNodeOrNull<Node3D>(OfflinePlayerPath);
+			if (offlinePlayer != null)
+			{
+				offlinePlayer.GlobalPosition = PlayerSpawnPosition;
+			}
 		}
 
 		// ------------------------------------------------------------------
@@ -214,6 +274,9 @@ public partial class GameManager : Node3D
 		if (sequenceManager != null)
 			sequenceManager.SequenceComplete -= OnSequenceComplete;
 
+		if (VoiceManager.Instance != null)
+			VoiceManager.Instance.RecognizedSpeechSubmitted -= OnRecognizedSpeechSubmitted;
+
 		var radioBroadcast = GetNodeOrNull<RadioBroadcast>(RadioBroadcastPath);
 		if (radioBroadcast != null)
 		{
@@ -291,19 +354,82 @@ public partial class GameManager : Node3D
 	// ---------------------------------------------------------------------------
 	private void IncrementRunCount()
 	{
-		var cfg = new ConfigFile();
-		cfg.Load("user://settings.cfg");
-
-		int currentRuns = (int)cfg.GetValue("player", "runs", 0);
-		currentRuns++;
-		cfg.SetValue("player", "runs", currentRuns);
-		cfg.Save("user://settings.cfg");
+		int currentRuns = IncrementSavedInt(PlayerStatsSection, "runs");
+		TotalRuns = currentRuns;
 
 		// GD.Print($"GameManager: Session reached 5-minute mark. Run logged. Total runs: {currentRuns}");
 
 		// Keep NetworkManager in sync so subsequent lobby checks are correct
 		if (NetworkManager.Instance != null)
 			NetworkManager.Instance.PlayerRuns = currentRuns;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Local save schema helpers (§14.5)
+	// ---------------------------------------------------------------------------
+	private void LoadPlayerStats()
+	{
+		var cfg = new ConfigFile();
+		if (cfg.Load(ConfigPath) != Error.Ok) return;
+
+		TotalRuns         = (int)cfg.GetValue(PlayerStatsSection, "runs", 0);
+		TotalDeaths       = (int)cfg.GetValue(PlayerStatsSection, "deaths", 0);
+		TipCounter        = (int)cfg.GetValue(PlayerStatsSection, "tip_counter", 0);
+		TokenHoldRuns     = (int)cfg.GetValue(PlayerStatsSection, "token_hold_runs", 0);
+		PerRunSpeakTime   = (float)cfg.GetValue(PlayerStatsSection, "per_run_speak_time", 0.0);
+		SetupComplete     = (bool)cfg.GetValue(SettingsSection, "setup_complete", false);
+		GdprAccepted      = (bool)cfg.GetValue(SettingsSection, "gdpr_accepted", false);
+		GdprTimestamp     = (long)cfg.GetValue(SettingsSection, "gdpr_timestamp", 0L);
+	}
+
+	private int IncrementSavedInt(string section, string key)
+	{
+		var cfg = new ConfigFile();
+		cfg.Load(ConfigPath);
+		int value = (int)cfg.GetValue(section, key, 0);
+		value++;
+		cfg.SetValue(section, key, value);
+		cfg.Save(ConfigPath);
+		return value;
+	}
+
+	private void SetSavedValue(string section, string key, Variant value)
+	{
+		var cfg = new ConfigFile();
+		cfg.Load(ConfigPath);
+		cfg.SetValue(section, key, value);
+		cfg.Save(ConfigPath);
+	}
+
+	public void RecordDeath()
+	{
+		TotalDeaths = IncrementSavedInt(PlayerStatsSection, "deaths");
+	}
+
+	public void RecordTokenHoldRun()
+	{
+		TokenHoldRuns = IncrementSavedInt(PlayerStatsSection, "token_hold_runs");
+	}
+
+	public void AddSpeakTime(float seconds)
+	{
+		PerRunSpeakTime += seconds;
+		SetSavedValue(PlayerStatsSection, "per_run_speak_time", PerRunSpeakTime);
+	}
+
+	public void SetSetupComplete(bool complete)
+	{
+		SetupComplete = complete;
+		SetSavedValue(SettingsSection, "setup_complete", complete);
+	}
+
+	public void SetGdprAccepted(bool accepted)
+	{
+		GdprAccepted = accepted;
+		long timestamp = accepted ? DateTimeOffset.UtcNow.ToUnixTimeSeconds() : 0L;
+		GdprTimestamp = timestamp;
+		SetSavedValue(SettingsSection, "gdpr_accepted", accepted);
+		SetSavedValue(SettingsSection, "gdpr_timestamp", timestamp);
 	}
 
 	// ---------------------------------------------------------------------------
@@ -346,6 +472,15 @@ public partial class GameManager : Node3D
 		EmitSignal(SignalName.PhaseChanged, (int)CurrentPhase);
 		EmitSignal(SignalName.Phase3Started);
 		SpawnRadioItem();
+	}
+
+	private void OnRecognizedSpeechSubmitted(long peerId, string text, int tier)
+	{
+		if (CurrentPhase != GamePhase.Phase2)
+			return;
+
+		var sequenceManager = GetNodeOrNull<SequenceManager>(SequenceManagerPath);
+		sequenceManager?.SubmitRecognizedWord(text, tier);
 	}
 
 	private void OnBroadcastComplete()
@@ -405,16 +540,12 @@ public partial class GameManager : Node3D
 
 	private void SpawnRadioItem()
 	{
-		if (RadioItemScene == null)
-		{
-			GD.PushError("GameManager: RadioItemScene is not assigned. Cannot spawn radio for Phase 3.");
-			return;
-		}
-
 		Node3D spawnMarker = GetNodeOrNull<Node3D>(RadioSpawnMarkerPath);
 		Vector3 spawnPos = spawnMarker?.GlobalPosition ?? PlayerSpawnPosition;
 
-		var radioItem = RadioItemScene.Instantiate<Node3D>();
+		var radioItem = RadioItemScene != null
+			? RadioItemScene.Instantiate<Node3D>()
+			: new RadioItem { Name = "RadioItem" };
 		radioItem.GlobalPosition = spawnPos;
 		if (radioItem is RadioItem item)
 			item.RadioPickedUp += OnRadioPickedUp;
@@ -474,7 +605,7 @@ public partial class GameManager : Node3D
 		if (markers.Count < 4)
 		{
 			GD.PushWarning($"GameManager: only {markers.Count} NoteSpawn markers found; need 4.");
-			return;
+			markers = CreateFallbackNoteMarkers();
 		}
 
 		var rng = new System.Random();
@@ -503,6 +634,31 @@ public partial class GameManager : Node3D
 		GD.Print($"GameManager: spawned 4 Phase-1 notes.");
 	}
 
+	private System.Collections.Generic.List<Marker3D> CreateFallbackNoteMarkers()
+	{
+		var markers = new System.Collections.Generic.List<Marker3D>();
+		Vector3[] offsets =
+		{
+			new(-3f, 0f, -3f),
+			new(3f, 0f, -3f),
+			new(-3f, 0f, 3f),
+			new(3f, 0f, 3f)
+		};
+
+		for (int i = 0; i < offsets.Length; i++)
+		{
+			var marker = new Marker3D
+			{
+				Name = $"NoteSpawnFallback{i + 1}",
+				GlobalPosition = PlayerSpawnPosition + offsets[i]
+			};
+			AddChild(marker);
+			markers.Add(marker);
+		}
+
+		return markers;
+	}
+
 	private void OnNotePickedUp(string word, int tier, long peerId)
 	{
 		_heldNotesByPeer[peerId] = (word, tier);
@@ -520,6 +676,25 @@ public partial class GameManager : Node3D
 
 		WordRegistryPath = wordRegistry.GetPath();
 		return wordRegistry;
+	}
+
+	private RegistrationBoard EnsureRegistrationBoard()
+	{
+		var board = GetNodeOrNull<RegistrationBoard>(RegistrationBoardPath)
+			?? GetTree()?.GetFirstNodeInGroup("RegistrationBoard") as RegistrationBoard;
+		if (board == null)
+		{
+			board = new RegistrationBoard
+			{
+				Name = "RegistrationBoard",
+				GlobalPosition = PlayerSpawnPosition + new Vector3(0f, 0f, 5f)
+			};
+			AddChild(board);
+		}
+
+		board.AddToGroup("RegistrationBoard");
+		RegistrationBoardPath = board.GetPath();
+		return board;
 	}
 
 	private void OnRadioPickedUp(long peerId, bool _isGracePickup)
@@ -592,6 +767,7 @@ public partial class GameManager : Node3D
 	// ---------------------------------------------------------------------------
 	private void OnPlayerDied(PlayerController player, string reason, string killerName)
 	{
+		RecordDeath();
 		int livingCount = 0;
 		foreach (var node in GetTree().GetNodesInGroup("Player"))
 		{
@@ -637,4 +813,3 @@ public partial class GameManager : Node3D
 	}
 
 }
-

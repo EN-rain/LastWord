@@ -935,14 +935,15 @@ public partial class ListenerAI : CharacterBody3D
 
 	private float GetPlayerDetectionMultiplier(Node3D source)
 	{
+		float multiplier = GetAdaptiveHearingMultiplier();
 		if (source == null)
-			return 1f;
+			return multiplier;
 
 		RoleData role = source.GetNodeOrNull<RoleData>("RoleData");
 		if (role != null && role.IsMute)
-			return role.MuteDetectionRadiusMultiplier;
+			multiplier *= role.MuteDetectionRadiusMultiplier;
 
-		return 1f;
+		return multiplier;
 	}
 
 	private bool ShouldSprintToMovementNoise(ListenerSoundEvent soundEvent)
@@ -1019,6 +1020,21 @@ public partial class ListenerAI : CharacterBody3D
 	private float GetLurkMoveSpeed()
 	{
 		return WalkSpeed * LurkMoveSpeedMultiplier;
+	}
+
+	private static float GetAdaptiveSpeedMultiplier()
+	{
+		return GameManager.Instance?.AdaptiveEvolution?.SpeedMultiplier ?? 1f;
+	}
+
+	private static float GetAdaptiveHearingMultiplier()
+	{
+		return GameManager.Instance?.AdaptiveEvolution?.HearingMultiplier ?? 1f;
+	}
+
+	private static float GetAdaptiveAttackRangeMultiplier()
+	{
+		return GameManager.Instance?.AdaptiveEvolution?.AttackRangeMultiplier ?? 1f;
 	}
 
 	private void SetNavigationTarget(Vector3 target)
@@ -1235,6 +1251,8 @@ public partial class ListenerAI : CharacterBody3D
 
 	protected void MoveTowardsTarget(float delta, float speed)
 	{
+		speed *= GetAdaptiveSpeedMultiplier();
+
 		if (_navAgent == null)
 		{
 			Velocity = Vector3.Zero;
@@ -1464,7 +1482,7 @@ public partial class ListenerAI : CharacterBody3D
 			bool hasLineOfSight = HasLineOfSight(player);
 			bool attackEligible = IsPlayerAttackEligible(player);
 
-			if (dist <= AttackRange)
+			if (dist <= AttackRange * GetAdaptiveAttackRangeMultiplier())
 			{
 				if (attackEligible && hasLineOfSight && _attackTimer <= 0f && player is PlayerController controller)
 				{

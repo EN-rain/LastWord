@@ -80,6 +80,7 @@ public partial class AchievementManager : Node
     // ---- Runtime state ------------------------------------------------------------------
     private readonly HashSet<string> _unlocked = new();
     private const string SavePath = "user://achievements.json";
+    private GameManager _boundGameManager;
 
     public override void _EnterTree()
     {
@@ -91,14 +92,29 @@ public partial class AchievementManager : Node
         Load();
 
         // Hook GameManager signals that exist right now — these are the easy wins.
-        var gm = GameManager.Instance;
-        if (gm != null)
-        {
-            gm.Victory += () => OnRunEnded(victory: true);
-            gm.RunFailed += _ => OnRunEnded(victory: false);
-            gm.PhaseChanged += OnPhaseChanged;
-        }
+        BindGameManager(GameManager.Instance);
     }
+
+    public void BindGameManager(GameManager gm)
+    {
+        if (gm == null || gm == _boundGameManager)
+            return;
+
+        if (_boundGameManager != null)
+        {
+            _boundGameManager.Victory -= OnVictory;
+            _boundGameManager.RunFailed -= OnRunFailed;
+            _boundGameManager.PhaseChanged -= OnPhaseChanged;
+        }
+
+        _boundGameManager = gm;
+        _boundGameManager.Victory += OnVictory;
+        _boundGameManager.RunFailed += OnRunFailed;
+        _boundGameManager.PhaseChanged += OnPhaseChanged;
+    }
+
+    private void OnVictory() => OnRunEnded(victory: true);
+    private void OnRunFailed(string _reason) => OnRunEnded(victory: false);
 
     private void OnPhaseChanged(GameManager.GamePhase phase)
     {
@@ -137,9 +153,8 @@ public partial class AchievementManager : Node
 
     // ---- Hook helpers (one-liners for systems that want to fire an achievement by name) ----
     /// <summary>
-    /// Call from RadioBroadcast (or its proxy) when a broadcast is sent but no teammate
-    /// is at the receiver, so the Listener is attracted to the wrong room.
-    /// TODO: wire when RadioBroadcast.cs is promoted from a runtime stub to a real class.
+    /// Call from radio/phone/intercom proxy interactions when a decoy receiver/noise source
+    /// sends the Listener away from the player's real position.
     /// </summary>
     public void UnlockWrongNumber() => Unlock(Id.WrongNumber);
 
@@ -158,17 +173,26 @@ public partial class AchievementManager : Node
         if (victory)
         {
             var vm = VoiceManager.Instance;
-            if (vm != null && vm.SecondsSinceLastVoice <= 5.0f)
+            long broadcasterPeerId = GetCurrentBroadcasterPeerId();
+            if (vm != null && vm.LastVoicePeerId > 0 && (broadcasterPeerId == 0 || vm.LastVoicePeerId == broadcasterPeerId))
                 Unlock(Id.TheLastWord);
         }
 
-        // Marathon of Silence: full match on Mute role AND we survived to the end.
+        // Marathon of Silence: full match on Mute role, no local speech, and survived to the end.
         if (victory)
         {
             var role = GetLocalRole();
-            if (role == PlayerRole.Mute)
+            var vm = VoiceManager.Instance;
+            if (role == PlayerRole.Mute && vm != null && !vm.HasSpokenThisRun)
                 Unlock(Id.MarathonOfSilence);
         }
+    }
+
+    private static long GetCurrentBroadcasterPeerId()
+    {
+        var gm = GameManager.Instance;
+        var broadcast = gm?.GetNodeOrNull<RadioBroadcast>(gm.RadioBroadcastPath);
+        return broadcast?.CurrentBroadcasterPeerId ?? 0;
     }
 
     private static PlayerRole GetLocalRole()

@@ -1,0 +1,248 @@
+[gd_resource type="Theme" load_steps=17 format=3]
+
+[sub_resource type="StyleBoxFlat" id="Panel"]
+bg_color = Color(0.027, 0.035, 0.043, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.17, 0.29, 0.24, 0.82)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 12
+shadow_offset = Vector2(0, 6)
+
+[sub_resource type="StyleBoxFlat" id="PanelDim"]
+bg_color = Color(0.006, 0.009, 0.012, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.12, 0.18, 0.17, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="ButtonNormal"]
+bg_color = Color(0.045, 0.065, 0.062, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.36, 0.3, 0.88)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 14
+content_margin_right = 14
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="ButtonHover"]
+bg_color = Color(0.064, 0.104, 0.088, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.33, 0.72, 0.45, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 14
+content_margin_right = 14
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="ButtonPressed"]
+bg_color = Color(0.84, 0.48, 0.08, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.72, 0.22, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 14
+content_margin_right = 14
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="ButtonDisabled"]
+bg_color = Color(0.032, 0.037, 0.04, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.09, 0.11, 0.11, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 14
+content_margin_right = 14
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="Focus"]
+bg_color = Color(0.045, 0.065, 0.062, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.68, 0.24, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="Field"]
+bg_color = Color(0.014, 0.019, 0.024, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.16, 0.25, 0.23, 0.9)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 12
+content_margin_right = 12
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="FieldFocus"]
+bg_color = Color(0.024, 0.035, 0.04, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.33, 0.72, 0.45, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 12
+content_margin_right = 12
+content_margin_top = 8
+content_margin_bottom = 8
+
+[sub_resource type="StyleBoxFlat" id="ProgressBg"]
+bg_color = Color(0.03, 0.04, 0.045, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="ProgressFill"]
+bg_color = Color(0.09, 0.5, 0.24, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="ScrollGrabber"]
+bg_color = Color(0.24, 0.42, 0.34, 0.86)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="ScrollBg"]
+bg_color = Color(0.01, 0.014, 0.018, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="Separator"]
+bg_color = Color(0.17, 0.29, 0.24, 0.82)
+
+[sub_resource type="StyleBoxFlat" id="Tooltip"]
+bg_color = Color(0.014, 0.019, 0.024, 0.98)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.33, 0.72, 0.45, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="TabSelected"]
+bg_color = Color(0.07, 0.12, 0.095, 1)
+border_width_bottom = 2
+border_color = Color(0.84, 0.48, 0.08, 1)
+
+[resource]
+default_base_scale = 1.0
+Button/colors/font_color = Color(0.9, 0.94, 0.9, 1)
+Button/colors/font_disabled_color = Color(0.45, 0.5, 0.48, 1)
+Button/colors/font_focus_color = Color(1, 0.95, 0.82, 1)
+Button/colors/font_hover_color = Color(1, 1, 0.92, 1)
+Button/colors/font_hover_pressed_color = Color(0.035, 0.025, 0.012, 1)
+Button/colors/font_pressed_color = Color(0.035, 0.025, 0.012, 1)
+Button/constants/align_to_largest_stylebox = 0
+Button/constants/h_separation = 8
+Button/font_sizes/font_size = 16
+Button/styles/disabled = SubResource("ButtonDisabled")
+Button/styles/focus = SubResource("Focus")
+Button/styles/hover = SubResource("ButtonHover")
+Button/styles/normal = SubResource("ButtonNormal")
+Button/styles/pressed = SubResource("ButtonPressed")
+CheckButton/colors/font_color = Color(0.88, 0.92, 0.88, 1)
+CheckBox/colors/font_color = Color(0.88, 0.92, 0.88, 1)
+HSeparator/styles/separator = SubResource("Separator")
+HSlider/styles/grabber_area = SubResource("ProgressFill")
+HSlider/styles/grabber_area_highlight = SubResource("ButtonHover")
+HSlider/styles/slider = SubResource("ProgressBg")
+ItemList/colors/font_color = Color(0.88, 0.92, 0.88, 1)
+ItemList/colors/font_selected_color = Color(1, 0.95, 0.82, 1)
+ItemList/styles/focus = SubResource("Focus")
+ItemList/styles/panel = SubResource("Field")
+Label/colors/font_color = Color(0.88, 0.92, 0.88, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/constants/outline_size = 0
+Label/font_sizes/font_size = 15
+LineEdit/colors/caret_color = Color(0.84, 0.48, 0.08, 1)
+LineEdit/colors/font_color = Color(0.92, 0.96, 0.92, 1)
+LineEdit/colors/font_placeholder_color = Color(0.55, 0.63, 0.6, 0.82)
+LineEdit/colors/font_selected_color = Color(0.02, 0.03, 0.024, 1)
+LineEdit/colors/selection_color = Color(0.84, 0.48, 0.08, 1)
+LineEdit/font_sizes/font_size = 15
+LineEdit/styles/focus = SubResource("FieldFocus")
+LineEdit/styles/normal = SubResource("Field")
+LineEdit/styles/read_only = SubResource("ButtonDisabled")
+OptionButton/colors/font_color = Color(0.9, 0.94, 0.9, 1)
+OptionButton/font_sizes/font_size = 15
+OptionButton/styles/disabled = SubResource("ButtonDisabled")
+OptionButton/styles/focus = SubResource("Focus")
+OptionButton/styles/hover = SubResource("ButtonHover")
+OptionButton/styles/normal = SubResource("ButtonNormal")
+OptionButton/styles/pressed = SubResource("ButtonPressed")
+Panel/styles/panel = SubResource("Panel")
+PanelContainer/styles/panel = SubResource("Panel")
+ProgressBar/colors/font_color = Color(0.88, 0.92, 0.88, 1)
+ProgressBar/styles/background = SubResource("ProgressBg")
+ProgressBar/styles/fill = SubResource("ProgressFill")
+RichTextLabel/colors/default_color = Color(0.88, 0.92, 0.88, 1)
+RichTextLabel/colors/font_outline_color = Color(0, 0, 0, 1)
+RichTextLabel/font_sizes/normal_font_size = 15
+ScrollBar/styles/grabber = SubResource("ScrollGrabber")
+ScrollBar/styles/grabber_highlight = SubResource("ButtonHover")
+ScrollBar/styles/grabber_pressed = SubResource("ButtonPressed")
+ScrollBar/styles/scroll = SubResource("ScrollBg")
+ScrollContainer/styles/bg = SubResource("PanelDim")
+TabContainer/styles/panel = SubResource("Panel")
+TabContainer/styles/tab_selected = SubResource("TabSelected")
+TooltipPanel/styles/panel = SubResource("Tooltip")
+VBoxContainer/constants/separation = 12

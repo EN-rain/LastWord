@@ -1,4 +1,5 @@
 using Godot;
+using LastWord.Core;
 
 namespace LastWord.World;
 
@@ -66,6 +67,7 @@ public partial class Intercom : Area3D
         _cooldownTimer = CooldownSeconds;
 
         VoiceManager.Instance?.ReportNoiseEvent(GlobalPosition, NoiseTier, SoundKind.Special, player);
+        AchievementManager.Instance?.UnlockWrongNumber();
 
         GD.Print($"Intercom: triggered noise event at {GlobalPosition}, tier {NoiseTier}.");
     }

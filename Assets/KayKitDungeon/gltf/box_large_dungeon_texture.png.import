@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgojc6g3rhjha"
-path="res://.godot/imported/box_large_dungeon_texture.png-b2cb8e1652136aee25da0a71a374c094.ctex"
+uid="uid://cxddlqxa62aag"
+path.s3tc="res://.godot/imported/box_large_dungeon_texture.png-b2cb8e1652136aee25da0a71a374c094.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/box_large_dungeon_texture.png"
-dest_files=["res://.godot/imported/box_large_dungeon_texture.png-b2cb8e1652136aee25da0a71a374c094.ctex"]
+dest_files=["res://.godot/imported/box_large_dungeon_texture.png-b2cb8e1652136aee25da0a71a374c094.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -41,11 +41,15 @@ public partial class VoiceManager : Node
 	private float _secondsSinceLastVoice = 999f;
 	/// <summary>Seconds since the player last produced any voice above Silent.</summary>
 	public float SecondsSinceLastVoice => _secondsSinceLastVoice;
+	public bool HasSpokenThisRun { get; private set; }
+	public long LastVoicePeerId { get; private set; }
 	/// <summary>Call at the start of a new run to reset per-run voice tracking.</summary>
 	public void ResetRunTracking()
 	{
 		_maxTierThisRun = VoiceTier.Silent;
 		_secondsSinceLastVoice = 999f;
+		HasSpokenThisRun = false;
+		LastVoicePeerId = 0;
 	}
 
 	private float _timer = 0f;
@@ -115,6 +119,9 @@ public partial class VoiceManager : Node
 			{ "ability_f", Key.F },
 			{ "ability_r", Key.R },
 			{ "ability_t", Key.T },
+			{ "voice_debug_whisper", Key.Key1 },
+			{ "voice_debug_normal", Key.Key2 },
+			{ "voice_debug_scream", Key.Key3 },
 			{ "spectator_j", Key.J }
 		};
 
@@ -155,7 +162,20 @@ public partial class VoiceManager : Node
 		if (peerId <= 0 || string.IsNullOrEmpty(normalized))
 			return;
 
+		TrackVoiceActivity((VoiceTier)Mathf.Clamp(tier, 0, 3), peerId);
 		RecognizedSpeechSubmitted?.Invoke(peerId, normalized, Mathf.Clamp(tier, 0, 3));
+	}
+
+	private void TrackVoiceActivity(VoiceTier tier, long peerId = 0)
+	{
+		if (tier < VoiceTier.Whisper)
+			return;
+
+		HasSpokenThisRun = true;
+		if ((int)tier > (int)_maxTierThisRun)
+			_maxTierThisRun = tier;
+		_secondsSinceLastVoice = 0f;
+		LastVoicePeerId = peerId > 0 ? peerId : ResolveLocalPeerId();
 	}
 
 	private void SetupMicBus()
@@ -316,9 +336,9 @@ public partial class VoiceManager : Node
 		// Only active when GDPR consent has been given so it cannot be abused on startup.
 		if (IsGdprAccepted)
 		{
-			bool forceWhisper = Input.IsKeyPressed(Key.Key1);
-			bool forceNormal  = Input.IsKeyPressed(Key.Key2);
-			bool forceScream  = Input.IsKeyPressed(Key.Key3);
+			bool forceWhisper = Input.IsActionPressed("voice_debug_whisper");
+			bool forceNormal  = Input.IsActionPressed("voice_debug_normal");
+			bool forceScream  = Input.IsActionPressed("voice_debug_scream");
 			bool isForced     = forceWhisper || forceNormal || forceScream;
 
 			if (isForced)
@@ -355,7 +375,10 @@ public partial class VoiceManager : Node
 					EmitSignal(SignalName.TierChanged, (int)_currentTier);
 
 					if (_currentTier >= VoiceTier.Whisper)
+					{
+						TrackVoiceActivity(_currentTier);
 						UpdateTokenHolder();
+					}
 
 					BroadcastCurrentVoiceNoise(true);
 				}
@@ -428,10 +451,8 @@ public partial class VoiceManager : Node
 		if (newTier != _currentTier)
 		{
 			_currentTier = newTier;
-			if ((int)_currentTier > (int)_maxTierThisRun)
-				_maxTierThisRun = _currentTier;
 			if (_currentTier >= VoiceTier.Whisper)
-				_secondsSinceLastVoice = 0f;
+				TrackVoiceActivity(_currentTier);
 			EmitSignal(SignalName.TierChanged, (int)_currentTier);
 
 			if (_currentTier >= VoiceTier.Whisper)
@@ -728,6 +749,15 @@ public partial class VoiceManager : Node
 		return long.TryParse(player.Name, out long peerId)
 			? peerId
 			: player.GetMultiplayerAuthority();
+	}
+
+	private long ResolveLocalPeerId()
+	{
+		if (Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer())
+			return Multiplayer.GetUniqueId();
+
+		Node3D localPlayer = GetTree()?.GetFirstNodeInGroup("Player") as Node3D;
+		return ResolvePeerId(localPlayer);
 	}
 
 	private void LoadBaseline()

@@ -1,4 +1,5 @@
 using Godot;
+using LastWord.Core;
 
 namespace LastWord.World;
 
@@ -67,12 +68,18 @@ public partial class DeadPhone : Area3D
         GD.Print($"DeadPhone: {player.Name} heard hint '{hint}'.");
 
         VoiceManager.Instance?.ReportNoiseEvent(GlobalPosition, NoiseTier, SoundKind.Special, player);
+        AchievementManager.Instance?.UnlockWrongNumber();
     }
 
     private string GetRandomHint()
     {
         if (PossibleHints == null || PossibleHints.Length == 0)
-            return "...static...";
+        {
+            var words = WordRegistry.Instance?.RegisteredWords;
+            if (words != null && words.Count > 0)
+                return words[(int)(GD.Randi() % (uint)words.Count)];
+            return "Find the board. Bring it a word.";
+        }
         return PossibleHints[(int)(GD.Randi() % (uint)PossibleHints.Length)];
     }
 }

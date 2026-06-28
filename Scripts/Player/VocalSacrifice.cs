@@ -32,6 +32,14 @@ public partial class VocalSacrifice : Node3D
 	{
 		if (VoiceManager.Instance != null)
 			VoiceManager.Instance.TierChanged += OnTierChanged;
+		else
+			CallDeferred(nameof(ConnectVoiceManager));
+	}
+
+	private void ConnectVoiceManager()
+	{
+		if (VoiceManager.Instance != null)
+			VoiceManager.Instance.TierChanged += OnTierChanged;
 	}
 
 	public override void _ExitTree()

@@ -67,6 +67,12 @@ public partial class VoiceRecorder : Node
 		if (_recorder == null || _recording)
 			return;
 
+		if (AudioServer.GetInputDeviceList().Length == 0)
+		{
+			GD.PushWarning("VoiceRecorder: no input device available. Rolling capture disabled.");
+			return;
+		}
+
 		_recorder.SetRecordingActive(true);
 		_recording = true;
 		_segmentTimer = 0.0;
@@ -85,6 +91,11 @@ public partial class VoiceRecorder : Node
 	private void CycleSegment()
 	{
 		if (_recorder == null)
+			return;
+
+		float leftPeak = AudioServer.GetBusPeakVolumeLeftDb(_busIndex, 0);
+		float rightPeak = AudioServer.GetBusPeakVolumeRightDb(_busIndex, 0);
+		if (leftPeak <= -79.0f && rightPeak <= -79.0f)
 			return;
 
 		_recorder.SetRecordingActive(false);
@@ -173,9 +184,16 @@ public partial class VoiceRecorder : Node
 	public override void _ExitTree()
 	{
 		StopRecording();
-		if (_busIndex >= 0 && _recorderIndex >= 0 && _recorderIndex < AudioServer.GetBusEffectCount(_busIndex))
+		if (_busIndex >= 0 && _recorder != null)
 		{
-			AudioServer.RemoveBusEffect(_busIndex, _recorderIndex);
+			for (int i = AudioServer.GetBusEffectCount(_busIndex) - 1; i >= 0; i--)
+			{
+				if (ReferenceEquals(AudioServer.GetBusEffect(_busIndex, i), _recorder))
+				{
+					AudioServer.RemoveBusEffect(_busIndex, i);
+					break;
+				}
+			}
 		}
 	}
 }

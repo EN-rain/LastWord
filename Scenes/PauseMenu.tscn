@@ -1,10 +1,12 @@
-[gd_scene load_steps=3 format=3 uid="uid://dblixul2w7k1a"]
+[gd_scene load_steps=4 format=3 uid="uid://dblixul2w7k1a"]
 
 [ext_resource type="Script" uid="uid://dm3efnuc54nbu" path="res://Scripts/UI/PauseMenu.cs" id="1_pausemenu"]
 [ext_resource type="PackedScene" uid="uid://b82ukaxaseq4a" path="res://Scenes/SettingsMenu.tscn" id="2_settings"]
+[ext_resource type="Theme" path="res://Assets/UI/LastWordTheme.tres" id="3_theme"]
 
 [node name="PauseMenu" type="CanvasLayer" groups=["PauseMenu"]]
 process_mode = 3
+theme = ExtResource("3_theme")
 script = ExtResource("1_pausemenu")
 OverlayPath = NodePath("Overlay")
 MenuPanelPath = NodePath("MenuPanel")
@@ -20,36 +22,37 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.0, 0.0, 0.0, 0.55)
+color = Color(0.006, 0.009, 0.012, 0.72)
 
 [node name="MenuPanel" type="PanelContainer" parent="." unique_id=1443341828]
-custom_minimum_size = Vector2(320, 220)
+custom_minimum_size = Vector2(380, 260)
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -160.0
-offset_top = -110.0
-offset_right = 160.0
-offset_bottom = 110.0
+offset_left = -190.0
+offset_top = -130.0
+offset_right = 190.0
+offset_bottom = 130.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="MenuPanel" unique_id=1229661927]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 16
 
 [node name="Margin" type="MarginContainer" parent="MenuPanel/VBox"]
 layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 4
 
 [node name="Title" type="Label" parent="MenuPanel/VBox/Margin" unique_id=338409062]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.68, 0.24, 1)
+theme_override_font_sizes/font_size = 24
 text = "GAME PAUSED"
 horizontal_alignment = 1
 
@@ -58,26 +61,26 @@ layout_mode = 2
 
 [node name="MarginButtons" type="MarginContainer" parent="MenuPanel/VBox"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 22
 
 [node name="ButtonContainer" type="VBoxContainer" parent="MenuPanel/VBox/MarginButtons"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 12
 
 [node name="ResumeButton" type="Button" parent="MenuPanel/VBox/MarginButtons/ButtonContainer" unique_id=1934285540]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Resume Game"
 
 [node name="SettingsButton" type="Button" parent="MenuPanel/VBox/MarginButtons/ButtonContainer"]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Open Settings"
 
 [node name="QuitButton" type="Button" parent="MenuPanel/VBox/MarginButtons/ButtonContainer" unique_id=781925727]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "Quit To Desktop"
 

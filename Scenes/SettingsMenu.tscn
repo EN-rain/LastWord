@@ -1,8 +1,10 @@
-[gd_scene format=3 uid="uid://b82ukaxaseq4a"]
+[gd_scene load_steps=3 format=3 uid="uid://b82ukaxaseq4a"]
 
 [ext_resource type="Script" uid="uid://54kkbickcx15" path="res://Scripts/UI/SettingsMenu.cs" id="1_settings"]
+[ext_resource type="Theme" path="res://Assets/UI/LastWordTheme.tres" id="2_theme"]
 
 [node name="SettingsMenu" type="PanelContainer" unique_id=980673033]
+theme = ExtResource("2_theme")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

@@ -111,6 +111,8 @@ public partial class PlayerController : CharacterBody3D
 	
 	private float _stationaryNearListenerTimer = 0f;
 	private MeshInstance3D _spectatorMarker;
+	private float _witnessBurstRemaining = 0f;
+	private const float WitnessBurstSpeedMultiplier = 1.5f;
 	public bool IsInteracting => Input.IsActionPressed("interact");
 	public bool IsAudioIsolated { get; private set; }
 	public bool IsSilenced { get; private set; }
@@ -313,20 +315,6 @@ public partial class PlayerController : CharacterBody3D
 		{
 			var broadcast = GameManager.Instance?.GetNodeOrNull<RadioBroadcast>(GameManager.Instance.RadioBroadcastPath);
 			broadcast?.OnVoiceUpdate(_currentVoiceTier, delta);
-		}
-
-		// Phase 2 sequence — no STT yet, so we validate the next expected word
-		// automatically when the player speaks at Normal tier or higher.
-		if (_currentVoiceTier >= (int)VoiceTier.Normal)
-		{
-			var sequenceManager = GameManager.Instance?.GetNodeOrNull<SequenceManager>(GameManager.Instance.SequenceManagerPath);
-			if (sequenceManager != null && !sequenceManager.IsLocked && !sequenceManager.IsComplete)
-			{
-				string nextWord = sequenceManager.CurrentSequence.Count > sequenceManager.CurrentIndex
-					? sequenceManager.CurrentSequence[sequenceManager.CurrentIndex]
-					: string.Empty;
-				sequenceManager.OnVoiceUpdate(nextWord, _currentVoiceTier, delta);
-			}
 		}
 	}
 
@@ -943,6 +931,8 @@ public partial class PlayerController : CharacterBody3D
 	{
 		if (_cameraManager == null)
 			return;
+		if (_witnessBurstRemaining > 0f)
+			_witnessBurstRemaining -= delta;
 
 		Vector3 input = Vector3.Zero;
 
@@ -1017,7 +1007,10 @@ public partial class PlayerController : CharacterBody3D
 			_stationaryNearListenerTimer = 0f;
 		}
 
-		GlobalPosition += input * SpectatorMoveSpeed * (float)delta;
+		float spectatorSpeed = _witnessBurstRemaining > 0f
+			? SpectatorMoveSpeed * WitnessBurstSpeedMultiplier
+			: SpectatorMoveSpeed;
+		GlobalPosition += input * spectatorSpeed * (float)delta;
 		Velocity = Vector3.Zero;
 
 		if (!PauseMenu.IsOpen && Input.IsPhysicalKeyPressed(Key.J))
@@ -1065,6 +1058,13 @@ public partial class PlayerController : CharacterBody3D
 				Rpc(nameof(SyncRemoteState), GlobalPosition, Velocity, _visuals?.Rotation ?? Vector3.Zero, IsOnFloor());
 			}
 		}
+	}
+
+	public void ApplyWitnessBurst(float duration)
+	{
+		_witnessBurstRemaining = Mathf.Max(_witnessBurstRemaining, duration);
+		if (HUDManager.Instance != null && IsMultiplayerAuthority())
+			HUDManager.Instance.UpdatePlayerState("WITNESS BURST", Colors.Orange);
 	}
 
 	private void PlayDeathAnimation()
@@ -1142,4 +1142,3 @@ public partial class PlayerController : CharacterBody3D
 		timer.Start();
 	}
 }
-

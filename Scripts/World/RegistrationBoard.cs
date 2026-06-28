@@ -16,6 +16,7 @@ public partial class RegistrationBoard : Area3D
     public override void _Ready()
     {
         WordRegistry ??= WordRegistry.Instance;
+        EnsureRootInteractionShape();
         BodyEntered += OnBodyEntered;
         BodyExited += OnBodyExited;
 
@@ -138,6 +139,19 @@ public partial class RegistrationBoard : Area3D
         return long.TryParse(player.Name, out long peerId)
             ? peerId
             : player.GetMultiplayerAuthority();
+    }
+
+    private void EnsureRootInteractionShape()
+    {
+        if (GetNodeOrNull<CollisionShape3D>("CollisionShape3D") != null)
+            return;
+
+        var collisionShape = new CollisionShape3D
+        {
+            Name = "CollisionShape3D",
+            Shape = new SphereShape3D { Radius = DetectionRadius }
+        };
+        AddChild(collisionShape);
     }
 
     private PlayerController FindPlayerByPeerId(long peerId)

@@ -20,6 +20,11 @@ public partial class FloorNavigationBaker : Node3D
 
 	public override void _Ready()
 	{
+		CallDeferred(nameof(BakeNavigation));
+	}
+
+	private void BakeNavigation()
+	{
 		NavigationRegion3D region = GetNodeOrNull<NavigationRegion3D>("NavigationRegion3D");
 		if (region == null)
 		{

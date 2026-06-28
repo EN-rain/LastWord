@@ -12,6 +12,7 @@ public partial class MainMenu : CanvasLayer
 	[Export] public NodePath CodeInputPath;
 	[Export] public NodePath JoinByCodeBtnPath;
 	[Export] public NodePath SettingsBtnPath;
+	[Export] public NodePath CalibrateMicBtnPath;
 	[Export] public NodePath GDPRPanelPath;
 	[Export] public NodePath GDPRAcceptBtnPath;
 	[Export] public NodePath SettingsMenuPath;
@@ -30,6 +31,7 @@ public partial class MainMenu : CanvasLayer
 	private LineEdit _codeInput;
 	private Button   _joinByCodeBtn;
 	private Button   _settingsBtn;
+	private Button   _calibrateMicBtn;
 	private Control  _gdprPanel;
 	private Button   _gdprAcceptBtn;
 	private Control  _settingsMenu;
@@ -86,6 +88,7 @@ public partial class MainMenu : CanvasLayer
 		_codeInput       = GetNodeOrNull<LineEdit>(CodeInputPath);
 		_joinByCodeBtn   = GetNodeOrNull<Button>(JoinByCodeBtnPath);
 		_settingsBtn     = GetNodeOrNull<Button>(SettingsBtnPath);
+		_calibrateMicBtn = GetNodeOrNull<Button>(CalibrateMicBtnPath);
 		_gdprPanel       = GetNodeOrNull<Control>(GDPRPanelPath);
 		_gdprAcceptBtn   = GetNodeOrNull<Button>(GDPRAcceptBtnPath);
 		_settingsMenu    = GetNodeOrNull<Control>(SettingsMenuPath);
@@ -452,6 +455,22 @@ public partial class MainMenu : CanvasLayer
 			_settingsMenu.Visible = !_settingsMenu.Visible;
 			if (_settingsMenu.Visible && _settingsMenu is SettingsMenu menu)
 				menu.LoadSettings();
+		}
+		else
+		{
+			GD.PushError("MainMenu: SettingsMenu scene not found. Check SettingsMenuPath export.");
+			UpdateStatus(StatusSettingsSceneMissingText, ColorTextAccent);
+		}
+	}
+
+	private void OnCalibrateMicPressed()
+	{
+		if (_settingsMenu != null)
+		{
+			_settingsMenu.Visible = true;
+			_settingsMenu.MoveToFront();
+			if (_settingsMenu is SettingsMenu sm)
+				sm.OpenAudioCalibration();
 		}
 		else
 		{

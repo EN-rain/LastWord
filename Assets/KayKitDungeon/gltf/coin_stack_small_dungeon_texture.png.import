@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dmos4g20cdfsr"
-path="res://.godot/imported/coin_stack_small_dungeon_texture.png-64e65d2e0f687dbd9f63c8930c37a4d4.ctex"
+uid="uid://bmvw0aaxad5ry"
+path.s3tc="res://.godot/imported/coin_stack_small_dungeon_texture.png-64e65d2e0f687dbd9f63c8930c37a4d4.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/coin_stack_small_dungeon_texture.png"
-dest_files=["res://.godot/imported/coin_stack_small_dungeon_texture.png-64e65d2e0f687dbd9f63c8930c37a4d4.ctex"]
+dest_files=["res://.godot/imported/coin_stack_small_dungeon_texture.png-64e65d2e0f687dbd9f63c8930c37a4d4.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

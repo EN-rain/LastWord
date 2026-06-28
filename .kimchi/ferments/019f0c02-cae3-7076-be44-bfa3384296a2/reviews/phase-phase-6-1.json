@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "fermentId": "019f0c02-cae3-7076-be44-bfa3384296a2",
+  "phaseId": "phase-6",
+  "phaseName": "Documentation + validation",
+  "attempt": 1,
+  "timestamp": "2026-06-28T05:42:57.457Z",
+  "goal": "Produce ASCII map, manifest, patrol order, placeholder list, and validate the scene loads and plays.",
+  "summary": "Phase 6 completed: produced ASCII top-down map in Floor1_Layout.md, 20-room manifest with patrol waypoint order and placeholder inventory in Floor1_RoomManifest.md, and validated F1_Basement.tscn structural integrity plus a clean dotnet build.",
+  "stepSummaries": "  1. Write Assets/Floor1/Floor1_Layout.md with ASCII map and Assets/Floor1/Floor1_RoomManifest.md with room table. [verified]\n  2. List patrol waypoint order and CSGBox placeholders in Assets/Floor1/Floor1_RoomManifest.md or a new file. [verified]\n  3. Validate F1_Basement.tscn parses in Godot (godot --headless --import if available, otherwise bracket/resource checks). [verified]",
+  "diffAvailable": false,
+  "diffFilesChanged": "(git unavailable)",
+  "flags": [],
+  "derivedGrade": "A",
+  "reviewerRationale": "All gates pass; project checks validate.",
+  "gateVerdicts": [
+    {
+      "id": "F1",
+      "verdict": "pass",
+      "rationale": "All three steps had real verification: file existence, grep counts, structural Python checks, and dotnet build.",
+      "evidence": "Step 1: test -s OK; Step 2: grep count 34 ≥15; Step 3: STRUCTURAL_OK and build 0 errors."
+    },
+    {
+      "id": "F2",
+      "verdict": "pass",
+      "rationale": "Phase output delivers the documentation and validation goal.",
+      "evidence": "Floor1_Layout.md, Floor1_RoomManifest.md, and validated scene/build."
+    },
+    {
+      "id": "F3",
+      "verdict": "pass",
+      "rationale": "No deferred items; all documentation and validation done.",
+      "evidence": "n/a"
+    }
+  ],
+  "projectChecks": {
+    "discovered": false,
+    "anyFailed": false,
+    "commands": []
+  }
+}

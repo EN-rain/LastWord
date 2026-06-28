@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c4apdmonb70n4"
-path="res://.godot/imported/floor_tile_grate_dungeon_texture.png-fc0bf651a1ed1f31700a2e0b45b4e354.ctex"
+uid="uid://hnqdi1tt0bi4"
+path.s3tc="res://.godot/imported/floor_tile_grate_dungeon_texture.png-fc0bf651a1ed1f31700a2e0b45b4e354.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/floor_tile_grate_dungeon_texture.png"
-dest_files=["res://.godot/imported/floor_tile_grate_dungeon_texture.png-fc0bf651a1ed1f31700a2e0b45b4e354.ctex"]
+dest_files=["res://.godot/imported/floor_tile_grate_dungeon_texture.png-fc0bf651a1ed1f31700a2e0b45b4e354.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -24,9 +24,9 @@ using System;
 
 public static class MonologuePool
 {
-    public const int DramaticCount = 60;
-    public const int AbsurdistCount = 20;
-    public const int TotalCount = DramaticCount + AbsurdistCount;
+    public static int DramaticCount => Dramatic.Length;
+    public static int AbsurdistCount => Absurdist.Length;
+    public static int TotalCount => DramaticCount + AbsurdistCount;
 
     /// <summary>75% dramatic / 25% absurdist per GAME_DESIGN.md §7.3.</summary>
     public const float DramaticWeight = 0.75f;

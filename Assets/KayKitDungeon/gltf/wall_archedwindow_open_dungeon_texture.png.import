@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://raxclt4uw4j5"
-path="res://.godot/imported/wall_archedwindow_open_dungeon_texture.png-8c88cbdc399b85d9421ecab91edbd66a.ctex"
+uid="uid://biwwmep6amg22"
+path.s3tc="res://.godot/imported/wall_archedwindow_open_dungeon_texture.png-8c88cbdc399b85d9421ecab91edbd66a.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/wall_archedwindow_open_dungeon_texture.png"
-dest_files=["res://.godot/imported/wall_archedwindow_open_dungeon_texture.png-8c88cbdc399b85d9421ecab91edbd66a.ctex"]
+dest_files=["res://.godot/imported/wall_archedwindow_open_dungeon_texture.png-8c88cbdc399b85d9421ecab91edbd66a.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

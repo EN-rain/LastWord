@@ -148,10 +148,10 @@ namespace LastWord
             {
                 Stream = stream,
                 Bus = bus,
-                PitchScale = pitchScale,
-                GlobalPosition = position
+                PitchScale = pitchScale
             };
             parent.AddChild(player);
+            player.GlobalPosition = position;
             player.Play();
             player.Finished += () => player.QueueFree();
             return player;

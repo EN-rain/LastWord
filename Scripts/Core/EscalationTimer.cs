@@ -62,8 +62,16 @@ namespace LastWord.Core
 			if (!_finalCountdownFired && runElapsed >= _finalCountdownTime)
 			{
 				_finalCountdownFired = true;
-				GD.Print("EscalationTimer: 30-minute mark reached. The 3-minute final countdown begins.");
-				// TODO: Notify HUD to show a 3-minute countdown
+				float countdownDuration = _finalDeadlineTime - _finalCountdownTime;
+				GD.Print($"EscalationTimer: 30-minute mark reached. The {countdownDuration:F0}-second final countdown begins.");
+				GameManager.Instance.EmitSignal(GameManager.SignalName.FinalCountdownStarted, countdownDuration);
+			}
+
+			// Update final countdown HUD tick
+			if (_finalCountdownFired && !_finalDeadlineFired)
+			{
+				float remaining = _finalDeadlineTime - runElapsed;
+				GameManager.Instance.EmitSignal(GameManager.SignalName.FinalCountdownTick, Math.Max(0f, remaining));
 			}
 
 			// 33-minute Deadline (3 minutes after countdown)

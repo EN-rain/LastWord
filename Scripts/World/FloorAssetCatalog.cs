@@ -27,6 +27,13 @@ public static partial class FloorAssetCatalog
         { "table",           "res://Assets/KayKitDungeon/gltf/table_long.gltf.glb" },
         { "chair",           "res://Assets/KayKitDungeon/gltf/chair.gltf.glb" },
         { "bed_frame",       "res://Assets/KayKitDungeon/gltf/bed_frame.gltf.glb" },
+        { "furn_armchair",   "res://Assets/KayKitFurniture/glb/armchair.glb" },
+        { "furn_bed_double_A","res://Assets/KayKitFurniture/glb/bed_double_A.glb" },
+        { "furn_bed_single_A","res://Assets/KayKitFurniture/glb/bed_single_A.glb" },
+        { "furn_book_set",   "res://Assets/KayKitFurniture/glb/book_set.glb" },
+        { "furn_book_single","res://Assets/KayKitFurniture/glb/book_single.glb" },
+        { "furn_cabinet_medium","res://Assets/KayKitFurniture/glb/cabinet_medium.glb" },
+        { "furn_chair_A",    "res://Assets/KayKitFurniture/glb/chair_A.glb" },
     };
 
     public static PackedScene Get(string key)

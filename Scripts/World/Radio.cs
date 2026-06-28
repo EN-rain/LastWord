@@ -23,6 +23,7 @@ public partial class Radio : Node3D
 
     public override void _Ready()
     {
+        AddToGroup("RadioItem");
         _board = GetNodeOrNull<RegistrationBoard>(RegistrationBoardPath);
         _board ??= GetTree()?.GetFirstNodeInGroup("RegistrationBoard") as RegistrationBoard;
         _broadcast = GetNodeOrNull<RadioBroadcast>(RadioBroadcastPath);

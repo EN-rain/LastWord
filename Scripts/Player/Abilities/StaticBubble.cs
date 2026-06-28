@@ -122,6 +122,8 @@ public partial class StaticBubble : Node3D
 		_remaining -= (float)delta;
 		if (_remaining <= 0f)
 			Collapse();
+		else
+			UpdateVisibilityForLocalPlayer();
 	}
 
 	private void SetBubbleVisible(bool visible)
@@ -140,6 +142,35 @@ public partial class StaticBubble : Node3D
 	private void OnBodyExited(Node body)
 	{
 		// Optional per-body tracking if needed in future.
+	}
+
+	private void UpdateVisibilityForLocalPlayer()
+	{
+		if (_visual == null)
+			return;
+
+		Node3D localPlayer = FindLocalPlayer();
+		if (localPlayer == null)
+		{
+			_visual.Visible = IsDeployed;
+			return;
+		}
+
+		float range = ClapAbility.LightsOutActive ? VisibleRangePostLightsOut : VisibleRange;
+		_visual.Visible = IsDeployed && localPlayer.GlobalPosition.DistanceTo(GlobalPosition) <= range;
+	}
+
+	private Node3D FindLocalPlayer()
+	{
+		bool networked = Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer();
+		foreach (Node node in GetTree().GetNodesInGroup("Player"))
+		{
+			if (node is not Node3D player)
+				continue;
+			if (!networked || player.IsMultiplayerAuthority())
+				return player;
+		}
+		return null;
 	}
 
 	/// <summary>

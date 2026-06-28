@@ -31,6 +31,7 @@ public partial class ClapAbility : Node3D
 		{
 			_light.Visible = false;
 			_light.LightEnergy = 0f;
+			_light.OmniRange = SoundRadius;
 		}
 	}
 
@@ -97,15 +98,7 @@ public partial class ClapAbility : Node3D
 
 		Rpc(nameof(SyncClap), Cooldown);
 
-		if (VoiceManager.Instance != null)
-		{
-			VoiceManager.Instance.ReportNoiseEvent(
-				GlobalPosition,
-				0,
-				SoundKind.Special,
-				source: this,
-				isSpecialLongRange: false);
-		}
+		ReportClapNoise();
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
@@ -120,8 +113,26 @@ public partial class ClapAbility : Node3D
 		{
 			_light.Visible = true;
 			_light.LightEnergy = 1f;
+			_light.OmniRange = SoundRadius;
 		}
 
 		HUDManager.Instance?.UpdatePlayerState("Clap!", new Color(0.9f, 0.9f, 0.7f));
+	}
+
+	private void ReportClapNoise()
+	{
+		if (VoiceManager.Instance == null)
+			return;
+
+		float baseline = Mathf.Max(VoiceManager.Instance.BaselineAmplitude, 0.001f);
+		float syntheticAmplitude = baseline * Mathf.Max(SoundBaselinePercent, 0f);
+		int tier = syntheticAmplitude >= baseline ? 1 : 0;
+
+		VoiceManager.Instance.ReportNoiseEvent(
+			GlobalPosition,
+			tier,
+			SoundKind.Special,
+			source: this,
+			isSpecialLongRange: false);
 	}
 }

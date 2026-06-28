@@ -34,7 +34,7 @@ AchievementManager="*res://Scripts/Core/AchievementManager.cs"
 
 [dotnet]
 
-project/assembly_name="-LastWord"
+project/assembly_name="LastWord"
 
 [file_customization]
 
@@ -46,9 +46,13 @@ folder_colors={
 
 import/blender/enabled=false
 
+[gui]
+
+theme/custom="res://Assets/UI/LastWordTheme.tres"
+
 [network]
 
-scenes/main_game_scene="res://Scenes/GameScene.tscn"
+scenes/main_game_scene="res://Scenes/MainMenu.tscn"
 
 [physics]
 

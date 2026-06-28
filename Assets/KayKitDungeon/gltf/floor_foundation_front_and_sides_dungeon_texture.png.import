@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://iajtff7e5rdk"
-path="res://.godot/imported/floor_foundation_front_and_sides_dungeon_texture.png-7ef7793439ae979f231a5d8a0fcce092.ctex"
+uid="uid://d3pac3to17hx"
+path.s3tc="res://.godot/imported/floor_foundation_front_and_sides_dungeon_texture.png-7ef7793439ae979f231a5d8a0fcce092.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/floor_foundation_front_and_sides_dungeon_texture.png"
-dest_files=["res://.godot/imported/floor_foundation_front_and_sides_dungeon_texture.png-7ef7793439ae979f231a5d8a0fcce092.ctex"]
+dest_files=["res://.godot/imported/floor_foundation_front_and_sides_dungeon_texture.png-7ef7793439ae979f231a5d8a0fcce092.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

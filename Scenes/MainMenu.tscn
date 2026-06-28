@@ -1,9 +1,11 @@
-[gd_scene format=3 uid="uid://ci0rr0xu3dqpm"]
+[gd_scene load_steps=4 format=3 uid="uid://ci0rr0xu3dqpm"]
 
 [ext_resource type="Script" uid="uid://d3yimcwaseq4" path="res://Scripts/UI/MainMenu.cs" id="1_mainmenu"]
 [ext_resource type="PackedScene" uid="uid://b82ukaxaseq4a" path="res://Scenes/SettingsMenu.tscn" id="2_settings"]
+[ext_resource type="Theme" path="res://Assets/UI/LastWordTheme.tres" id="3_theme"]
 
 [node name="MainMenu" type="CanvasLayer" unique_id=382916097]
+theme = ExtResource("3_theme")
 script = ExtResource("1_mainmenu")
 PlayRandomBtnPath = NodePath("Root/VBoxContainer/BtnPlayRandom")
 CreateCustomBtnPath = NodePath("Root/VBoxContainer/BtnCreateCustom")
@@ -13,6 +15,7 @@ StatusLabelPath = NodePath("Root/StatusLabel")
 CodeInputPath = NodePath("Root/JoinCodePopup/PanelContainer/MarginContainer/VBox/CodeInput")
 JoinByCodeBtnPath = NodePath("Root/VBoxContainer/BtnJoinLobby")
 SettingsBtnPath = NodePath("Root/VBoxContainer/BtnSettings")
+CalibrateMicBtnPath = NodePath("Root/VBoxContainer/BtnCalibrateMic")
 GDPRPanelPath = NodePath("Root/GDPRPanel")
 GDPRAcceptBtnPath = NodePath("Root/GDPRPanel/VBox/BtnAccept")
 SettingsMenuPath = NodePath("SettingsMenu")
@@ -32,15 +35,28 @@ grow_horizontal = 2
 grow_vertical = 2
 metadata/_edit_use_anchors_ = true
 
+[node name="Background" type="ColorRect" parent="Root" unique_id=629861890]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.006, 0.009, 0.012, 1)
+
 [node name="Title" type="Label" parent="Root" unique_id=144821396]
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -543.0
-offset_bottom = 116.0
-grow_horizontal = 0
-theme_override_font_sizes/font_size = 44
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -271.5
+offset_top = 42.0
+offset_right = 271.5
+offset_bottom = 132.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.95, 0.68, 0.24, 1)
+theme_override_font_sizes/font_size = 64
 text = "LAST WORD"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -49,22 +65,23 @@ metadata/_edit_use_anchors_ = true
 [node name="VBoxContainer" type="VBoxContainer" parent="Root" unique_id=1895102246]
 layout_mode = 1
 anchors_preset = -1
-anchor_left = 0.045138888
-anchor_top = 0.47299382
-anchor_right = 0.045138888
-anchor_bottom = 0.52700615
-offset_top = -250.0
-offset_right = 320.0
-offset_bottom = 250.0
+anchor_left = 0.06
+anchor_top = 0.28
+anchor_right = 0.06
+anchor_bottom = 0.28
+offset_right = 390.0
+offset_bottom = 380.0
 grow_vertical = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 12
 metadata/_edit_use_anchors_ = true
 
 [node name="NameLabel2" type="Label" parent="Root/VBoxContainer" unique_id=1595706661]
 layout_mode = 2
-text = "Character Name:"
+theme_override_colors/font_color = Color(0.62, 0.86, 0.66, 1)
+text = "CHARACTER NAME"
 
 [node name="NameInput" type="LineEdit" parent="Root/VBoxContainer" unique_id=227579335]
+custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 placeholder_text = "Enter profile name..."
 
@@ -72,31 +89,31 @@ placeholder_text = "Enter profile name..."
 layout_mode = 2
 
 [node name="BtnPlayRandom" type="Button" parent="Root/VBoxContainer" unique_id=1258925898]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "PLAY RANDOM (MATCHMAKING)"
 alignment = 0
 
 [node name="BtnCreateCustom" type="Button" parent="Root/VBoxContainer" unique_id=819665258]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "CREATE CUSTOM ROOM"
 alignment = 0
 
 [node name="BtnJoinLobby" type="Button" parent="Root/VBoxContainer" unique_id=1550153089]
-custom_minimum_size = Vector2(0, 42)
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 text = "JOIN LOBBY BY CODE"
 alignment = 0
 
 [node name="BtnSettings" type="Button" parent="Root/VBoxContainer" unique_id=294257878]
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 text = "AUDIO & MIC SETTINGS"
 alignment = 0
 
 [node name="BtnQuit" type="Button" parent="Root/VBoxContainer" unique_id=1460972695]
-custom_minimum_size = Vector2(0, 40)
+custom_minimum_size = Vector2(0, 46)
 layout_mode = 2
 text = "QUIT"
 alignment = 0
@@ -111,6 +128,7 @@ offset_top = -60.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "READY"
+theme_override_colors/font_color = Color(0.62, 0.86, 0.66, 1)
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -122,7 +140,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.95)
+color = Color(0.006, 0.009, 0.012, 0.94)
 
 [node name="VBox" type="VBoxContainer" parent="Root/GDPRPanel" unique_id=386030095]
 layout_mode = 1
@@ -131,22 +149,25 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -250.0
-offset_top = -150.0
-offset_right = 250.0
-offset_bottom = 150.0
+offset_left = -300.0
+offset_top = -190.0
+offset_right = 300.0
+offset_bottom = 190.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 18
 
 [node name="Title" type="Label" parent="Root/GDPRPanel/VBox" unique_id=1258880975]
 layout_mode = 2
 text = "PRIVACY & AUDIO NOTICE"
+theme_override_colors/font_color = Color(0.95, 0.68, 0.24, 1)
+theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 
 [node name="Text" type="Label" parent="Root/GDPRPanel/VBox" unique_id=314301036]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.88, 0.84, 1)
 text = "EARLY ACCESS NOTICE: Voice recording is not active in this version. This notice describes a planned post-launch feature. Your acknowledgement is recorded for when the feature activates.
 
 This game requires a working microphone. Your voice audio is processed locally to detect amplitude (volume) and drive core gameplay mechanics. No voice data is transmitted externally or saved to disk.
@@ -155,7 +176,7 @@ By continuing, you consent to local microphone processing."
 autowrap_mode = 2
 
 [node name="BtnAccept" type="Button" parent="Root/GDPRPanel/VBox" unique_id=2003998625]
-custom_minimum_size = Vector2(0, 48)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 text = "I AGREE"
 
@@ -167,7 +188,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.85)
+color = Color(0.006, 0.009, 0.012, 0.86)
 
 [node name="PanelContainer" type="PanelContainer" parent="Root/JoinCodePopup" unique_id=1152505938]
 layout_mode = 1
@@ -228,5 +249,6 @@ visible = false
 [connection signal="pressed" from="Root/VBoxContainer/BtnCreateCustom" to="." method="OnCustomRoomPressed"]
 [connection signal="pressed" from="Root/VBoxContainer/BtnJoinLobby" to="." method="OnJoinByCodePressed"]
 [connection signal="pressed" from="Root/VBoxContainer/BtnSettings" to="." method="OnSettingsPressed"]
+[connection signal="pressed" from="Root/VBoxContainer/BtnCalibrateMic" to="." method="OnCalibrateMicPressed"]
 [connection signal="pressed" from="Root/VBoxContainer/BtnQuit" to="." method="OnQuitPressed"]
 [connection signal="pressed" from="Root/GDPRPanel/VBox/BtnAccept" to="." method="OnGDPRAccepted"]

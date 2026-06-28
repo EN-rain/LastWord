@@ -1,175 +1,138 @@
 # Floor 1 — The Basement Layout
 
-**Grid scale:** each cell = 2 metres.  
-**Total footprint:** ~52 m × 40 m.  
-**Shape:** fractured Y / amoeba sprawl.  
+**Grid scale:** each ASCII cell = 2 metres.  
+**Total footprint:** approximately 56 m (W-E) × 60 m (N-S).  
+**Shape:** fractured, asymmetric service-basement sprawl with a flooded southern wing and a secret western niche.  
 **Fixed anchors:**
-- `P` Player Spawn / Entrance — NW edge
-- `F` Furnace Room — SW corner
-- `S` Staircase Hub (only upward exit) — NE corner
+- `P` Player Spawn — inside Room 03 CoalBin (NW cluster)
+- `F` Furnace Room — Room 01 Furnace (SW of north row)
+- `^` Staircase Hub / win zone — Room 20 StaircaseHub (NE)
+- `R` RegistrationBoard — inside Room 10 CentralHall
+- `f` / `u` Flooded wing — Room 18 FloodedTunnel + Room 19 SumpPit
+- `s` Secret wing — Room 17 SecretNiche
 
 ---
 
 ## ASCII Top-Down Map
 
 ```text
-     1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2
-     1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-  1  # # # # # # # # # # # # # # # # # # # # # # # # # # #
-  2  # P P . # . . . . . . . . . . # . . . . . . . . S S #
-  3  # P P . # . . . . . . . . . . # . . . . . . . . S S #
-  4  # . . . # . . . . . . . . . . # . . . . . . . . . . #
-  5  # # . # # # # # # . # # # # # # # # # # . # # # # # #
-  6  # . . . T T . . . . . . . . . . . . . . . . . . . . #
-  7  # . . . T T . . . . . . . . . . . . . . . . . G G . #
-  8  # # . # # # # # # # # # . # # # # # . # # # . G G . #
-  9  # . . . . . . . . . . . . . . . . . . . . . . . . . #
- 10  # . V V V . . . . . . . . . . . . . . . . . . . . . #
- 11  # . V V V . . C C C C C C C C . . . . . . . . . . . #
- 12  # . . . . . . C C C C C C C C . . . . . . . . . . . #
- 13  # # . # # # # # # # . # # # # # # # . # # # # # # # #
- 14  # . . . . . . . . . . . . . . . . . . . . . . . . . #
- 15  # . X X X . . B B . . . . . . . . . . . . V V . . . #
- 16  # . X X X . . B B . . W W W W . . . . . . V V . . . #
- 17  # . X X X . . . . . . W W W W . . . . . . V V . . . #
- 18  # # . # # # # # # # # # # # # # . # # # . # # . # # #
- 19  # . . . . . . . . . . . . . . . . . . . . . . . L L #
- 20  # . F F F . . . . . . . . . . . . . . . . . . . L L #
- 21  # . F F F . . . . . . . . . . . . . . . . . . . . . #
- 22  # # # # # # # # # # # # # # # # # # # # # # # # # # #
+      2 2 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 1 1 1 1 2 2 2 3
+x:   -2 -2 -1 -1 -1 -0 -0 -0  0  0  0  0  0  0  0  0  0  0  1  1  1  1  1  1  1  1  1  1
+      2 0 8 6 4 2  0  8  6  4  2  0  2  4  6  8  0  2  4  6  8  0  2  4  6  8  0  2  4
+z:46 #############################
+  44 #FFFFFBBBBB.WWWWW############
+  42 #FFFFFBBBBB.WWWWW##ppp#######
+  40 #FFFFFBBBBB.WWWWW##ppp#######
+  38 #FFFFFBBBBB.WWWWW##ppp#######
+  36 #FFFFFBBBBB.WWWWW############
+  34 #................############
+  32 #CCCCCDDDDD.LLLLL.KKKKK######
+  30 #CCCCCDDDDD.LLLLL.KKKKK######
+  28 #CCPCCDDDDD.LLLLL.KKKKK######
+  26 #CCCCCDDDDD.LLLLL.KKKKK######
+  24 #CCCCCDDDDD.LLLLL.KKKKK######
+  22 ######.................######
+  20 ######HHHHH.RRRRR.EEEEE.YYYYY
+  18 ######HHHHH.RRRRR.EEEEE.YYYYY
+  16 ######HHHHH.RRRRR.EEEEE.YYYYY
+  14 ######HHHHH.RRRRR.EEEEE.YYYYY
+  12 ######HHHHH.RRRRR.EEEEE.YYYYY
+  10 ######.......................
+   8 ######VVVVV.NNNNN.TTTTT.^^^^^
+   6 #SSS##VVVVV.NNNNN.TTTTT.^^^^^
+   4 #SSS##VVVVV.NNNNN.TTTTT.^^^^^
+   2 #SSS##VVVVV.NNNNN.TTTTT.^^^^^
+   0 ######VVVVV.NNNNN.TTTTT.^^^^^
+  -2 ############.....############
+  -4 ############fffff############
+  -6 #sss########fffff##uuu#######
+  -8 #sss########fffff##uuu#######
+ -10 #sss########fffff##uuu#######
+ -12 ############fffff############
+ -14 #############################
 ```
 
-### Room / Zone Legend
+### Map Legend
 
 | Symbol | Room / Zone |
 |---|---|
-| `P` | Player Spawn / Entrance |
-| `F` | Furnace Room |
-| `S` | Staircase Hub |
-| `C` | Creak Corridor (central, unavoidable main path) |
-| `A` | Alternate Route (silent bypass) — see detailed map below |
-| `L` | Lockbox Room |
-| `R` | Registration Board Alcove |
-| `B` | Boiler / Utility Room |
-| `W` | Flooded Section |
-| `V` | Wide Patrol Chamber |
-| `M` | Ambush Corridor |
-| `D` | Dead-End Reward Room |
-| `J` | Split-Path Junction |
-| `X` | Collapsed Room |
-| `H` | Hidden Alcove |
-| `T` | Storage Room |
-| `G` | Guard Room / Antechamber |
-| `.` | Generic hallway / traversable floor |
-| `#` | Wall / rock / blocked space |
-| `~` | Shallow water / puddle |
+| `F` | Room 01 Furnace |
+| `B` | Room 02 Boiler Antechamber |
+| `C` | Room 03 Coal Bin |
+| `D` | Room 04 Cold Storage |
+| `W` | Room 05 Wine Cellar |
+| `L` | Room 06 Laundry |
+| `H` | Room 07 Servant Hall (CreakZone) |
+| `p` | Room 08 Pantry |
+| `K` | Room 09 Kitchen Prep |
+| `R` | Room 10 Central Hall (RegistrationBoard) |
+| `E` | Room 11 East Corridor |
+| `Y` | Room 12 Crypt |
+| `T` | Room 13 Ritual Chamber |
+| `N` | Room 14 North Store |
+| `V` | Room 15 West Corridor |
+| `S` | Room 16 Storage Niche |
+| `s` | Room 17 Secret Niche |
+| `f` | Room 18 Flooded Tunnel |
+| `u` | Room 19 Sump Pit |
+| `^` | Room 20 Staircase Hub |
+| `P` | Player spawn point (inside Coal Bin) |
+| `.` | Traversable hallway / corridor |
+| `#` | Wall / void / blocked space |
 
 ---
 
-## Detailed Alternate Route & Hidden Paths
+## Patrol Waypoint Order
 
-The ASCII map above is simplified. The alternate route is a longer eastern loop that
-bypasses the Creak Corridor. It re-enters the main floor south of the flooded section.
+The Listener patrols the 16 `Marker3D` nodes under `World/Navigation/PatrolWaypoints`.  
+The intended loop starts at the furnace, sweeps west and south, crosses the flooded wing, loops back through the east and north, and returns to the furnace.
 
-```text
-  Alternate Route (eastern loop, silent):
+1. **WP01_Furnace** — Room 01 Furnace centre (`-16, 0.1, 40`)
+2. **WP02_Boiler** — Room 02 BoilerAnte centre (`-6, 0.1, 40`)
+3. **WP03_ColdStorage** — Room 04 ColdStorage centre (`-6, 0.1, 28`)
+4. **WP04_ServantHall** — Room 07 ServantHall centre (`-6, 0.1, 16`)
+5. **WP05_WestCorridor** — Room 15 WestCorridor centre (`-6, 0.1, 4`)
+6. **WP06_StorageNiche** — Room 16 StorageNiche centre (`-18, 0.1, 4`)
+7. **WP07_SecretNiche** — Room 17 SecretNiche centre (`-18, 0.1, -8`)
+8. **WP08_FloodedTunnel** — Room 18 FloodedTunnel centre (`6, 0.1, -8`)
+9. **WP09_SumpPit** — Room 19 SumpPit centre (`18, 0.1, -8`)
+10. **WP10_RitualChamber** — Room 13 RitualChamber centre (`18, 0.1, 4`)
+11. **WP11_EastCorridor** — Room 11 EastCorridor centre (`18, 0.1, 16`)
+12. **WP12_Crypt** — Room 12 Crypt centre (`30, 0.1, 16`)
+13. **WP13_StaircaseHub** — Room 20 StaircaseHub centre (`30, 0.1, 4`)
+14. **WP14_Laundry** — Room 06 Laundry centre (`6, 0.1, 28`)
+15. **WP15_WineCellar** — Room 05 WineCellar centre (`6, 0.1, 40`)
+16. **WP16_Pantry** — Room 08 Pantry centre (`18, 0.1, 40`)
 
-       ┌─ Guard Room (G) ─┐
-       │                  │
-  Creak Corridor (C)     Alternate hallway
-       │                  │
-       └─ Split J2 ───────┘
-                            │
-                       Flooded Section (W)
-                            │
-                       Hidden Alcove (H)
-                            │
-                       Lockbox Room (L)
-                            │
-                       Staircase Hub (S)  ← rejoin
-```
-
----
-
-## Connectivity Graph
-
-```
-Entrance (P)
-  │
-  ├─ Storage Room (T)
-  │
-  ├─ Wide Patrol Chamber A (V1) ─ Dead-End Reward A (D1)
-  │
-  ├─ Creak Corridor (C) ─────────────┬── Split-Path Junction A (J1)
-  │                                  │
-  │                                  ├── Ambush Corridor A (M1)
-  │                                  │
-  │                                  └── Split-Path Junction B (J2) ─ Guard Room (G)
-  │
-  └─ Alternate Route (A) ────────────┬── Registration Board Alcove (R)
-                                     │
-                                     ├── Flooded Section (W) ─ Hidden Alcove (H)
-                                     │
-                                     ├── Wide Patrol Chamber B (V2)
-                                     │
-                                     └── Lockbox Room (L)
-
-South spine:
-Split-Path Junction A (J1)
-  │
-  ├─ Collapsed Room (X)
-  │
-  ├─ Boiler / Utility Room (B)
-  │
-  ├─ Split-Path Junction C (J3)
-  │
-  └─ Furnace Room (F)
-
-East spine:
-Guard Room (G)
-  │
-  ├─ Staircase Hub (S)
-  │
-  └─ Alternate Route (A) ─ Lockbox Room (L)
-```
+*Cycle:* WP16 → WP01 to close the loop.
 
 ---
 
-## Patrol Waypoint Path
+## PLACEHOLDER CSGBox3D List
 
-Perimeter patrol for The Listener. Waypoints are placed at room centres / choke points
-and connected in a clockwise loop around the floor.
+These `CSGBox3D` nodes are under `World/Props` and are tagged with `metadata/missing_asset = true`.  
+They stand in for final art assets.
 
-1. WP01 — Player Spawn landing
-2. WP02 — Storage Room entrance
-3. WP03 — Wide Patrol Chamber A centre
-4. WP04 — Creak Corridor midpoint
-5. WP05 — Guard Room / Antechamber
-6. WP06 — Staircase Hub
-7. WP07 — Wide Patrol Chamber B
-8. WP08 — Flooded Section east edge
-9. WP09 — Lockbox Room entrance
-10. WP10 — Collapsed Room north edge
-11. WP11 — Boiler / Utility Room
-12. WP12 — Furnace Room east side
-13. WP13 — Furnace Room north side  → back to WP03
-
-(The Listener uses `NavigationRegion3D` and these `Marker3D` waypoints to cycle.)
+| Node | Purpose | World Position | Size (m) |
+|---|---|---|---|
+| `PLACEHOLDER_Furnace` | Main furnace body | `-16, 1.5, 40` | `3 × 3 × 2` |
+| `PLACEHOLDER_Intercom` | Wall intercom / objective trigger | `-6, 1.5, 28` | `0.4 × 0.6 × 0.2` |
+| `PLACEHOLDER_Chains` | Hanging chains / ambience prop | `-6, 2, 26` | `0.2 × 4 × 0.2` |
+| `PLACEHOLDER_Puddle` | Shallow water surface in flooded wing | `18, 0.05, -8` | `4 × 0.1 × 4` |
+| `PLACEHOLDER_Shelves` | Storage shelving (CoalBin area) | `-14, 1.5, 30` | `4 × 2.5 × 1` |
+| `PLACEHOLDER_Workbench` | Workbench / utility table | `-18, 1, 22` | `3 × 1.5 × 1.5` |
+| `PLACEHOLDER_Pipes` | Vertical pipe cluster | `8, 1.5, 16` | `0.5 × 3 × 0.5` |
 
 ---
 
-## Acoustic Tags
+## Key Zone Markers
 
-| Room | Acoustic Tag | Reason |
-|---|---|---|
-| Furnace Room | MUFFLED | Heavy machinery, enclosed |
-| Creak Corridor | CREAK_ZONE | Central creak tiles — Tier 0, 15% chance, 4m radius |
-| Alternate Route | NEUTRAL | Silent bypass |
-| Flooded Section | ECHO | Water surface, large open area |
-| Wide Patrol Chambers | ECHO | Tall ceilings, stone walls |
-| Storage Room | MUFFLED | Crates absorb sound |
-| Guard Room | ECHO | Wide dramatic chamber |
-| Boiler / Utility | MUFFLED | Machinery, small |
-| Collapsed Room | ECHO | Open ceiling, rubble |
-| Staircase Hub | NEUTRAL | Transition space |
-| All halls | NEUTRAL | Standard traversal |
+| Marker | Node Path | World Position | Purpose |
+|---|---|---|---|
+| Player spawn | `World/Zones/SpawnZone_Players` | `-16, 0.1, 28` | Player start (inside Coal Bin) |
+| Listener spawn | `World/Zones/SpawnZone_Listener` | `30, 0.1, 16` | Listener start (inside Crypt) |
+| Registration board | `World/Props/RegistrationBoard` | `6, 1, 16` | Central objective board (inside Central Hall) |
+| Creak zone | `World/Zones/CreakZone` | `-6, 0, 16` | `6 × 4 × 22` hazard area centred on Servant Hall |
+| Wet zone | `World/Zones/WetZone` | `12, 0, -8` | `10 × 4 × 10` water hazard centred on Flooded Tunnel |
+| Staircase win zone | `World/Zones/Staircase_WinZone` | `34, 0.5, 16` | Triggers end-of-floor sequence after objective complete |
+| Note spawns | `World/Zones/NoteSpawn_01..04` | `-16,0.1,40` / `6,0.1,28` / `18,0.1,4` / `30,0.1,-8` | Collectible lore-note spawn points |

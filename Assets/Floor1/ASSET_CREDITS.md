@@ -1,69 +1,52 @@
 # Floor 1 — Asset Credits
 
-All assets listed below are free for commercial use (CC0 / CC-BY / MIT / Apache).
-No CC-BY-NC or restricted-license assets are included.
+All assets listed below are free for commercial game use under CC0, MIT, Apache, or public-domain terms, or are internal CSGBox3D placeholders. CC-BY-NC, paid-only, and no-game-use assets are excluded from this project.
 
-Assets marked **PLACEHOLDER / NOT DOWNLOADED** are approved sources but were
-not fetched automatically due to login-gated downloads or repository size.
-They should be downloaded manually and placed in the subfolder shown.
+## Asset Credits
 
----
+| Asset Name | Category | Source / Author | License | URL / Notes |
+|---|---|---|---|---|
+| Banner | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Barrel | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Character Human | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Character Orc | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Chest | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Coin | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Column | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Dirt | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Door | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Floor Detail | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Floor | structural | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Rocks | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Stairs | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Stones | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Trap | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Wall Half | structural | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Wall Narrow | structural | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Wall Opening | structural | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Wall | structural | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Wood Structure | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Wood Support | prop | gheja / Kenney mini-dungeon (shifty-dungeon) | CC0 | https://github.com/gheja/shifty-dungeon |
+| Basement Drone | ambience | TizWildin-Obsidian (GareBear99) | CC0 | https://github.com/GareBear99/TizWildin-Obsidian |
+| Cathedral Fog | ambience | TizWildin-Obsidian (GareBear99) | CC0 | https://github.com/GareBear99/TizWildin-Obsidian |
+| Furnace Machine | ambience | TizWildin-Obsidian (GareBear99) | CC0 | https://github.com/GareBear99/TizWildin-Obsidian |
+| Stone Bell | SFX | TizWildin-Obsidian (GareBear99) | CC0 | https://github.com/GareBear99/TizWildin-Obsidian |
+| Bone Hall Texture | SFX | TizWildin-Obsidian (GareBear99) | CC0 | https://github.com/GareBear99/TizWildin-Obsidian |
+| Fog Corridor Piano | music | Free-Dark-Piano-Sound-Kit (GareBear99) | CC0 | https://github.com/GareBear99/Free-Dark-Piano-Sound-Kit |
+| Hollow Staircase | music | Free-Dark-Piano-Sound-Kit (GareBear99) | CC0 | https://github.com/GareBear99/Free-Dark-Piano-Sound-Kit |
+| KayKit Dungeon Remastered | asset pack | KayKit | CC0 | https://kaylousberg.itch.io/kaykit-dungeon-remastered |
+| KayKit Furniture Pack | asset pack | KayKit | CC0 | https://kaylousberg.itch.io/kaykit-furniture-pack |
+| PLACEHOLDER_IndustrialFurnace_Body | placeholder | PLACEHOLDER | n/a | internal placeholder; Furnace Room industrial furnace / boiler |
+| PLACEHOLDER_IntercomSpeakerBox | placeholder | PLACEHOLDER | n/a | internal placeholder; Furnace Room wall-mounted intercom / radio broadcast unit |
+| PLACEHOLDER_BrokenPipe_A | placeholder | PLACEHOLDER | n/a | internal placeholder; Broken pipes / leak emitter near furnace |
+| PLACEHOLDER_HangingChains | placeholder | PLACEHOLDER | n/a | internal placeholder; Guard Room ceiling hanging chains |
+| PLACEHOLDER_WaterPuddleFloodedSection | placeholder | PLACEHOLDER | n/a | internal placeholder; Flooded Section water puddle / flooded-section decal |
+| PLACEHOLDER_MetalShelvesStorageRack | placeholder | PLACEHOLDER | n/a | internal placeholder; Storage Room metal shelves / storage rack |
+| PLACEHOLDER_FurnaceDetail | placeholder | PLACEHOLDER | n/a | internal placeholder; Furnace coal bed / stoker door detail |
+| PLACEHOLDER_RegistrationBoard | placeholder | PLACEHOLDER | n/a | internal placeholder; Staircase Hub registration board prop |
+| PLACEHOLDER_WallTorch | placeholder | PLACEHOLDER | n/a | internal placeholder; Furnace Room wall torch |
+| PLACEHOLDER_IronBars | placeholder | PLACEHOLDER | n/a | internal placeholder; Guard Room iron bars |
 
-## Structural — Modular Stone / Dungeon Pieces
+## Placeholder Policy
 
-| Asset Name | Source | License | Local Path | URL | Status |
-|---|---|---|---|---|---|
-| Modular Dungeon Kit 2.0 | Kenney.nl | CC0 | `Assets/Floor1/Meshes/kenney_modular-dungeon-kit/` | https://kenney.nl/assets/modular-dungeon-kit | NOT DOWNLOADED — direct zip behind donation page |
-| Kenney Dungeon Pack 2.3 | Kenney.nl (mirrored on GitHub) | CC0 | `Assets/Floor1/Meshes/kenneyDungeonPack_2.3/` | https://github.com/ETdoFresh/kenney.nl/tree/master/kenneyDungeonPack_2.3 | NOT DOWNLOADED — full repo clone timed out; sparse checkout possible |
-| Roguelike Indoor Kit Updated | Kenney.nl | CC0 | `Assets/Floor1/Meshes/roguelikeindoor_updated/` | https://github.com/ETdoFresh/kenney.nl/tree/master/roguelikeindoor_updated | NOT DOWNLOADED — same mirror repo |
-| Castle Kit 1.0 | Kenney.nl | CC0 | `Assets/Floor1/Meshes/castle-kit-1.0/` | https://github.com/ETdoFresh/kenney.nl/tree/master/castle-kit-1.0 | NOT DOWNLOADED — same mirror repo |
-| Modular Dungeon — 3D Models | OpenGameArt (Keith at Fertile Soil) | CC0 | `Assets/Floor1/Meshes/fertile-soil-dungeon/` | https://opengameart.org/content/modular-dungeon-3d-models | NOT DOWNLOADED — login required |
-| 3D Castle / Dungeon Tileset Extended | OpenGameArt (rubberduck) | CC0 | `Assets/Floor1/Meshes/dungeon-tileset-extended/` | https://opengameart.org/content/3d-castle-dungeon-tileset-extended | NOT DOWNLOADED — login required |
-| Dungeon Interior Kit | OpenGameArt | CC0 | `Assets/Floor1/Meshes/dungeon_interior_kit/` | https://opengameart.org/content/dungeon-interior-kit | NOT DOWNLOADED — login required |
-
-## Props / Furniture
-
-| Asset Name | Source | License | Local Path | URL | Status |
-|---|---|---|---|---|---|
-| Cast Iron Stove | OpenGameArt (Firefly in the Dusk) | CC0 | `Assets/Floor1/Meshes/cast_iron_stove/` | https://opengameart.org/content/cast-iron-stove | NOT DOWNLOADED — login required |
-| Fieldstone Fireplace | OpenGameArt (Ulf) | CC-BY 3.0 | `Assets/Floor1/Meshes/fieldstone_fireplace/` | https://opengameart.org/content/fieldstone-fireplace | NOT DOWNLOADED — login required |
-| Old Industrial Boiler | Sketchfab (CatgirlNotLive) | CC-BY 4.0 | `Assets/Floor1/Meshes/old_industrial_boiler/` | https://sketchfab.com/3d-models/old-industrial-boiler-82d77b2f4fe346f3b662929d763f1cdc | NOT DOWNLOADED — login required |
-| Industrial Furnace Station | GetGLB (chenchanchong) | CC-BY | `Assets/Floor1/Meshes/industrial_furnace_station/` | https://www.getglb.com/uncategorized/industrial-furnace-station/ | NOT DOWNLOADED — page download |
-
-## Textures — PBR Stone / Metal / Wood
-
-| Asset Name | Source | License | Local Path | URL | Status |
-|---|---|---|---|---|---|
-| Stone Wall 04 | Poly Haven | CC0 | `Assets/Floor1/Textures/stone_wall_04/` | https://polyhaven.com/a/stone_wall_04 | NOT DOWNLOADED — API available |
-| Stone Floor | Poly Haven | CC0 | `Assets/Floor1/Textures/stone_floor/` | https://polyhaven.com/a/stone_floor | NOT DOWNLOADED — API available |
-| Rustic Stone Wall | Poly Haven | CC0 | `Assets/Floor1/Textures/rustic_stone_wall/` | https://polyhaven.com/a/rustic_stone_wall | NOT DOWNLOADED — API available |
-| Monastery Stone Floor | Poly Haven | CC0 | `Assets/Floor1/Textures/monastery_stone_floor/` | https://polyhaven.com/a/monastery_stone_floor | NOT DOWNLOADED — API available |
-| Cobblestone Floor 07 | Poly Haven | CC0 | `Assets/Floor1/Textures/cobblestone_floor_07/` | https://polyhaven.com/a/cobblestone_floor_07 | NOT DOWNLOADED — API available |
-| Kenney Retro Textures Fantasy | Kenney.nl | CC0 | `Assets/Floor1/Textures/retro-textures-fantasy/` | https://kenney.nl/assets/retro-textures-fantasy | NOT DOWNLOADED — donation page |
-
-## Audio — Ambience / SFX
-
-| Asset Name | Source | License | Local Path | URL | Status |
-|---|---|---|---|---|---|
-| FreeSound basement ambience search | Freesound.org | CC0 / CC-BY | `Assets/Floor1/Audio/` | https://freesound.org/search/?q=basement+ambience | NOT DOWNLOADED — per-file login |
-| FreeSound water drip search | Freesound.org | CC0 / CC-BY | `Assets/Floor1/Audio/` | https://freesound.org/search/?q=water+drip | NOT DOWNLOADED — per-file login |
-| FreeSound wood creak search | Freesound.org | CC0 / CC-BY | `Assets/Floor1/Audio/` | https://freesound.org/search/?q=wood+creak | NOT DOWNLOADED — per-file login |
-
----
-
-## Recommended Download Order
-
-1. **Kenney Modular Dungeon Kit** (`kenney.nl/assets/modular-dungeon-kit`) — structural walls, floors, arches, doors.
-2. **Kenney Dungeon Pack 2.3** from GitHub mirror (`ETdoFresh/kenney.nl`) — fallback / additional modular pieces.
-3. **Poly Haven Stone Wall 04 + Stone Floor** — main PBR textures.
-4. **OpenGameArt Cast Iron Stove / Fieldstone Fireplace** — furnace room centerpiece.
-5. **Sketchfab Old Industrial Boiler** — alternative furnace prop.
-6. **Freesound** — ambient basement drone, drips, creaks.
-
----
-
-## License Notes
-
-- **CC0**: Public domain — no attribution required.
-- **CC-BY**: Attribution required — add credit line above when used.
-- All assets above were verified as free for commercial game use at the time of cataloging.
+CSGBox3D nodes named `PLACEHOLDER_*` with `metadata/missing_asset = true` are used when no free replacement asset exists. These boxes mark the intended location, size, and collision boundary of the final prop and must be swapped for real meshes during the art pass.

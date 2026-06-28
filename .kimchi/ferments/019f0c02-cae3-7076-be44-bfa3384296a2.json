@@ -1,0 +1,595 @@
+{
+  "id": "019f0c02-cae3-7076-be44-bfa3384296a2",
+  "name": "Build F1 Basement Floor",
+  "description": "You are a Godot 4.x C# developer building a horror \nsurvival game called Last Word. Build now, don't plan.\n\n══════════════════════════════\nTHE GAME (context)\n══════════════════════════════\n- Multiplayer co-op horror, 1-4 players\n- Setting: Ashford Estate, dark gothic manor\n- Enemy: The Listener — hunts whoever spoke last\n  in voice chat, tracks sound not sight\n- Art style: low poly, dark gothic palette\n- Players must stay SILENT to survive but SPEAK\n  to complete objectives\n\n══════════════════════════════\nYOUR TASK RIGHT NOW\n══════════════════════════════\nBuild Floor 1 — \"The Basement\" of Ashford Estate.\n\nPath: C:/Users/LENOVO/Documents/Last-word-godot/Scenes/Floors/\n\nDO THIS IN ORDER. DO NOT STOP BETWEEN STEPS.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSTEP 1 — DOWNLOAD FREE ASSETS\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSearch the entire internet for the best free and\nopen-source assets. You are NOT limited to any list.\nFind the highest quality free assets available anywhere.\n\nLICENSE FILTER — only download:\n  ✅ CC0           — no credit needed\n  ✅ CC-BY         — log credit in ASSET_CREDITS.md\n  ✅ MIT / Apache  — OK\n  ✅ Royalty-free commercial use — OK\n  ✅ Public domain — OK\n  ❌ CC-BY-NC      — SKIP (this is a commercial game)\n  ❌ Requires paid license — SKIP, use CSGBox instead\n  ❌ No-game-use clause — SKIP\n\nASSET HUNTING STRATEGY:\n  Search Google, GitHub, itch.io, asset stores,\n  forums, Discord drops, creator bundles — anywhere.\n  Prioritize quality over source. Examples of places\n  to search (not a limit — go beyond these):\n\n  MESHES & MODELS:\n  - polyhaven.com, kenney.nl, opengameart.org\n  - sketchfab.com/features/free-3d-models\n  - fab.com, itch.io/game-assets/free\n  - turbosquid.com (free filter)\n  - cgtrader.com (free filter)\n  - free3d.com, thangs.com, printables.com\n  - github search: \"free gothic 3d assets\"\n  - github.com/devanshutak25/3d-resources\n  - github.com/teamgravitydev/gamedev-free-resources\n\n  TEXTURES & MATERIALS:\n  - ambientcg.com (best CC0 PBR)\n  - polyhaven.com, 3dtextures.me\n  - freepbr.com, sharetextures.com\n  - textures.com (free allowance)\n  - cc0textures.com\n\n  AUDIO — SFX & AMBIENCE:\n  - sonniss.com/gameaudiogdc (pro CC0 GDC bundles)\n  - freesound.org (CC0 filter)\n  - mixkit.co, zapsplat.com\n  - soundsnap.com, soundbible.com\n  - opengameart.org/content/music\n  - github search: \"free horror sound effects\"\n\n  MUSIC & LOOPS:\n  - incompetech.com (Kevin MacLeod, CC-BY)\n  - freemusicarchive.org (CC0 filter)\n  - pixabay.com/music\n  - opengameart.org\n  - musopen.org (public domain)\n  - bandcamp free downloads (if CC licensed)\n\n  ANIMATIONS:\n  - mixamo.com (free, Adobe account)\n  - opengameart.org\n  - kenney.nl character packs\n  - sketchfab animated free models\n  - github search: \"free humanoid animations glb\"\n\n  SHADERS & VFX:\n  - godotshaders.com (Godot-native, all free)\n  - github search: \"godot 4 horror shader\"\n  - github search: \"godot fog shader\"\n  - itch.io/game-assets/free (VFX tag)\n  - shadertoy.com (port to Godot if needed)\n\n  FONTS:\n  - fontsquirrel.com, google.com/fonts\n  - dafont.com (free commercial filter)\n\nASSETS NEEDED FOR THIS FLOOR:\n  Structural:\n  - Stone brick wall tiles / modular segments\n  - Cracked stone floor tiles\n  - Low poly arched doorways / door frames\n  - Stone ceiling or vault segments\n  - Wooden support beams (old, rotten)\n  - Iron bars / dungeon grating\n  - Modular corridor pieces\n\n  Props:\n  - Industrial furnace or boiler\n  - Wooden crates and barrels\n  - Old chest / lockbox\n  - Broken pipes / plumbing\n  - Wall torch or dim lantern\n  - Hanging chains\n  - Water puddle / flooded floor mesh\n  - Old shelving / storage rack\n  - Rubble / collapsed ceiling debris\n  - Intercom device or old speaker box\n\n  Textures (PBR, max 2048x):\n  - Wet/mossy stone (albedo + normal + roughness)\n  - Rusted metal (furnace, pipes)\n  - Rotting wood (beams, doors)\n  - Dirty concrete or old brick\n  - Puddle / wet floor surface\n\n  Audio:\n  - Basement ambient drone (loopable .ogg)\n  - Furnace fire ambience (loopable .ogg)\n  - Floor creak SFX (.wav)\n  - Water drip SFX (.wav)\n  - Distant metal clang SFX (.wav)\n  - Stone scrape / door groan SFX (.wav)\n\n  Animations (humanoid rig):\n  - Listener slow patrol walk\n  - Listener alert / head-turn\n  - Player crouch-walk\n  - Player idle\n\n  Shaders / VFX:\n  - Volumetric fog / damp haze\n  - Fire flicker / furnace glow\n  - Water ripple (flooded section)\n  - Dust mote particles\n\nSAVE EVERYTHING TO:\n  C:/Users/LENOVO/Documents/Last-word-godot/Assets/Floor1/\n  /Meshes/      — .glb or .obj only\n  /Textures/    — .png PBR maps\n  /Audio/       — .ogg loops, .wav SFX\n  /Animations/  — .glb with embedded anims\n  /Shaders/     — .gdshader files\n  /VFX/         — particle .tscn files\n\nCONVERT BEFORE SAVING:\n  .fbx → .glb via Blender CLI\n  .mp3 → .ogg via ffmpeg\n  .tga/.bmp → .png via ImageMagick\n  Decimate any mesh over 5000 tris\n\nLOG EVERY ASSET:\n  Assets/Floor1/ASSET_CREDITS.md\n  | Name | Category | Source | License | URL |\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSTEP 2 — BUILD THE FLOOR LAYOUT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nDesign a sprawling asymmetric basement floor.\n\nHARD RULES:\n  ❌ No square overall footprint\n  ❌ No rectangle overall footprint\n  ✅ Use: fractured cross, amoeba, web, broken L,\n     diagonal sprawl, honeycomb — anything organic\n  ✅ Wide and sprawling so players can lose The Listener\n  ✅ Minimum 20 rooms/areas total\n  ✅ Furnace room FIXED at southwest corner\n  ✅ Staircase hub FIXED at opposite corner\n  ✅ Player spawn and staircase on OPPOSITE ends\n\nREQUIRED ROOMS (build all of these):\n  - Furnace Room (SW, intercom on the wall nearby)\n  - Creak Corridor (central, main path through floor)\n  - Alternate Silent Route (bypasses creak corridor,\n    longer path, no creak tiles)\n  - Staircase Hub (only exit upward, bottleneck)\n  - Lockbox Room (small, tucked off main path)\n  - Registration Board Alcove (near staircase hub)\n  - Boiler / Utility Room (mechanical ambience)\n  - Flooded Section (standing water, no lights)\n  - Wide Patrol Chamber x2 (Listener patrols here)\n  - Ambush Corridor x2 (narrow, long, dangerous)\n  - Dead-End Reward Room x2 (item or lore note)\n  - Split-Path Junction x3 (Y or T intersections)\n  - Collapsed Room (rubble, partial ceiling)\n  - Hidden Alcove (secret, reward inside)\n  - Storage Room (crates and barrels for cover)\n  - Guard Room / Antechamber (wide, dramatic entry)\n  + extra filler halls to reach 20 rooms minimum\n\nGAMEPLAY RULES FOR LAYOUT:\n  - Creak corridor must have a silent alternate path\n  - Every dead end has a reward, never empty\n  - At least 3 rooms have 2 or more exits\n  - Place props in major rooms for line-of-sight breaks\n  - Listener patrol loop must flow naturally around\n    the perimeter without getting stuck\n\nACOUSTIC TAG for every room:\n  ECHO       — stone walls, large, or flooded\n  MUFFLED    — dirt floor, small, or furnace room\n  CREAK_ZONE — central corridor only\n  NEUTRAL    — everything else\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSTEP 3 — BUILD THE GODOT SCENE\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nEngine: Godot 4.x .NET C#\n\nBuild Floor1.tscn with this exact node structure:\n\n  Floor1.tscn\n  └── World (Node3D)\n      ├── Rooms (Node3D)\n      │   ├── Room_Furnace (Node3D)\n      │   ├── Room_Lockbox (Node3D)\n      │   ├── Hall_Creak_Central (Node3D)\n      │   └── [all other rooms]\n      ├── Props (Node3D)\n      │   ├── Furnace_Mesh (MeshInstance3D)\n      │   └── [all downloaded props placed here]\n      ├── Navigation (Node3D)\n      │   ├── NavigationRegion3D\n      │   └── PatrolWaypoints (Node3D)\n      │       ├── Waypoint_01 (Marker3D)\n      │       └── [perimeter patrol path]\n      ├── Zones (Node3D)\n      │   ├── CreakZone (Area3D)\n      │   ├── WetZone (Area3D)\n      │   ├── SpawnZone_Players (Marker3D)\n      │   └── SpawnZone_Listener (Marker3D)\n      ├── Audio (Node3D)\n      │   ├── Ambient_Drone (AudioStreamPlayer3D)\n      │   ├── Ambient_Furnace (AudioStreamPlayer3D)\n      │   └── SFX_WaterDrip (AudioStreamPlayer3D)\n      └── Lighting (Node3D)\n          ├── [OmniLight3D furnace — orange, short range]\n          └── [wall torches — dim yellow, 3-5m range only]\n\nATTACH THIS SCRIPT TO EVERY ROOM NODE:\n  @export var room_name: String\n  @export var room_type: String\n  @export var acoustic_type: String\n  @export var is_creak_zone: bool\n  @export var has_patrol_waypoint: bool\n  @export var exit_count: int\n  @export var has_cover: bool\n  @export var listener_can_investigate: bool\n\nCOLLISION RULES:\n  - StaticBody3D + CollisionShape3D on every wall,\n    floor, ceiling, and prop mesh\n  - Area3D on every doorway — tag \"Doorway\"\n  - Area3D on creak tiles — tag \"CreakZone\"\n  - Area3D on flooded section — tag \"WetZone\"\n\nLIGHTING RULES:\n  - Global ambient: near black, horror dark\n  - Furnace room: OmniLight3D orange/red, range 4m\n  - Corridors: wall torch OmniLight3D dim yellow 3-5m\n  - Flooded section: zero lights, total darkness\n  - NO bright lights anywhere on this floor\n\nIF AN ASSET CANNOT BE FOUND FREE:\n  Use a CSGBox3D as placeholder\n  Name it: PLACEHOLDER_[AssetName]\n  Add metadata: missing_asset = true\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nSTEP 4 — OUTPUT WHEN DONE\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  1. ASSET_CREDITS.md with every asset logged\n  2. Floor1.tscn complete scene file\n  3. ASCII top-down map with every room labeled\n  4. Room manifest table:\n     name | type | size | exits | acoustic | props\n  5. Listener patrol waypoint order (numbered list)\n  6. List of any CSGBox placeholders used\n  7. Flag any rooms needing manual art work",
+  "status": "complete",
+  "worktree": {
+    "path": "/mnt/c/Users/LENOVO/Documents/Last-word-godot",
+    "branch": "main",
+    "commit": "993bff03b3b47589d222057e23ba5fbef8f39dea"
+  },
+  "scoping": {
+    "goal": {
+      "answer": "Expand Scenes/Floors/F1_Basement.tscn into a fully playable, 20-room asymmetric basement vertical slice with proper collision, lighting, audio, navigation, patrol waypoints, and objective wiring, using free assets where available and CSG placeholders where not.",
+      "confirmedAt": "2026-06-28T02:31:16.147Z"
+    },
+    "criteria": {
+      "answer": "F1_Basement.tscn contains 20+ named rooms with Floor1Room.cs metadata, non-rectangular organic footprint, furnace at SW corner, staircase hub at opposite end, player spawn opposite staircase.\nF1_Basement.tscn implements the exact node hierarchy: World/Rooms, World/Props, World/Navigation, World/Zones, World/Audio, World/Lighting.\nEvery room has StaticBody3D + CollisionShape3D floors, walls, and ceilings; doorway Area3Ds are in group 'Doorway'; CreakZone and WetZone Area3Ds exist.\nMissing assets use CSGBox3D placeholders named PLACEHOLDER_* with metadata/missing_asset = true.\nPlayer spawn Marker3D (group 'SpawnPoint') and Listener spawn Marker3D (group 'ListenerSpawnBasement') are placed and referenced by GameManager on run start.\nListener patrol waypoints form a perimeter loop, all in group 'Waypoint', and ListenerAI cycles them without getting stuck.\nPhase 1 objective is functional: NoteItem pickup + RegistrationBoard registration advances SequenceManager; sequence completion is host-authoritative.\nWin/lose states work: staircase triggers win after sequence complete; total party wipe triggers loss.\nAudio present and autoplaying: Ambient_Drone, Ambient_Furnace, SFX_WaterDrip.\nLighting follows horror rules: near-black global ambient, furnace OmniLight3D orange/red ~4m, wall torches dim yellow 3-5m, flooded section has zero lights.\nDocumentation complete: ASCII top-down map, room manifest table, patrol waypoint order, CSGBox placeholder list, and manual-art-work flags are in Assets/Floor1/.\nASSET_CREDITS.md logs every downloaded asset and every placeholder source with name, category, source, license, and URL.",
+      "confirmedAt": "2026-06-28T02:31:16.147Z"
+    },
+    "constraints": {
+      "answer": "Use only CC0, CC-BY, MIT/Apache, royalty-free commercial, or public-domain assets; no CC-BY-NC or no-game-use clauses., Do not create a new scene file; edit Scenes/Floors/F1_Basement.tscn as the canonical Floor 1., Use CSGBox3D placeholders (named PLACEHOLDER_*) with metadata/missing_asset = true for any requested asset that cannot be found free., Preserve existing GameManager, NetworkManager, ListenerAI, SequenceManager, and PlayerController APIs; only add integration points and NodePath wiring.",
+      "confirmedAt": "2026-06-28T02:31:16.147Z"
+    },
+    "phases": {
+      "answer": "Asset inventory + scene reset, Layout build — 20 rooms, Visual art pass, Audio, lighting, navigation, Gameplay wiring, Documentation + validation",
+      "confirmedAt": "2026-06-28T02:31:16.147Z"
+    },
+    "assumptions": {
+      "answer": "Floor1Room.cs export API (RoomName, RoomType, AcousticType, IsCreakZone, HasPatrolWaypoint, ExitCount, HasCover, ListenerCanInvestigate, RoomSize) is sufficient for the floor metadata.; GameManager.PlayerScene is already assigned in GameScene.tscn; we only change spawn position to a marker in F1_Basement.; ListenerAI discovers waypoints via the 'Waypoint' group and cycles them in registration order.; NoteItem spawning uses markers named NoteSpawn_* in the 'SpawnPoint' group (GameManager.SpawnNoteItems fallback behavior).; Voice input/speech recognition is owned by VoiceManager; we only wire RegistrationBoard and SequenceManager endpoints.; For this vertical slice, the win condition is: SequenceManager.SequenceComplete → players reach the staircase Area3D → GameManager triggers Victory.",
+      "confirmedAt": "2026-06-28T02:31:16.147Z"
+    }
+  },
+  "phases": [
+    {
+      "id": "phase-1",
+      "index": 1,
+      "name": "Asset inventory + scene reset",
+      "goal": "Finalize which assets to use, update ASSET_CREDITS.md, and prepare a clean F1_Basement.tscn scaffold.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Inventory existing project KayKit assets and already-downloaded GitHub assets in Assets/Floor1/.",
+          "status": "verified",
+          "verification": {
+            "command": "ls Assets/Floor1/Meshes/ | wc -l returns ≥ 21 and ls Assets/Floor1/Audio/ | wc -l returns ≥ 7",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T02:32:10.264Z",
+          "completedAt": "2026-06-28T02:35:18.790Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T02:35:18.790Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Update Assets/Floor1/ASSET_CREDITS.md with every asset used, every placeholder, source, license, and URL.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE '^\\| .* \\| .* \\| .* \\| .* \\|' Assets/Floor1/ASSET_CREDITS.md returns ≥ 30",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T02:36:07.893Z",
+          "completedAt": "2026-06-28T02:39:24.532Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T02:39:24.532Z"
+          }
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Back up current F1_Basement.tscn and create the new root node hierarchy (World/Rooms/Props/Navigation/Zones/Audio/Lighting).",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE '^\\[node name=\"Room_' Scenes/Floors/F1_Basement.tscn returns 0 (this phase only creates the scaffold; rooms come next)",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T02:40:48.640Z",
+          "completedAt": "2026-06-28T02:43:07.151Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T02:43:07.151Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-28T02:31:40.525Z",
+      "completedAt": "2026-06-28T02:44:13.836Z",
+      "summary": "Phase 1 complete: inventoried 21 Floor1 meshes and 7 Floor1 audio files plus reusable KayKitDungeon/KayKitFurniture packs; rewrote Assets/Floor1/ASSET_CREDITS.md with 41 table rows and a placeholder policy; backed up the original F1_Basement.tscn and created a clean scaffold with World/Rooms/Props/Navigation/Zones/Audio/Lighting.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-28T02:44:13.811Z"
+      }
+    },
+    {
+      "id": "phase-2",
+      "index": 2,
+      "name": "Layout build — 20 rooms",
+      "goal": "Build the asymmetric 20-room layout with collision, doorways, CreakZone, WetZone, and spawn markers.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Create 20+ room nodes under World/Rooms with Floor1Room.cs exports, covering all required room types and acoustic tags.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE '^\\[node name=\"Room_' Scenes/Floors/F1_Basement.tscn returns ≥ 20",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T02:45:32.386Z",
+          "completedAt": "2026-06-28T02:48:31.730Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T02:48:31.730Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Add StaticBody3D + CollisionShape3D floors, walls, and ceilings for every room.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -c 'type=\"StaticBody3D\"' Scenes/Floors/F1_Basement.tscn returns ≥ 60",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T02:49:48.564Z",
+          "completedAt": "2026-06-28T03:03:57.908Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T03:03:57.908Z"
+          }
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Add Area3D doorways in group 'Doorway', a CreakZone Area3D, and a WetZone Area3D.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'groups=\\[\"Doorway\"\\]' Scenes/Floors/F1_Basement.tscn returns ≥ 25 && grep -cE 'CreakZone.*groups=\\[\"CreakZone\"\\]' Scenes/Floors/F1_Basement.tscn returns 1 && grep -cE 'WetZone.*groups=\\[\"WetZone\"\\]' Scenes/Floors/F1_Basement.tscn returns 1",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T03:05:12.348Z",
+          "completedAt": "2026-06-28T03:06:04.093Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T03:06:04.093Z"
+          }
+        },
+        {
+          "id": "step-4",
+          "index": 4,
+          "description": "Place SpawnZone_Players, SpawnZone_Listener, and NoteSpawn_* markers in the 'SpawnPoint' group.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'NoteSpawn_' Scenes/Floors/F1_Basement.tscn returns ≥ 4 && grep -cE 'groups=\\[\"SpawnPoint\"\\]' Scenes/Floors/F1_Basement.tscn returns ≥ 6",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T03:08:21.841Z",
+          "completedAt": "2026-06-28T03:10:40.644Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T03:10:40.644Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-28T02:45:21.515Z",
+      "completedAt": "2026-06-28T03:12:09.803Z",
+      "summary": "Phase 2 completed: Scenes/Floors/F1_Basement.tscn contains 20 named rooms with Floor1Room.cs metadata, per-room StaticBody3D + CollisionShape3D floors/walls/ceilings, 54 Doorway Area3Ds, CreakZone and WetZone Area3Ds, SpawnZone_Players/Listener and 5 NoteSpawn markers, patrol waypoints, audio, and lighting. All verification commands passed.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-28T03:12:09.778Z"
+      }
+    },
+    {
+      "id": "phase-3",
+      "index": 3,
+      "name": "Visual art pass",
+      "goal": "Add mesh instances for floors, walls, and props; use CSG placeholders for missing assets.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Add floor/wall mesh instances using downloaded KayKit and shifty-dungeon modular pieces, scaled/tiled per room.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'instance=ExtResource' Scenes/Floors/F1_Basement.tscn returns ≥ 50",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T03:14:05.909Z",
+          "completedAt": "2026-06-28T03:24:22.517Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T03:24:22.517Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Place props in major rooms (crates, barrels, chest, columns, rubble, wood supports, door, stairs).",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'parent=\"World/Props/' Scenes/Floors/F1_Basement.tscn returns ≥ 20",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T03:29:45.984Z",
+          "completedAt": "2026-06-28T03:30:50.545Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T03:30:50.545Z"
+          }
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Add CSGBox3D placeholders for furnace, intercom, chains, puddle, shelves, and any other missing asset.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'PLACEHOLDER_' Scenes/Floors/F1_Basement.tscn returns ≥ 6",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T03:33:20.863Z",
+          "completedAt": "2026-06-28T03:34:59.670Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T03:34:59.670Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-28T03:13:19.531Z",
+      "completedAt": "2026-06-28T03:43:57.687Z",
+      "summary": "Phase 3 'Visual art pass' complete. Added 180 mesh instances for floors, walls, and props; organized 23 prop instances under World/Props sub-groups (Crates, Barrels, Chests, Columns, Rubble, WoodSupports, Doors, Stairs); and placed 8 CSGBox3D placeholders for missing assets with metadata/missing_asset = true. Scene remains syntactically valid with balanced brackets and all ExtResource references resolving.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-28T03:43:57.664Z"
+      }
+    },
+    {
+      "id": "phase-4",
+      "index": 4,
+      "name": "Audio, lighting, navigation",
+      "goal": "Wire ambient audio, horror lighting, NavigationRegion3D, and perimeter patrol waypoints.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Add AudioStreamPlayer3D nodes for Ambient_Drone, Ambient_Furnace, and SFX_WaterDrip with autoplay.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'type=\"AudioStreamPlayer3D\"' Scenes/Floors/F1_Basement.tscn returns ≥ 3 && grep -c 'autoplay = true' Scenes/Floors/F1_Basement.tscn returns ≥ 3",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T03:46:42.883Z",
+          "completedAt": "2026-06-28T03:48:10.323Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T03:48:10.323Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Add OmniLight3D nodes: furnace glow (orange, ~4m), wall torches (dim yellow, 3-5m), flooded section dark.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'type=\"OmniLight3D\"' Scenes/Floors/F1_Basement.tscn returns ≥ 6",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T04:35:26.974Z",
+          "completedAt": "2026-06-28T04:38:39.417Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T04:38:39.417Z"
+          }
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Add NavigationRegion3D with NavigationMesh and 10+ waypoints in group 'Waypoint' forming a perimeter loop.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'type=\"Marker3D\".*groups=\\[\"Waypoint\"\\]' Scenes/Floors/F1_Basement.tscn returns ≥ 10",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T04:39:02.350Z",
+          "completedAt": "2026-06-28T04:41:12.424Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T04:41:12.424Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-28T03:45:39.445Z",
+      "completedAt": "2026-06-28T04:41:25.840Z",
+      "summary": "Phase 4 'Audio, lighting, navigation' complete. Audio: 4 autoplaying AudioStreamPlayer3D nodes (Ambient_Drone, Ambient_Furnace, SFX_WaterDrip, SFX_DistantBell). Lighting: 6 OmniLight3D nodes (FurnaceGlow orange 4m, 5 wall torches dim yellow 3-5m, flooded section dark). Navigation: NavigationRegion3D with NavigationMesh and 16 perimeter Waypoint Marker3D nodes forming a loop across all quadrants.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-28T04:41:25.817Z"
+      }
+    },
+    {
+      "id": "phase-5",
+      "index": 5,
+      "name": "Gameplay wiring",
+      "goal": "Connect the floor to GameManager so the vertical slice is playable: spawn, objectives, win/lose.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Update GameManager.PlayerSpawnPosition to use the F1_Basement player spawn marker coordinate (or add a NodePath export if safer).",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'PlayerSpawn|SpawnZone_Players' Scripts/Core/GameManager.cs returns ≥ 1 && Godot scene import succeeds",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T04:59:13.552Z",
+          "completedAt": "2026-06-28T05:13:37.702Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T05:13:37.702Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "Place RegistrationBoard and wire it to the SequenceManager path in GameManager.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'RegistrationBoard' Scenes/Floors/F1_Basement.tscn returns ≥ 1 && grep -cE 'SequenceManagerPath' Scenes/Floors/F1_Basement.tscn returns ≥ 1",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T05:17:22.801Z",
+          "completedAt": "2026-06-28T05:21:39.525Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T05:21:39.525Z"
+          }
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Add a staircase Area3D that, on body entered after SequenceManager.IsComplete, calls GameManager.OnFinalBroadcastTransmitted or directly emits Victory.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'Staircase.*Area3D|OnFinalBroadcastTransmitted|Victory' Scenes/Floors/F1_Basement.tscn returns ≥ 1",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T05:22:23.059Z",
+          "completedAt": "2026-06-28T05:25:13.241Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T05:25:13.241Z"
+          }
+        },
+        {
+          "id": "step-4",
+          "index": 4,
+          "description": "Verify Listener spawn and patrol: place Listener.tscn at ListenerSpawn marker and confirm it cycles waypoints.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'Listener.*instance=ExtResource|instance=.*Listener\\.tscn' Scenes/Floors/F1_Basement.tscn returns ≥ 1",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T05:25:30.341Z",
+          "completedAt": "2026-06-28T05:27:15.163Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T05:27:15.163Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-28T04:56:45.713Z",
+      "completedAt": "2026-06-28T05:27:36.787Z",
+      "summary": "Phase 5 wired the F1_Basement floor to GameManager: player spawn marker resolution, RegistrationBoard + SequenceManager placement, staircase win trigger, and Listener spawn/patrol placement. All steps verified via grep counts and a clean dotnet build.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-28T05:27:36.746Z"
+      }
+    },
+    {
+      "id": "phase-6",
+      "index": 6,
+      "name": "Documentation + validation",
+      "goal": "Produce ASCII map, manifest, patrol order, placeholder list, and validate the scene loads and plays.",
+      "description": "",
+      "parallel": false,
+      "status": "completed",
+      "steps": [
+        {
+          "id": "step-1",
+          "index": 1,
+          "description": "Write Assets/Floor1/Floor1_Layout.md with ASCII map and Assets/Floor1/Floor1_RoomManifest.md with room table.",
+          "status": "verified",
+          "verification": {
+            "command": "test -s Assets/Floor1/Floor1_Layout.md && test -s Assets/Floor1/Floor1_RoomManifest.md",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T05:28:09.656Z",
+          "completedAt": "2026-06-28T05:34:37.180Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T05:34:37.180Z"
+          }
+        },
+        {
+          "id": "step-2",
+          "index": 2,
+          "description": "List patrol waypoint order and CSGBox placeholders in Assets/Floor1/Floor1_RoomManifest.md or a new file.",
+          "status": "verified",
+          "verification": {
+            "command": "grep -cE 'WP[0-9]+|PLACEHOLDER_' Assets/Floor1/Floor1_RoomManifest.md returns ≥ 15",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T05:37:47.659Z",
+          "completedAt": "2026-06-28T05:39:43.594Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T05:39:43.594Z"
+          }
+        },
+        {
+          "id": "step-3",
+          "index": 3,
+          "description": "Validate F1_Basement.tscn parses in Godot (godot --headless --import if available, otherwise bracket/resource checks).",
+          "status": "verified",
+          "verification": {
+            "command": "python3 -c \"import re; s=open('Scenes/Floors/F1_Basement.tscn').read(); assert s.count('[')==s.count(']'); assert len(re.findall(r'\\[ext_resource .* id=\\\"([^\\\"]+)\\\"\\]', s)) == len(set(re.findall(r'\\[ext_resource .* id=\\\"([^\\\"]+)\\\"\\]', s)))\"",
+            "retries": 2,
+            "retryDelayMs": 1000
+          },
+          "parallel": false,
+          "startedAt": "2026-06-28T05:40:37.455Z",
+          "completedAt": "2026-06-28T05:42:36.623Z",
+          "result": {
+            "success": true,
+            "exitCode": 0,
+            "stdout": "",
+            "stderr": "",
+            "completedAt": "2026-06-28T05:42:36.623Z"
+          }
+        }
+      ],
+      "startedAt": "2026-06-28T05:27:42.447Z",
+      "completedAt": "2026-06-28T05:42:57.528Z",
+      "summary": "Phase 6 completed: produced ASCII top-down map in Floor1_Layout.md, 20-room manifest with patrol waypoint order and placeholder inventory in Floor1_RoomManifest.md, and validated F1_Basement.tscn structural integrity plus a clean dotnet build.",
+      "grade": {
+        "grade": "A",
+        "rationale": "All gates pass; project checks validate.",
+        "gradedAt": "2026-06-28T05:42:57.472Z"
+      }
+    }
+  ],
+  "decisions": [],
+  "memories": [],
+  "createdAt": "2026-06-28T02:15:37.443Z",
+  "updatedAt": "2026-06-28T06:14:58.016Z",
+  "goal": "Expand Scenes/Floors/F1_Basement.tscn into a fully playable, 20-room asymmetric basement vertical slice with proper collision, lighting, audio, navigation, patrol waypoints, and objective wiring, using free assets where available and CSG placeholders where not.",
+  "successCriteria": [
+    "F1_Basement.tscn contains 20+ named rooms with Floor1Room.cs metadata, non-rectangular organic footprint, furnace at SW corner, staircase hub at opposite end, player spawn opposite staircase.",
+    "F1_Basement.tscn implements the exact node hierarchy: World/Rooms, World/Props, World/Navigation, World/Zones, World/Audio, World/Lighting.",
+    "Every room has StaticBody3D + CollisionShape3D floors, walls, and ceilings; doorway Area3Ds are in group 'Doorway'; CreakZone and WetZone Area3Ds exist.",
+    "Missing assets use CSGBox3D placeholders named PLACEHOLDER_* with metadata/missing_asset = true.",
+    "Player spawn Marker3D (group 'SpawnPoint') and Listener spawn Marker3D (group 'ListenerSpawnBasement') are placed and referenced by GameManager on run start.",
+    "Listener patrol waypoints form a perimeter loop, all in group 'Waypoint', and ListenerAI cycles them without getting stuck.",
+    "Phase 1 objective is functional: NoteItem pickup + RegistrationBoard registration advances SequenceManager; sequence completion is host-authoritative.",
+    "Win/lose states work: staircase triggers win after sequence complete; total party wipe triggers loss.",
+    "Audio present and autoplaying: Ambient_Drone, Ambient_Furnace, SFX_WaterDrip.",
+    "Lighting follows horror rules: near-black global ambient, furnace OmniLight3D orange/red ~4m, wall torches dim yellow 3-5m, flooded section has zero lights.",
+    "Documentation complete: ASCII top-down map, room manifest table, patrol waypoint order, CSGBox placeholder list, and manual-art-work flags are in Assets/Floor1/.",
+    "ASSET_CREDITS.md logs every downloaded asset and every placeholder source with name, category, source, license, and URL."
+  ],
+  "constraints": [
+    "Use only CC0, CC-BY, MIT/Apache, royalty-free commercial, or public-domain assets; no CC-BY-NC or no-game-use clauses.",
+    "Do not create a new scene file; edit Scenes/Floors/F1_Basement.tscn as the canonical Floor 1.",
+    "Use CSGBox3D placeholders (named PLACEHOLDER_*) with metadata/missing_asset = true for any requested asset that cannot be found free.",
+    "Preserve existing GameManager, NetworkManager, ListenerAI, SequenceManager, and PlayerController APIs; only add integration points and NodePath wiring."
+  ],
+  "lastActiveAt": "2026-06-28T05:27:42.447Z"
+}

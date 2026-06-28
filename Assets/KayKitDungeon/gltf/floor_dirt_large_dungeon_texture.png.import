@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bf3kxeo7jqvvk"
-path="res://.godot/imported/floor_dirt_large_dungeon_texture.png-665f52d5e6a58cfca98cc1f167a41e5f.ctex"
+uid="uid://bp5kv3uvdfwx6"
+path.s3tc="res://.godot/imported/floor_dirt_large_dungeon_texture.png-665f52d5e6a58cfca98cc1f167a41e5f.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/floor_dirt_large_dungeon_texture.png"
-dest_files=["res://.godot/imported/floor_dirt_large_dungeon_texture.png-665f52d5e6a58cfca98cc1f167a41e5f.ctex"]
+dest_files=["res://.godot/imported/floor_dirt_large_dungeon_texture.png-665f52d5e6a58cfca98cc1f167a41e5f.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

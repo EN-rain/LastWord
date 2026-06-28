@@ -96,10 +96,32 @@ public partial class GestureSystem : Node3D
 
 	private void ApplyGesture(GestureId gesture)
 	{
+		if (!IsGestureVisibleToLocalPlayer())
+			return;
+
 		_currentGesture = gesture;
 		_gestureTimer = GestureDuration;
 		EmitSignal(SignalName.GesturePlayed, (int)gesture);
 		TryPlayAnimation(gesture);
+	}
+
+	private bool IsGestureVisibleToLocalPlayer()
+	{
+		if (Owner is not Node3D ownerNode)
+			return true;
+
+		bool networked = Multiplayer.MultiplayerPeer != null && Multiplayer.HasMultiplayerPeer();
+		if (!networked || ownerNode.IsMultiplayerAuthority())
+			return true;
+
+		foreach (Node node in GetTree().GetNodesInGroup("Player"))
+		{
+			if (node is not Node3D player || !player.IsMultiplayerAuthority())
+				continue;
+			return player.GlobalPosition.DistanceTo(ownerNode.GlobalPosition) <= MaxVisibilityDistance;
+		}
+
+		return true;
 	}
 
 	private void TryPlayAnimation(GestureId gesture)

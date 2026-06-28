@@ -97,8 +97,16 @@ public partial class VocalImprintTracker : Node
 		if (player == null)
 			return;
 
-		if (_profiles.TryGetValue(player, out Profile profile))
-			profile.IsDead = true;
+		if (!_profiles.TryGetValue(player, out Profile profile))
+		{
+			profile = new Profile(player)
+			{
+				LastSpeakTime = Time.GetTicksMsec() / 1000.0
+			};
+			_profiles[player] = profile;
+		}
+
+		profile.IsDead = true;
 	}
 
 	public override void _Process(double delta)

@@ -1,6 +1,10 @@
 # Last Word â€” Game Design Document
 ### Version 2.5 Engine: Godot 4.x (.NET/C#)
 
+## Current Implementation Status
+
+This repository has been reconciled with the code audit dated 2026-06-27. Current behavior includes duplicate-role guardrails, non-skippable calibration gating, Phase 1 spoken-word verification at the RegistrationBoard, Phase 2 speech-driven sequence validation, carried-radio Phase 3 targeting, silence/wardrobe noise suppression, bell masking, signal-jammer creak suppression, playback-trap listener baiting, and runtime escalation events. Treat older sections that describe these as planned or unwired as stale until the full GDD is rewritten.
+
 
 ## Table of Contents
 

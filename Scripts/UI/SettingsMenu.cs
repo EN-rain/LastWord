@@ -153,6 +153,9 @@ public partial class SettingsMenu : PanelContainer
 		{ "gesture_l", "Gesture L (Key L)" },
 		{ "clap_q", "Clap Action (Key Q)" },
 		{ "sacrifice_g", "Vocal Sacrifice (Key G)" },
+		{ "ability_f", "Loud Stun (Key F)" },
+		{ "ability_r", "Static Bubble (Key R)" },
+		{ "ability_t", "Echo Replay (Key T)" },
 		{ "radial_wheel_mmb", "Radial Selection Wheel (MMB)" },
 		{ "spectator_j", "Spectator Skull Marker (Key J) [Reserved]" }
 	};
@@ -224,6 +227,9 @@ public partial class SettingsMenu : PanelContainer
 			{ "gesture_l", Key.L },
 			{ "clap_q", Key.Q },
 			{ "sacrifice_g", Key.G },
+			{ "ability_f", Key.F },
+			{ "ability_r", Key.R },
+			{ "ability_t", Key.T },
 			{ "spectator_j", Key.J }
 		};
 
@@ -1043,6 +1049,12 @@ public partial class SettingsMenu : PanelContainer
 
 		AddChild(dialog);
 		dialog.PopupCentered();
+	}
+
+	public void OpenAudioCalibration()
+	{
+		SetActiveTab(2);
+		OnCalibratePressed();
 	}
 
 	private void OnRevokeConsentPressed()

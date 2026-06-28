@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b05woowldjui1"
-path="res://.godot/imported/candle_melted_dungeon_texture.png-21d0e28bf401637ee798622da383cd22.ctex"
+uid="uid://e0i2weh1noui"
+path.s3tc="res://.godot/imported/candle_melted_dungeon_texture.png-21d0e28bf401637ee798622da383cd22.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/candle_melted_dungeon_texture.png"
-dest_files=["res://.godot/imported/candle_melted_dungeon_texture.png-21d0e28bf401637ee798622da383cd22.ctex"]
+dest_files=["res://.godot/imported/candle_melted_dungeon_texture.png-21d0e28bf401637ee798622da383cd22.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

@@ -122,7 +122,9 @@ public partial class MatchmakingLobby : CanvasLayer
     private void OnRoleSelected(long index)
     {
         if (NetworkManager.Instance == null) return;
-        NetworkManager.Instance.SelectRole((PlayerRole)index);
+        var option = GetNodeOrNull<OptionButton>(RoleOptionPath);
+        int roleId = option?.GetItemId((int)index) ?? (int)PlayerRole.None;
+        NetworkManager.Instance.SelectRole((PlayerRole)roleId);
     }
 
     public override void _ExitTree()

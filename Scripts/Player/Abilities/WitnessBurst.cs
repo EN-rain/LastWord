@@ -16,9 +16,8 @@ public partial class WitnessBurst : Node3D
 	{
 		GD.Print($"WitnessBurst: {player.Name} triggered extended ghost burst.");
 		AudioAssets.PlayOneShot3D(AudioAssets.AbilityWitnessBurst, player, player.GlobalPosition, "SFX");
-		// The actual duration extension is applied by the PlayerController death logic
-		// reading this component. Path reveal is visual-only and can be expanded once
-		// the spectator map / Listener path renderer exists.
+		player.ApplyWitnessBurst(GhostBurstDuration);
+		TryRevealListenerPath(GetTree()?.GetFirstNodeInGroup("Listener") as Node3D);
 	}
 
 	public bool TryRevealListenerPath(Node3D listener)
@@ -28,7 +27,20 @@ public partial class WitnessBurst : Node3D
 
 		GD.Print($"WitnessBurst: revealing Listener path for {ListenerPathRevealDuration}s.");
 		AudioAssets.PlayOneShot3D(AudioAssets.AbilityWitnessBurst, this, GlobalPosition, "SFX");
-		// TODO: spawn line renderer from listener to current nav target once map UI exists.
+		var marker = new MeshInstance3D
+		{
+			Name = "WitnessListenerPathMarker",
+			Mesh = new BoxMesh { Size = new Vector3(0.15f, 0.15f, 3.0f) },
+			GlobalPosition = listener.GlobalPosition
+		};
+		var mat = new StandardMaterial3D
+		{
+			AlbedoColor = PathColor,
+			ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded
+		};
+		marker.MaterialOverride = mat;
+		GetTree().CurrentScene?.AddChild(marker);
+		GetTree().CreateTimer(ListenerPathRevealDuration).Timeout += marker.QueueFree;
 		return true;
 	}
 }

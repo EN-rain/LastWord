@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://s55lx1fnvd3n"
-path="res://.godot/imported/barrier_corner_dungeon_texture.png-3011009e5a0f61daad693c10dd0c4eaf.ctex"
+uid="uid://1fhoqkx80ba"
+path.s3tc="res://.godot/imported/barrier_corner_dungeon_texture.png-3011009e5a0f61daad693c10dd0c4eaf.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/barrier_corner_dungeon_texture.png"
-dest_files=["res://.godot/imported/barrier_corner_dungeon_texture.png-3011009e5a0f61daad693c10dd0c4eaf.ctex"]
+dest_files=["res://.godot/imported/barrier_corner_dungeon_texture.png-3011009e5a0f61daad693c10dd0c4eaf.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

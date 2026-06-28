@@ -49,6 +49,7 @@ public partial class EchoReplay : Node3D
 		decoy.GlobalPosition = GlobalPosition;
 		GetTree().CurrentScene?.AddChild(decoy);
 		decoy.Play();
+		VoiceManager.Instance?.ReportNoiseEvent(decoy.GlobalPosition, 2, SoundKind.Special, Owner as Node3D, isSpecialLongRange: true);
 
 		var timer = GetTree().CreateTimer(DecoyDuration);
 		timer.Timeout += () =>

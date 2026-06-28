@@ -74,6 +74,12 @@ public partial class RoleSelect : Control
 
 	private void SelectRole(PlayerRole role)
 	{
+		if (role != PlayerRole.None && _takenRoles.Contains(role))
+		{
+			RefreshUI();
+			return;
+		}
+
 		_selectedRole = role;
 		EmitSignal(SignalName.RoleSelected, (int)role);
 		RefreshUI();
@@ -81,6 +87,12 @@ public partial class RoleSelect : Control
 
 	private void OnConfirm()
 	{
+		if (_selectedRole != PlayerRole.None && _takenRoles.Contains(_selectedRole))
+		{
+			RefreshUI();
+			return;
+		}
+
 		EmitSignal(SignalName.RoleConfirmed, (int)_selectedRole);
 	}
 

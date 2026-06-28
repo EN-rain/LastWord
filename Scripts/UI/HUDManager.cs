@@ -19,6 +19,7 @@ public partial class HUDManager : Control
 	[Export] public NodePath GestureWheelPath;
 	[Export] public NodePath PhaseTrackerPath;
 	[Export] public NodePath ProximityPulsePath;
+	[Export] public NodePath FinalCountdownLabelPath;
 
 	private Label _tierLabel;
 	private ProgressBar _volumeMeter;
@@ -37,6 +38,10 @@ public partial class HUDManager : Control
 	private bool _tokenIndicatorActive = false;
 
 	private float _currentHoldDuration = 0f;
+
+	private Label _finalCountdownLabel;
+	private float _finalCountdownRemaining = 0f;
+	private bool _finalCountdownActive = false;
 
 	[Export] public string RoomCodePrefixText = "ROOM CODE: ";
 	[Export] public string RoomCodeOfflineText = "ROOM CODE: OFFLINE";
@@ -85,6 +90,8 @@ public partial class HUDManager : Control
 		_sacrificeCountdownLabel = GetNodeOrNull<Label>(SacrificeCountdownLabelPath);
 		_phaseTracker     = GetNodeOrNull<HBoxContainer>(PhaseTrackerPath);
 		_proximityPulse   = GetNodeOrNull<ColorRect>(ProximityPulsePath);
+		_finalCountdownLabel = GetNodeOrNull<Label>(FinalCountdownLabelPath);
+		if (_finalCountdownLabel != null) _finalCountdownLabel.Visible = false;
 
 		BindPhaseTrackerDots();
 		LoadProximityPulseSetting();
@@ -131,6 +138,8 @@ public partial class HUDManager : Control
 		if (gameManager != null)
 		{
 			gameManager.PhaseChanged += OnPhaseChanged;
+			gameManager.FinalCountdownStarted += OnFinalCountdownStarted;
+			gameManager.FinalCountdownTick += OnFinalCountdownTick;
 			UpdateObjectiveText(gameManager.CurrentPhase);
 		}
 
@@ -194,7 +203,11 @@ public partial class HUDManager : Control
 
 		var gameManager = GameManager.Instance;
 		if (gameManager != null)
+		{
 			gameManager.PhaseChanged -= OnPhaseChanged;
+			gameManager.FinalCountdownStarted -= OnFinalCountdownStarted;
+			gameManager.FinalCountdownTick -= OnFinalCountdownTick;
+		}
 
 		UpdateTierUI(0);
 	}
@@ -391,6 +404,28 @@ public partial class HUDManager : Control
 	{
 		if (_sacrificeCountdownLabel != null)
 			_sacrificeCountdownLabel.Visible = false;
+	}
+
+	private void OnFinalCountdownStarted(float duration)
+	{
+		_finalCountdownActive = true;
+		_finalCountdownRemaining = duration;
+		if (_finalCountdownLabel != null)
+		{
+			_finalCountdownLabel.Visible = true;
+			_finalCountdownLabel.Text = $"FINAL COUNTDOWN: {FormatTime(_finalCountdownRemaining)}";
+		}
+	}
+
+	private void OnFinalCountdownTick(float remaining)
+	{
+		_finalCountdownRemaining = remaining;
+		if (_finalCountdownLabel != null && _finalCountdownActive)
+		{
+			_finalCountdownLabel.Text = $"FINAL COUNTDOWN: {FormatTime(_finalCountdownRemaining)}";
+			if (remaining <= 0f)
+				_finalCountdownLabel.Visible = false;
+		}
 	}
 
 	// ------------------------------------------------------------------ //

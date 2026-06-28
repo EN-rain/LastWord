@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "fermentId": "019f0c02-cae3-7076-be44-bfa3384296a2",
+  "phaseId": "phase-1",
+  "phaseName": "Asset inventory + scene reset",
+  "attempt": 1,
+  "timestamp": "2026-06-28T02:44:13.805Z",
+  "goal": "Finalize which assets to use, update ASSET_CREDITS.md, and prepare a clean F1_Basement.tscn scaffold.",
+  "summary": "Phase 1 complete: inventoried 21 Floor1 meshes and 7 Floor1 audio files plus reusable KayKitDungeon/KayKitFurniture packs; rewrote Assets/Floor1/ASSET_CREDITS.md with 41 table rows and a placeholder policy; backed up the original F1_Basement.tscn and created a clean scaffold with World/Rooms/Props/Navigation/Zones/Audio/Lighting.",
+  "stepSummaries": "  1. Inventory existing project KayKit assets and already-downloaded GitHub assets in Assets/Floor1/. [verified]\n  2. Update Assets/Floor1/ASSET_CREDITS.md with every asset used, every placeholder, source, license, and URL. [verified]\n  3. Back up current F1_Basement.tscn and create the new root node hierarchy (World/Rooms/Props/Navigation/Zones/Audio/Lighting). [verified]",
+  "diffAvailable": false,
+  "diffFilesChanged": "(git unavailable)",
+  "flags": [],
+  "derivedGrade": "A",
+  "reviewerRationale": "All gates pass; project checks validate.",
+  "gateVerdicts": [
+    {
+      "id": "F1",
+      "verdict": "pass",
+      "rationale": "All three steps used real verification (file counts, grep row counts, Python bracket balance) rather than proxies.",
+      "evidence": "Step 1: find counts of .glb/.wav files; Step 2: grep row count on ASSET_CREDITS.md; Step 3: Python bracket assertion and grep child-node counts."
+    },
+    {
+      "id": "F2",
+      "verdict": "pass",
+      "rationale": "Phase outputs deliver the goal: asset inventory informs which assets to use, ASSET_CREDITS.md is updated, and F1_Basement.tscn is a clean scaffold.",
+      "evidence": "ASSET_CREDITS.md has 41 rows; F1_Basement.tscn has the exact World hierarchy and 0 Room_ nodes; backup exists."
+    },
+    {
+      "id": "F3",
+      "verdict": "pass",
+      "rationale": "Nothing deferred in this phase; all planned work completed.",
+      "evidence": "All three steps completed and verified; no remaining items listed in worker reports."
+    }
+  ],
+  "projectChecks": {
+    "discovered": false,
+    "anyFailed": false,
+    "commands": []
+  }
+}

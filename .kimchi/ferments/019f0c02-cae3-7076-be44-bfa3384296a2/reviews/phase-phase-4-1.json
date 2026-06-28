@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "fermentId": "019f0c02-cae3-7076-be44-bfa3384296a2",
+  "phaseId": "phase-4",
+  "phaseName": "Audio, lighting, navigation",
+  "attempt": 1,
+  "timestamp": "2026-06-28T04:41:25.813Z",
+  "goal": "Wire ambient audio, horror lighting, NavigationRegion3D, and perimeter patrol waypoints.",
+  "summary": "Phase 4 'Audio, lighting, navigation' complete. Audio: 4 autoplaying AudioStreamPlayer3D nodes (Ambient_Drone, Ambient_Furnace, SFX_WaterDrip, SFX_DistantBell). Lighting: 6 OmniLight3D nodes (FurnaceGlow orange 4m, 5 wall torches dim yellow 3-5m, flooded section dark). Navigation: NavigationRegion3D with NavigationMesh and 16 perimeter Waypoint Marker3D nodes forming a loop across all quadrants.",
+  "stepSummaries": "  1. Add AudioStreamPlayer3D nodes for Ambient_Drone, Ambient_Furnace, and SFX_WaterDrip with autoplay. [verified]\n  2. Add OmniLight3D nodes: furnace glow (orange, ~4m), wall torches (dim yellow, 3-5m), flooded section dark. [verified]\n  3. Add NavigationRegion3D with NavigationMesh and 10+ waypoints in group 'Waypoint' forming a perimeter loop. [verified]",
+  "diffAvailable": false,
+  "diffFilesChanged": "(git unavailable)",
+  "flags": [],
+  "derivedGrade": "A",
+  "reviewerRationale": "All gates pass; project checks validate.",
+  "gateVerdicts": [
+    {
+      "id": "F1",
+      "verdict": "pass",
+      "rationale": "All three steps had real verification: audio counts and stream references; light counts, colors, ranges, flooded-section absence; waypoint counts, NavigationRegion3D presence, perimeter distribution, and bracket balance.",
+      "evidence": "Step 1: 4 AudioStreamPlayer3D, 4 autoplay, correct ext_resources; Step 2: 6 OmniLight3D, FurnaceGlow range 4.0, 5 torches, no flooded lights, brackets 690/690; Step 3: 16 waypoints, x/z span 48, NavigationRegion3D present."
+    },
+    {
+      "id": "F2",
+      "verdict": "pass",
+      "rationale": "Phase goal was to wire ambient audio, horror lighting, NavigationRegion3D, and perimeter patrol waypoints. All wired and verified.",
+      "evidence": "Scenes/Floors/F1_Basement.tscn contains World/Audio with 4 players, World/Lighting with 6 lights, World/Navigation with NavigationRegion3D and 16 Waypoint markers."
+    },
+    {
+      "id": "F3",
+      "verdict": "pass",
+      "rationale": "Nothing deferred in this phase. All planned work completed.",
+      "evidence": "n/a"
+    }
+  ],
+  "projectChecks": {
+    "discovered": false,
+    "anyFailed": false,
+    "commands": []
+  }
+}

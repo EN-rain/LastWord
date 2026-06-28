@@ -2,23 +2,21 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bi33wjmjdrap1"
-path="res://.godot/imported/banner_shield_yellow_dungeon_texture.png-fca8ccd431368780f4c6b9d5d6fc2483.ctex"
+uid="uid://d2vuvux8elg0v"
+path.s3tc="res://.godot/imported/banner_shield_yellow_dungeon_texture.png-fca8ccd431368780f4c6b9d5d6fc2483.s3tc.ctex"
 metadata={
-"vram_texture": false
-}
-generator_parameters={
-"md5": "9a714bc33f4314ea4520009f20b048a8"
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 
 [deps]
 
 source_file="res://Assets/KayKitDungeon/gltf/banner_shield_yellow_dungeon_texture.png"
-dest_files=["res://.godot/imported/banner_shield_yellow_dungeon_texture.png-fca8ccd431368780f4c6b9d5d6fc2483.ctex"]
+dest_files=["res://.godot/imported/banner_shield_yellow_dungeon_texture.png-fca8ccd431368780f4c6b9d5d6fc2483.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

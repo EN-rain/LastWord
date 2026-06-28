@@ -17,7 +17,7 @@ public partial class PlaybackManager : Node3D
 	[Export] public float MimicryPitchMax = 1.3f;
 	[Export] public float MimicryDistanceMin = 2.0f;
 	[Export] public float MimicryDistanceMax = 6.0f;
-	[Export] public bool TriggerEnabled = false;
+	[Export] public bool TriggerEnabled = true;
 
 	private float _silenceTimer = 0f;
 	private bool _randomMatchmakingDelayPassed = false;
@@ -94,6 +94,7 @@ public partial class PlaybackManager : Node3D
 		GetTree().CurrentScene?.AddChild(player);
 		player.Play();
 		player.Finished += () => player.QueueFree();
+		VoiceManager.Instance?.ReportNoiseEvent(origin, 2, SoundKind.Special, target, isSpecialLongRange: true);
 
 		GD.Print($"PlaybackManager: mimicry playback at {origin} near {target.Name}.");
 
@@ -127,6 +128,6 @@ public partial class PlaybackManager : Node3D
 		if (living.Count == 0)
 			return null;
 
-		return living[GD.RandRange(0, living.Count - 1)];
+		return living[(int)GD.RandRange(0, living.Count - 1)];
 	}
 }
